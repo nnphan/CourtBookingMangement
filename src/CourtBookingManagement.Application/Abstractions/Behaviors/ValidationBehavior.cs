@@ -1,4 +1,5 @@
 using FluentValidation;
+using CourtBookingManagement.Domain.Abstractions;
 using MediatR;
 
 namespace CourtBookingManagement.Application.Abstractions.Behaviors;
@@ -23,9 +24,37 @@ public sealed class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidat
 
         if (failures.Count != 0)
         {
-            throw new ValidationException(failures);
+            return CreateValidationResult(failures);
         }
 
         return await next();
+    }
+
+    private static TResponse CreateValidationResult(
+        IReadOnlyCollection<FluentValidation.Results.ValidationFailure> failures)
+    {
+        var error = new Error(
+            "Error.Validation",
+            string.Join("; ", failures.Select(failure =>
+                $"{failure.PropertyName}: {failure.ErrorMessage}")));
+
+        if (typeof(TResponse) == typeof(Result))
+        {
+            return (TResponse)(object)Result.Failure(error);
+        }
+
+        var resultType = typeof(TResponse);
+        if (resultType.IsGenericType && resultType.GetGenericTypeDefinition() == typeof(Result<>))
+        {
+            var valueType = resultType.GetGenericArguments()[0];
+            var failureMethod = typeof(Result)
+                .GetMethod(nameof(Result.Failure), [typeof(Error)])!
+                .MakeGenericMethod(valueType);
+
+            return (TResponse)failureMethod.Invoke(null, [error])!;
+        }
+
+        throw new InvalidOperationException(
+            $"Cannot create validation result for type {typeof(TResponse).Name}");
     }
 }

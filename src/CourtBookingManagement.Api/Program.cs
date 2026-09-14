@@ -22,7 +22,12 @@ builder.Services.AddInfrastructure(builder.Configuration);
 var databaseConnectionString = builder.Configuration[$"{DatabaseOptions.SectionName}:ConnectionString"];
 if (!string.IsNullOrWhiteSpace(databaseConnectionString))
 {
-    builder.Services.AddHealthChecks().AddNpgSql(databaseConnectionString);
+    builder.Services.AddHealthChecks()
+        .AddNpgSql(
+            databaseConnectionString,
+            name: "postgresql",
+            failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy,
+            tags: ["db", "sql", "postgresql", "ready"]);
 }
 
 var app = builder.Build();
@@ -56,6 +61,12 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("health", new HealthCheckOptions
 {
+    Predicate = _ => false,
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
+app.MapHealthChecks("health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready"),
     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
 });
 
