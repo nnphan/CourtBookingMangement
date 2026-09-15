@@ -4,6 +4,10 @@ namespace CourtBookingManagement.Domain.Users;
 
 public static class UserErrors
 {
+    public static Error NotFound(Guid id) => new(
+        "User.NotFound",
+        $"User '{id}' was not found");
+
     public static readonly Error EmailIsRequired = new(
         "User.EmailRequired",
         "User email is required");
