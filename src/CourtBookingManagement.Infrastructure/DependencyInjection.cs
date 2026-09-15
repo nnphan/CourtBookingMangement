@@ -2,8 +2,10 @@ using CourtBookingManagement.Application.Abstractions.Clock;
 using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.Options;
 using CourtBookingManagement.Domain.Abstractions;
+using CourtBookingManagement.Domain.Users;
 using CourtBookingManagement.Infrastructure.Clock;
 using CourtBookingManagement.Infrastructure.Data;
+using CourtBookingManagement.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,6 +50,7 @@ public static class DependencyInjection
         }, poolSize: 128);
 
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IUserRepository, UserRepository>();
         services.AddSingleton<ISqlConnectionFactory>(serviceProvider =>
         {
             var databaseOptions = serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
