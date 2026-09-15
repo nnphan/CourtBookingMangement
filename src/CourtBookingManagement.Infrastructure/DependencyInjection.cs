@@ -5,7 +5,7 @@ using CourtBookingManagement.Domain.Abstractions;
 using CourtBookingManagement.Domain.Users;
 using CourtBookingManagement.Infrastructure.Clock;
 using CourtBookingManagement.Infrastructure.Data;
-using CourtBookingManagement.Infrastructure.Persistence.Repositories;
+using CourtBookingManagement.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

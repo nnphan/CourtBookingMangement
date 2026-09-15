@@ -4,7 +4,7 @@ using CourtBookingManagement.Domain.Users;
 using CourtBookingManagement.Infrastructure.Persistence.Mappings;
 using Microsoft.EntityFrameworkCore;
 
-namespace CourtBookingManagement.Infrastructure.Persistence.Repositories;
+namespace CourtBookingManagement.Infrastructure.Repositories;
 
 public sealed class UserRepository : IUserRepository
 {
