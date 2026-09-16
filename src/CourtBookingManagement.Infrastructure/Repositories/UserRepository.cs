@@ -22,9 +22,38 @@ public sealed class UserRepository : IUserRepository
         var entity = await _dbContext
             .Set<EfUser>()
             .AsNoTracking()
-            .SingleOrDefaultAsync(user => user.Id == id, cancellationToken);
+            .SingleOrDefaultAsync(
+                user => user.Id == id && user.DeletedAt == null,
+                cancellationToken);
 
         return entity?.ToDomain();
+    }
+
+    public async Task<IReadOnlyList<DomainUser>> GetAllAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var entities = await _dbContext
+            .Set<EfUser>()
+            .AsNoTracking()
+            .Where(user => user.DeletedAt == null)
+            .OrderByDescending(user => user.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return entities.Select(entity => entity.ToDomain()).ToList();
+    }
+
+    public Task<bool> ExistsByEmailAsync(
+        string email,
+        Guid? excludingId = null,
+        CancellationToken cancellationToken = default)
+    {
+        return _dbContext
+            .Set<EfUser>()
+            .AnyAsync(
+                user => user.DeletedAt == null
+                    && user.Email.ToLower() == email.ToLower()
+                    && (excludingId == null || user.Id != excludingId),
+                cancellationToken);
     }
 
     public async Task AddAsync(

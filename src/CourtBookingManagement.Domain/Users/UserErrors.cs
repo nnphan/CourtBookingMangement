@@ -4,6 +4,10 @@ namespace CourtBookingManagement.Domain.Users;
 
 public static class UserErrors
 {
+    public static Error EmailAlreadyExists(string email) => new(
+        "User.EmailAlreadyExists",
+        $"Email '{email}' already exists");
+
     public static Error NotFound(Guid id) => new(
         "User.NotFound",
         $"User '{id}' was not found");

@@ -1,4 +1,5 @@
 using CourtBookingManagement.Application.Abstractions.Behaviors;
+using CourtBookingManagement.Application.Users.Services;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,7 @@ public static class DependencyInjection
         });
 
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
+        services.AddScoped<IUserService, UserService>();
         return services;
     }
 }
