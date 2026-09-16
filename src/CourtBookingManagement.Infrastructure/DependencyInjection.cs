@@ -1,10 +1,13 @@
 using CourtBookingManagement.Application.Abstractions.Clock;
 using CourtBookingManagement.Application.Abstractions.Data;
+using CourtBookingManagement.Application.Auth.Interfaces;
 using CourtBookingManagement.Application.Options;
 using CourtBookingManagement.Domain.Abstractions;
 using CourtBookingManagement.Domain.Users;
+using CourtBookingManagement.Infrastructure.Auth;
 using CourtBookingManagement.Infrastructure.Clock;
 using CourtBookingManagement.Infrastructure.Data;
+using CourtBookingManagement.Infrastructure.Persistence;
 using CourtBookingManagement.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -21,6 +24,7 @@ public static class DependencyInjection
         IConfiguration configuration)
     {
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+        services.AddHttpContextAccessor();
 
         var connectionString = configuration.GetConnectionString("Database")
             ?? configuration[$"{DatabaseOptions.SectionName}:ConnectionString"]
@@ -31,6 +35,11 @@ public static class DependencyInjection
             .ValidateDataAnnotations()
             .Validate(options => options.MinPoolSize <= options.MaxPoolSize,
                 "Database minimum pool size cannot exceed maximum pool size")
+            .ValidateOnStart();
+
+        services.AddOptions<JwtOptions>()
+            .Bind(configuration.GetSection(JwtOptions.SectionName))
+            .ValidateDataAnnotations()
             .ValidateOnStart();
 
         services.AddDbContextPool<ApplicationDbContext>((serviceProvider, options) =>
@@ -51,6 +60,11 @@ public static class DependencyInjection
 
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IAuthRepository, AuthRepository>();
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IPermissionService, PermissionService>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<PermissionAuthorizationHandler>();
         services.AddSingleton<ISqlConnectionFactory>(serviceProvider =>
         {
             var databaseOptions = serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value;

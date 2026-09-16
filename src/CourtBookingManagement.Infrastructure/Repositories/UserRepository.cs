@@ -3,6 +3,7 @@ using EfUser = CourtBookingManagement.Infrastructure.Persistence.Entities.User;
 using CourtBookingManagement.Domain.Users;
 using CourtBookingManagement.Infrastructure.Persistence.Mappings;
 using Microsoft.EntityFrameworkCore;
+using CourtBookingManagement.Infrastructure.Persistence;
 
 namespace CourtBookingManagement.Infrastructure.Repositories;
 

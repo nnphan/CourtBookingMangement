@@ -6,24 +6,36 @@ using FluentValidation;
 
 namespace CourtBookingManagement.Application.Users.Services;
 
-public sealed class UserService(
-    IUserRepository userRepository,
-    IUnitOfWork unitOfWork,
-    IDateTimeProvider dateTimeProvider,
-    IValidator<CreateUserRequestDto> createValidator,
-    IValidator<UpdateUserRequestDto> updateValidator) : IUserService
+public sealed class UserService : IUserService
 {
+    private readonly IUserRepository _userRepository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IDateTimeProvider _dateTimeProvider;
+    private readonly IValidator<CreateUserRequestDto> _validator;
+
+    public UserService(
+        IUserRepository userRepository,
+        IUnitOfWork unitOfWork,
+        IDateTimeProvider dateTimeProvider,
+        IValidator<CreateUserRequestDto> validator)
+    {
+        _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
+        _dateTimeProvider = dateTimeProvider;
+        _validator = validator;
+    }
+
     public async Task<Result<UserResponseDto>> CreateUserAsync(
         CreateUserRequestDto request,
         CancellationToken cancellationToken = default)
     {
-        var validationResult = await createValidator.ValidateAsync(request, cancellationToken);
+        var validationResult = await _validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
         {
             return Result.Failure<UserResponseDto>(CreateValidationError(validationResult));
         }
 
-        if (await userRepository.ExistsByEmailAsync(request.Email, cancellationToken: cancellationToken))
+        if (await _userRepository.ExistsByEmailAsync(request.Email, cancellationToken: cancellationToken))
         {
             return Result.Failure<UserResponseDto>(UserErrors.EmailAlreadyExists(request.Email));
         }
@@ -31,7 +43,7 @@ public sealed class UserService(
         var userResult = User.Create(
             request.Email,
             request.PasswordHash,
-            dateTimeProvider.UtcNow,
+            _dateTimeProvider.UtcNow,
             request.PhoneNumber,
             request.CreatedBy);
 
@@ -40,8 +52,8 @@ public sealed class UserService(
             return Result.Failure<UserResponseDto>(userResult.Error);
         }
 
-        await userRepository.AddAsync(userResult.Value, cancellationToken);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        await _userRepository.AddAsync(userResult.Value, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return ToResponse(userResult.Value);
     }
@@ -51,19 +63,19 @@ public sealed class UserService(
         UpdateUserRequestDto request,
         CancellationToken cancellationToken = default)
     {
-        var validationResult = await updateValidator.ValidateAsync(request, cancellationToken);
-        if (!validationResult.IsValid)
-        {
-            return Result.Failure<UserResponseDto>(CreateValidationError(validationResult));
-        }
+        //var validationResult = await validator.ValidateAsync(request, cancellationToken);
+        //if (!validationResult.IsValid)
+        //{
+        //    return Result.Failure<UserResponseDto>(CreateValidationError(validationResult));
+        //}
 
-        var user = await userRepository.GetByIdAsync(id, cancellationToken);
+        var user = await _userRepository.GetByIdAsync(id, cancellationToken);
         if (user is null)
         {
             return Result.Failure<UserResponseDto>(UserErrors.NotFound(id));
         }
 
-        if (await userRepository.ExistsByEmailAsync(request.Email, id, cancellationToken))
+        if (await _userRepository.ExistsByEmailAsync(request.Email, id, cancellationToken))
         {
             return Result.Failure<UserResponseDto>(UserErrors.EmailAlreadyExists(request.Email));
         }
@@ -71,7 +83,7 @@ public sealed class UserService(
         var updateResult = user.UpdateContactInformation(
             request.Email,
             request.PhoneNumber,
-            dateTimeProvider.UtcNow,
+            _dateTimeProvider.UtcNow,
             request.UpdatedBy);
 
         if (updateResult.IsFailure)
@@ -83,7 +95,7 @@ public sealed class UserService(
         {
             var passwordResult = user.ChangePassword(
                 request.PasswordHash,
-                dateTimeProvider.UtcNow,
+                _dateTimeProvider.UtcNow,
                 request.UpdatedBy);
 
             if (passwordResult.IsFailure)
@@ -92,8 +104,8 @@ public sealed class UserService(
             }
         }
 
-        await userRepository.UpdateAsync(user, cancellationToken);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        await _userRepository.UpdateAsync(user, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return ToResponse(user);
     }
@@ -103,15 +115,15 @@ public sealed class UserService(
         Guid? deletedBy = null,
         CancellationToken cancellationToken = default)
     {
-        var user = await userRepository.GetByIdAsync(id, cancellationToken);
+        var user = await _userRepository.GetByIdAsync(id, cancellationToken);
         if (user is null)
         {
             return Result.Failure(UserErrors.NotFound(id));
         }
 
-        user.Delete(dateTimeProvider.UtcNow, deletedBy);
-        await userRepository.UpdateAsync(user, cancellationToken);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        user.Delete(_dateTimeProvider.UtcNow, deletedBy);
+        await _userRepository.UpdateAsync(user, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }
@@ -120,7 +132,7 @@ public sealed class UserService(
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        var user = await userRepository.GetByIdAsync(id, cancellationToken);
+        var user = await _userRepository.GetByIdAsync(id, cancellationToken);
 
         return user is null
             ? Result.Failure<UserResponseDto>(UserErrors.NotFound(id))
@@ -130,7 +142,7 @@ public sealed class UserService(
     public async Task<Result<IReadOnlyList<UserResponseDto>>> GetAllUsersAsync(
         CancellationToken cancellationToken = default)
     {
-        var users = await userRepository.GetAllAsync(cancellationToken);
+        var users = await _userRepository.GetAllAsync(cancellationToken);
         return users.Select(ToResponse).ToList();
     }
 
@@ -152,39 +164,4 @@ public sealed class UserService(
         "Error.Validation",
         string.Join("; ", result.Errors.Select(error =>
             $"{error.PropertyName}: {error.ErrorMessage}")));
-}
-
-internal sealed class CreateUserRequestValidator : AbstractValidator<CreateUserRequestDto>
-{
-    public CreateUserRequestValidator()
-    {
-        RuleFor(request => request.Email)
-            .NotEmpty()
-            .MaximumLength(100);
-
-        RuleFor(request => request.PasswordHash)
-            .NotEmpty();
-
-        RuleFor(request => request.PhoneNumber)
-            .MaximumLength(20)
-            .When(request => request.PhoneNumber is not null);
-    }
-}
-
-internal sealed class UpdateUserRequestValidator : AbstractValidator<UpdateUserRequestDto>
-{
-    public UpdateUserRequestValidator()
-    {
-        RuleFor(request => request.Email)
-            .NotEmpty()
-            .MaximumLength(100);
-
-        RuleFor(request => request.PasswordHash)
-            .MaximumLength(500)
-            .When(request => request.PasswordHash is not null);
-
-        RuleFor(request => request.PhoneNumber)
-            .MaximumLength(20)
-            .When(request => request.PhoneNumber is not null);
-    }
 }
