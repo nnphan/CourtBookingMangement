@@ -71,6 +71,18 @@ public partial class User
     public virtual ICollection<Court> CourtUpdatedByNavigations { get; set; } = new List<Court>();
 
     [InverseProperty("CreatedByNavigation")]
+    public virtual ICollection<Customer> CustomerCreatedByNavigations { get; set; } = new List<Customer>();
+
+    [InverseProperty("DeletedByNavigation")]
+    public virtual ICollection<Customer> CustomerDeletedByNavigations { get; set; } = new List<Customer>();
+
+    [InverseProperty("UpdatedByNavigation")]
+    public virtual ICollection<Customer> CustomerUpdatedByNavigations { get; set; } = new List<Customer>();
+
+    [InverseProperty("User")]
+    public virtual Customer? CustomerUser { get; set; }
+
+    [InverseProperty("CreatedByNavigation")]
     public virtual ICollection<Owner> OwnerCreatedByNavigations { get; set; } = new List<Owner>();
 
     [InverseProperty("DeletedByNavigation")]
