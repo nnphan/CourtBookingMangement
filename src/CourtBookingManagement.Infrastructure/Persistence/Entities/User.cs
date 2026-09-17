@@ -52,6 +52,36 @@ public partial class User
     [Column("deleted_by")]
     public Guid? DeletedBy { get; set; }
 
+    [InverseProperty("CreatedByNavigation")]
+    public virtual ICollection<Branch> BranchCreatedByNavigations { get; set; } = new List<Branch>();
+
+    [InverseProperty("DeletedByNavigation")]
+    public virtual ICollection<Branch> BranchDeletedByNavigations { get; set; } = new List<Branch>();
+
+    [InverseProperty("UpdatedByNavigation")]
+    public virtual ICollection<Branch> BranchUpdatedByNavigations { get; set; } = new List<Branch>();
+
+    [InverseProperty("CreatedByNavigation")]
+    public virtual ICollection<Court> CourtCreatedByNavigations { get; set; } = new List<Court>();
+
+    [InverseProperty("DeletedByNavigation")]
+    public virtual ICollection<Court> CourtDeletedByNavigations { get; set; } = new List<Court>();
+
+    [InverseProperty("UpdatedByNavigation")]
+    public virtual ICollection<Court> CourtUpdatedByNavigations { get; set; } = new List<Court>();
+
+    [InverseProperty("CreatedByNavigation")]
+    public virtual ICollection<Owner> OwnerCreatedByNavigations { get; set; } = new List<Owner>();
+
+    [InverseProperty("DeletedByNavigation")]
+    public virtual ICollection<Owner> OwnerDeletedByNavigations { get; set; } = new List<Owner>();
+
+    [InverseProperty("UpdatedByNavigation")]
+    public virtual ICollection<Owner> OwnerUpdatedByNavigations { get; set; } = new List<Owner>();
+
+    [InverseProperty("User")]
+    public virtual Owner? OwnerUser { get; set; }
+
     [InverseProperty("User")]
     public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 

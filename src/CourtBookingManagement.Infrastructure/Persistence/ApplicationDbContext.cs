@@ -9,6 +9,17 @@ public partial class ApplicationDbContext(
     DbContextOptions<ApplicationDbContext> options,
     IDateTimeProvider dateTimeProvider) : DbContext(options), IUnitOfWork
 {
+    public virtual DbSet<Branch> Branches { get; set; }
+
+    public virtual DbSet<Court> Courts { get; set; }
+
+    public virtual DbSet<CourtImage> CourtImages { get; set; }
+
+    public virtual DbSet<CourtType> CourtTypes { get; set; }
+
+    public virtual DbSet<OperatingHour> OperatingHours { get; set; }
+
+    public virtual DbSet<Owner> Owners { get; set; }
 
     public virtual DbSet<Permission> Permissions { get; set; }
 
@@ -29,6 +40,113 @@ public partial class ApplicationDbContext(
         modelBuilder
             .HasPostgresExtension("pg_trgm")
             .HasPostgresExtension("pgcrypto");
+
+        modelBuilder.Entity<Branch>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("branches_pkey");
+
+            entity.HasIndex(e => e.Name, "ix_branches_name_trgm")
+                .HasMethod("gin")
+                .HasOperators(new[] { "gin_trgm_ops" });
+
+            entity.HasIndex(e => e.OwnerId, "ix_branches_owner").HasFilter("(deleted_at IS NULL)");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.BranchCreatedByNavigations).HasConstraintName("branches_created_by_fkey");
+
+            entity.HasOne(d => d.DeletedByNavigation).WithMany(p => p.BranchDeletedByNavigations).HasConstraintName("branches_deleted_by_fkey");
+
+            entity.HasOne(d => d.Owner).WithMany(p => p.Branches)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("branches_owner_id_fkey");
+
+            entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.BranchUpdatedByNavigations).HasConstraintName("branches_updated_by_fkey");
+        });
+
+        modelBuilder.Entity<Court>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("courts_pkey");
+
+            entity.HasIndex(e => new { e.BranchId, e.Status }, "ix_courts_branch_status").HasFilter("(deleted_at IS NULL)");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.Status).HasDefaultValueSql("'active'::character varying");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.Branch).WithMany(p => p.Courts)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("courts_branch_id_fkey");
+
+            entity.HasOne(d => d.CourtType).WithMany(p => p.Courts).HasConstraintName("courts_court_type_id_fkey");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.CourtCreatedByNavigations).HasConstraintName("courts_created_by_fkey");
+
+            entity.HasOne(d => d.DeletedByNavigation).WithMany(p => p.CourtDeletedByNavigations).HasConstraintName("courts_deleted_by_fkey");
+
+            entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.CourtUpdatedByNavigations).HasConstraintName("courts_updated_by_fkey");
+        });
+
+        modelBuilder.Entity<CourtImage>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("court_images_pkey");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.SortOrder).HasDefaultValue((short)0);
+
+            entity.HasOne(d => d.Court).WithMany(p => p.CourtImages).HasConstraintName("court_images_court_id_fkey");
+        });
+
+        modelBuilder.Entity<CourtType>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("court_types_pkey");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+        });
+
+        modelBuilder.Entity<OperatingHour>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("operating_hours_pkey");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
+            entity.Property(e => e.IsClosed).HasDefaultValue(false);
+
+            entity.HasOne(d => d.Branch).WithOne(p => p.OperatingHour)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("operating_hours_branch_id_fkey");
+        });
+
+        modelBuilder.Entity<Owner>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("owners_pkey");
+
+            entity.HasIndex(e => e.UserId, "ux_owners_user")
+                .IsUnique()
+                .HasFilter("(deleted_at IS NULL)");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.OwnerCreatedByNavigations).HasConstraintName("owners_created_by_fkey");
+
+            entity.HasOne(d => d.DeletedByNavigation).WithMany(p => p.OwnerDeletedByNavigations).HasConstraintName("owners_deleted_by_fkey");
+
+            entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.OwnerUpdatedByNavigations).HasConstraintName("owners_updated_by_fkey");
+
+            entity.HasOne(d => d.User).WithOne(p => p.OwnerUser)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("owners_user_id_fkey");
+        });
 
         modelBuilder.Entity<Permission>(entity =>
         {
