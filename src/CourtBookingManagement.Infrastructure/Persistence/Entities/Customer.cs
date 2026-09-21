@@ -12,7 +12,7 @@ public partial class Customer
 {
     [Key]
     [Column("id")]
-    public Guid Id { get; set; } 
+    public Guid Id { get; set; }
 
     [Column("user_id")]
     public Guid? UserId { get; set; }
@@ -58,6 +58,9 @@ public partial class Customer
 
     [Column("deleted_by")]
     public Guid? DeletedBy { get; set; }
+
+    [InverseProperty("Customer")]
+    public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
     [ForeignKey("CreatedBy")]
     [InverseProperty("CustomerCreatedByNavigations")]

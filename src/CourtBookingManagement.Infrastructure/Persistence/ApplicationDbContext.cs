@@ -9,6 +9,9 @@ public partial class ApplicationDbContext(
     DbContextOptions<ApplicationDbContext> options,
     IDateTimeProvider dateTimeProvider) : DbContext(options), IUnitOfWork
 {
+    public virtual DbSet<Booking> Bookings { get; set; }
+
+    public virtual DbSet<BookingDetail> BookingDetails { get; set; }
     public virtual DbSet<Branch> Branches { get; set; }
 
     public virtual DbSet<Court> Courts { get; set; }
@@ -40,6 +43,44 @@ public partial class ApplicationDbContext(
         modelBuilder
             .HasPostgresExtension("pg_trgm")
             .HasPostgresExtension("pgcrypto");
+
+        modelBuilder.Entity<Booking>(entity =>
+        {
+            entity.HasKey(e => new { e.Id, e.CreatedAt }).HasName("bookings_pkey");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.BookingType).HasDefaultValueSql("'instant'::character varying");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.Status).HasDefaultValueSql("'pending'::character varying");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.Branch).WithMany(p => p.Bookings)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("bookings_branch_id_fkey");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.BookingCreatedByNavigations).HasConstraintName("bookings_created_by_fkey");
+
+            entity.HasOne(d => d.Customer).WithMany(p => p.Bookings)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("bookings_customer_id_fkey");
+
+            entity.HasOne(d => d.DeletedByNavigation).WithMany(p => p.BookingDeletedByNavigations).HasConstraintName("bookings_deleted_by_fkey");
+
+            entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.BookingUpdatedByNavigations).HasConstraintName("bookings_updated_by_fkey");
+        });
+
+        modelBuilder.Entity<BookingDetail>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("booking_details_pkey");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
+            entity.Property(e => e.Status).HasDefaultValueSql("'reserved'::character varying");
+
+            entity.HasOne(d => d.Court).WithMany(p => p.BookingDetails)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("booking_details_court_id_fkey");
+        });
 
         modelBuilder.Entity<Branch>(entity =>
         {

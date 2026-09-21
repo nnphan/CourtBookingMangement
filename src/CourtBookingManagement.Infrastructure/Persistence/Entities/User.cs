@@ -53,6 +53,15 @@ public partial class User
     public Guid? DeletedBy { get; set; }
 
     [InverseProperty("CreatedByNavigation")]
+    public virtual ICollection<Booking> BookingCreatedByNavigations { get; set; } = new List<Booking>();
+
+    [InverseProperty("DeletedByNavigation")]
+    public virtual ICollection<Booking> BookingDeletedByNavigations { get; set; } = new List<Booking>();
+
+    [InverseProperty("UpdatedByNavigation")]
+    public virtual ICollection<Booking> BookingUpdatedByNavigations { get; set; } = new List<Booking>();
+
+    [InverseProperty("CreatedByNavigation")]
     public virtual ICollection<Branch> BranchCreatedByNavigations { get; set; } = new List<Branch>();
 
     [InverseProperty("DeletedByNavigation")]

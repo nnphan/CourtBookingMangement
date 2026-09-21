@@ -58,6 +58,9 @@ public partial class Branch
     public Guid? DeletedBy { get; set; }
 
     [InverseProperty("Branch")]
+    public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+
+    [InverseProperty("Branch")]
     public virtual ICollection<Court> Courts { get; set; } = new List<Court>();
 
     [ForeignKey("CreatedBy")]

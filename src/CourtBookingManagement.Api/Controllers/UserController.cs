@@ -1,13 +1,13 @@
 using CourtBookingManagement.Application.Users.DTOs;
 using CourtBookingManagement.Application.Users.Services;
-using CourtBookingManagement.Domain.Abstractions;
+using CourtBookingManagement.Api.Common.Responses;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CourtBookingManagement.Api.Controllers;
 
 [ApiController]
 [Route("api/users")]
-public sealed class UserController(IUserService userService) : ControllerBase
+public sealed class UserController(IUserService userService) : ApiControllerBase
 {
     [HttpPost]
     public async Task<IActionResult> Create(
@@ -16,17 +16,15 @@ public sealed class UserController(IUserService userService) : ControllerBase
     {
         var result = await userService.CreateUserAsync(request, cancellationToken);
         return result.IsSuccess
-            ? CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value)
-            : ToErrorResponse(result.Error);
+            ? Created(result.Value, nameof(GetById), new { id = result.Value.Id })
+            : Error(result.Error);
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         var result = await userService.GetAllUsersAsync(cancellationToken);
-        return result.IsSuccess
-            ? Ok(result.Value)
-            : ToErrorResponse(result.Error);
+        return FromResult(result);
     }
 
     [HttpGet("{id:guid}")]
@@ -35,9 +33,7 @@ public sealed class UserController(IUserService userService) : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await userService.GetUserByIdAsync(id, cancellationToken);
-        return result.IsSuccess
-            ? Ok(result.Value)
-            : ToErrorResponse(result.Error);
+        return FromResult(result);
     }
 
     [HttpPut("{id:guid}")]
@@ -47,9 +43,7 @@ public sealed class UserController(IUserService userService) : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await userService.UpdateUserAsync(id, request, cancellationToken);
-        return result.IsSuccess
-            ? Ok(result.Value)
-            : ToErrorResponse(result.Error);
+        return FromResult(result);
     }
 
     [HttpDelete("{id:guid}")]
@@ -58,24 +52,6 @@ public sealed class UserController(IUserService userService) : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await userService.DeleteUserAsync(id, cancellationToken: cancellationToken);
-        return result.IsSuccess
-            ? NoContent()
-            : ToErrorResponse(result.Error);
-    }
-
-    private ObjectResult ToErrorResponse(Error error)
-    {
-        var statusCode = error.Code switch
-        {
-            "User.NotFound" => StatusCodes.Status404NotFound,
-            "User.EmailAlreadyExists" => StatusCodes.Status409Conflict,
-            "Error.Validation" => StatusCodes.Status400BadRequest,
-            _ => StatusCodes.Status400BadRequest
-        };
-
-        return Problem(
-            statusCode: statusCode,
-            title: error.Code,
-            detail: error.Description);
+        return FromResult(result);
     }
 }

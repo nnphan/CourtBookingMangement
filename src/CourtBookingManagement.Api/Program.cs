@@ -1,11 +1,14 @@
 using System.Text;
 using CourtBookingManagement.Application;
 using CourtBookingManagement.Application.Options;
+using CourtBookingManagement.Api.Common.Middleware;
+using CourtBookingManagement.Api.Common.Responses;
 using CourtBookingManagement.Infrastructure;
 using CourtBookingManagement.Infrastructure.Auth;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 
@@ -14,7 +17,32 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration));
 
-builder.Services.AddControllers();
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Where(entry => entry.Value?.Errors.Count > 0)
+                .SelectMany(entry => entry.Value!.Errors.Select(error =>
+                    new ValidationError(
+                        entry.Key,
+                        string.IsNullOrWhiteSpace(error.ErrorMessage)
+                            ? "The supplied value is invalid."
+                            : error.ErrorMessage)))
+                .ToArray();
+
+            return new BadRequestObjectResult(new ApiErrorResponse(
+                false,
+                "COMMON_001",
+                "One or more validation errors occurred.",
+                context.HttpContext.TraceIdentifier,
+                DateTimeOffset.UtcNow,
+                errors));
+        };
+    });
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(options =>
@@ -85,6 +113,8 @@ if (!string.IsNullOrWhiteSpace(databaseConnectionString))
 }
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {

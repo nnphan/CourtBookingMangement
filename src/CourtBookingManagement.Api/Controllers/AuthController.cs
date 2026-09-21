@@ -1,6 +1,6 @@
 using CourtBookingManagement.Application.Auth.DTOs;
 using CourtBookingManagement.Application.Auth.Interfaces;
-using CourtBookingManagement.Domain.Abstractions;
+using CourtBookingManagement.Api.Common.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,27 +8,27 @@ namespace CourtBookingManagement.Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public sealed class AuthController(IAuthService authService, ICurrentUserService currentUserService) : ControllerBase
+public sealed class AuthController(IAuthService authService, ICurrentUserService currentUserService) : ApiControllerBase
 {
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
     {
         var result = await authService.RegisterAsync(request, cancellationToken);
-        return result.IsSuccess ? Ok(result.Value) : ToErrorResponse(result.Error);
+        return FromResult(result);
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
         var result = await authService.LoginAsync(request, cancellationToken);
-        return result.IsSuccess ? Ok(result.Value) : ToErrorResponse(result.Error);
+        return FromResult(result);
     }
 
     [HttpPost("refresh-token")]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request, CancellationToken cancellationToken)
     {
         var result = await authService.RefreshTokenAsync(request, cancellationToken);
-        return result.IsSuccess ? Ok(result.Value) : ToErrorResponse(result.Error);
+        return FromResult(result);
     }
 
     [Authorize]
@@ -36,7 +36,7 @@ public sealed class AuthController(IAuthService authService, ICurrentUserService
     public async Task<IActionResult> Logout([FromBody] RefreshTokenRequest request, CancellationToken cancellationToken)
     {
         var result = await authService.LogoutAsync(request.RefreshToken, currentUserService.UserId, cancellationToken);
-        return result.IsSuccess ? Ok() : ToErrorResponse(result.Error);
+        return FromResult(result);
     }
 
     [Authorize]
@@ -46,11 +46,11 @@ public sealed class AuthController(IAuthService authService, ICurrentUserService
         var userId = currentUserService.UserId ?? Guid.Empty;
         if (userId == Guid.Empty)
         {
-            return Unauthorized();
+            return Error(new Domain.Abstractions.Error("Auth.Unauthorized", "Authentication is required."));
         }
 
         var result = await authService.LogoutAllDevicesAsync(userId, cancellationToken);
-        return result.IsSuccess ? Ok() : ToErrorResponse(result.Error);
+        return FromResult(result);
     }
 
     [Authorize]
@@ -60,30 +60,10 @@ public sealed class AuthController(IAuthService authService, ICurrentUserService
         var userId = currentUserService.UserId;
         if (userId is null)
         {
-            return Unauthorized();
+            return Error(new Domain.Abstractions.Error("Auth.Unauthorized", "Authentication is required."));
         }
 
         var result = await authService.GetCurrentUserAsync(userId.Value, cancellationToken);
-        return result.IsSuccess ? Ok(result.Value) : ToErrorResponse(result.Error);
-    }
-
-    private ObjectResult ToErrorResponse(Error error)
-    {
-        var statusCode = error.Code switch
-        {
-            "Auth.InvalidRequest" => StatusCodes.Status400BadRequest,
-            "Auth.InvalidCredentials" => StatusCodes.Status401Unauthorized,
-            "Auth.UserDisabled" => StatusCodes.Status403Forbidden,
-            "Auth.EmailNotVerified" => StatusCodes.Status403Forbidden,
-            "Auth.RefreshTokenInvalid" => StatusCodes.Status401Unauthorized,
-            "Auth.RefreshTokenRevoked" => StatusCodes.Status401Unauthorized,
-            "Auth.RefreshTokenExpired" => StatusCodes.Status401Unauthorized,
-            "Auth.Unauthorized" => StatusCodes.Status403Forbidden,
-            "User.NotFound" => StatusCodes.Status404NotFound,
-            "User.EmailAlreadyExists" => StatusCodes.Status409Conflict,
-            _ => StatusCodes.Status400BadRequest
-        };
-
-        return Problem(statusCode: statusCode, title: error.Code, detail: error.Description);
+        return FromResult(result);
     }
 }
