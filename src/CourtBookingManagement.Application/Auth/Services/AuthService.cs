@@ -31,22 +31,23 @@ public sealed class AuthService : IAuthService
         _authRepository = authRepository;
     }
 
-    public async Task<Result<AuthResponse>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result<RegisterResponse>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
         {
-            return Result.Failure<AuthResponse>(new Error("Auth.InvalidRequest", "Email and password are required."));
+            return Result.Failure<RegisterResponse>(new Error("Auth.InvalidRequest", "Email and password are required."));
         }
 
         var normalizedEmail = request.Email.Trim();
         if (await _userRepository.ExistsByEmailAsync(normalizedEmail, cancellationToken: cancellationToken))
         {
-            return Result.Failure<AuthResponse>(UserErrors.EmailAlreadyExists(normalizedEmail));
+            return Result.Failure<RegisterResponse>(UserErrors.EmailAlreadyExists(normalizedEmail));
         }
 
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
         var userResult = User.Create(
             normalizedEmail,
+            request.FullName,
             passwordHash,
             _dateTimeProvider.UtcNow,
             request.PhoneNumber,
@@ -54,13 +55,26 @@ public sealed class AuthService : IAuthService
 
         if (userResult.IsFailure)
         {
-            return Result.Failure<AuthResponse>(userResult.Error);
+            return Result.Failure<RegisterResponse>(userResult.Error);
         }
 
         await _userRepository.AddAsync(userResult.Value, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await CreateAuthResponseAsync(userResult.Value, cancellationToken);
+        var result = Result.Success(new RegisterResponse
+        {
+            User = new CurrentUserResponse
+            {
+                Id = userResult.Value.Id,
+                Email = userResult.Value.Email,
+                FullName = userResult.Value.FullName,
+                PhoneNumber = userResult.Value.PhoneNumber,
+                IsActive = userResult.Value.IsActive,
+                IsEmailVerified = userResult.Value.IsEmailVerified
+            }
+        });
+
+        return result;
     }
 
     public async Task<Result<AuthResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
@@ -86,10 +100,10 @@ public sealed class AuthService : IAuthService
             return Result.Failure<AuthResponse>(new Error("Auth.InvalidCredentials", "Invalid email or password."));
         }
 
-        if (!user.IsEmailVerified)
-        {
-            return Result.Failure<AuthResponse>(new Error("Auth.EmailNotVerified", "Email is not verified."));
-        }
+        //if (!user.IsEmailVerified)
+        //{
+        //    return Result.Failure<AuthResponse>(new Error("Auth.EmailNotVerified", "Email is not verified."));
+        //}
 
         user.RecordLogin(_dateTimeProvider.UtcNow);
         await _userRepository.UpdateAsync(user, cancellationToken);
@@ -264,11 +278,28 @@ public sealed class AuthService : IAuthService
             {
                 Id = user.Id,
                 Email = user.Email,
+                FullName = user.FullName,
                 PhoneNumber = user.PhoneNumber,
                 IsActive = user.IsActive,
                 IsEmailVerified = user.IsEmailVerified,
                 Roles = roles,
                 Permissions = permissions
+            }
+        });
+    }
+
+    private async Task<Result<RegisterResponse>> CreateRegisterResponseAsync(User user, CancellationToken cancellationToken)
+    {
+        return Result.Success(new RegisterResponse
+        {
+            User = new CurrentUserResponse
+            {
+                Id = user.Id,
+                Email = user.Email,
+                FullName = user.FullName,
+                PhoneNumber = user.PhoneNumber,
+                IsActive = user.IsActive,
+                IsEmailVerified = user.IsEmailVerified
             }
         });
     }

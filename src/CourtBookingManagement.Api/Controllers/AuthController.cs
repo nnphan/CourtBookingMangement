@@ -17,7 +17,7 @@ public sealed class AuthController(IAuthService authService, ICurrentUserService
         return FromResult(result);
     }
 
-    [HttpPost("login")]
+    [HttpPost("login/email")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
         var result = await authService.LoginAsync(request, cancellationToken);

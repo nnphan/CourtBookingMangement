@@ -10,6 +10,7 @@ public static class UserMappings
         var result = DomainUser.Rehydrate(
             entity.Id,
             entity.Email,
+            entity.FullName,
             entity.PhoneNumber,
             entity.PasswordHash,
             entity.IsActive,
@@ -39,6 +40,7 @@ public static class UserMappings
     {
         entity.Id = domain.Id;
         entity.Email = domain.Email;
+        entity.FullName = domain.FullName;
         entity.PhoneNumber = domain.PhoneNumber;
         entity.PasswordHash = domain.PasswordHash;
         entity.IsActive = domain.IsActive;

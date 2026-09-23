@@ -2,6 +2,7 @@ using System.Security.Claims;
 using CourtBookingManagement.Application.Auth.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 
 namespace CourtBookingManagement.Infrastructure.Auth;
 
@@ -46,12 +47,38 @@ public sealed class PermissionAuthorizationHandler : AuthorizationHandler<Permis
     }
 }
 
+public sealed class PermissionAuthorizationPolicyProvider : DefaultAuthorizationPolicyProvider
+{
+    public const string PolicyPrefix = "Permission:";
+
+    public PermissionAuthorizationPolicyProvider(IOptions<AuthorizationOptions> options)
+        : base(options)
+    {
+    }
+
+    public override Task<AuthorizationPolicy?> GetPolicyAsync(string policyName)
+    {
+        if (policyName.StartsWith(PolicyPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            var permission = policyName[PolicyPrefix.Length..];
+            var policy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .AddRequirements(new PermissionRequirement(permission))
+                .Build();
+
+            return Task.FromResult<AuthorizationPolicy?>(policy);
+        }
+
+        return base.GetPolicyAsync(policyName);
+    }
+}
+
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
 public sealed class PermissionAttribute : AuthorizeAttribute
 {
     public PermissionAttribute(string permission)
     {
-        Policy = "Permission";
+        Policy = $"{PermissionAuthorizationPolicyProvider.PolicyPrefix}{permission}";
         Permission = permission;
     }
 

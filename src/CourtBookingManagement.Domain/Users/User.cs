@@ -8,6 +8,7 @@ public sealed class User : Entity
     private User(
         Guid id,
         string email,
+        string fullName,
         string? phoneNumber,
         string passwordHash,
         bool isActive,
@@ -22,6 +23,7 @@ public sealed class User : Entity
         : base(id)
     {
         Email = email;
+        FullName = fullName;
         PhoneNumber = phoneNumber;
         PasswordHash = passwordHash;
         IsActive = isActive;
@@ -36,6 +38,8 @@ public sealed class User : Entity
     }
 
     public string Email { get; private set; } = null!;
+
+    public string FullName { get; private set; } = null!;
 
     public string? PhoneNumber { get; private set; }
 
@@ -61,6 +65,7 @@ public sealed class User : Entity
 
     public static Result<User> Create(
         string email,
+        string? fullName,
         string passwordHash,
         DateTime createdAt,
         string? phoneNumber = null,
@@ -75,6 +80,7 @@ public sealed class User : Entity
         var user = new User(
             Guid.NewGuid(),
             email.Trim(),
+            fullName,
             phoneNumber,
             passwordHash,
             true,
@@ -85,9 +91,7 @@ public sealed class User : Entity
             createdAt,
             createdBy,
             null,
-            null);
-
-        user.RaiseDomainEvent(new UserCreatedDomainEvent(user.Id));
+            null); user.RaiseDomainEvent(new UserCreatedDomainEvent(user.Id));
 
         return user;
     }
@@ -95,6 +99,7 @@ public sealed class User : Entity
     public static Result<User> Rehydrate(
         Guid id,
         string email,
+        string fullName,
         string? phoneNumber,
         string passwordHash,
         bool isActive,
@@ -116,6 +121,7 @@ public sealed class User : Entity
         return new User(
             id,
             email,
+            fullName,
             phoneNumber,
             passwordHash,
             isActive,

@@ -1,6 +1,7 @@
 using CourtBookingManagement.Application.Users.DTOs;
 using CourtBookingManagement.Application.Users.Services;
 using CourtBookingManagement.Api.Common.Responses;
+using CourtBookingManagement.Infrastructure.Auth;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CourtBookingManagement.Api.Controllers;
@@ -10,6 +11,7 @@ namespace CourtBookingManagement.Api.Controllers;
 public sealed class UserController(IUserService userService) : ApiControllerBase
 {
     [HttpPost]
+    [Permission("user.create")]
     public async Task<IActionResult> Create(
         CreateUserRequestDto request,
         CancellationToken cancellationToken)
@@ -21,6 +23,7 @@ public sealed class UserController(IUserService userService) : ApiControllerBase
     }
 
     [HttpGet]
+    [Permission("user.view")]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         var result = await userService.GetAllUsersAsync(cancellationToken);
@@ -28,6 +31,7 @@ public sealed class UserController(IUserService userService) : ApiControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [Permission("user.view")]
     public async Task<IActionResult> GetById(
         Guid id,
         CancellationToken cancellationToken)
@@ -37,6 +41,7 @@ public sealed class UserController(IUserService userService) : ApiControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Permission("user.update")]
     public async Task<IActionResult> Update(
         Guid id,
         UpdateUserRequestDto request,
@@ -47,6 +52,7 @@ public sealed class UserController(IUserService userService) : ApiControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Permission("user.delete")]
     public async Task<IActionResult> Delete(
         Guid id,
         CancellationToken cancellationToken)

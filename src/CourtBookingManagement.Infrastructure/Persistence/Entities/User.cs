@@ -18,6 +18,10 @@ public partial class User
     [StringLength(100)]
     public string Email { get; set; } = null!;
 
+    [Column("full_name")]
+    [StringLength(255)]
+    public string? FullName { get; set; }
+
     [Column("phone_number")]
     [StringLength(20)]
     public string? PhoneNumber { get; set; }

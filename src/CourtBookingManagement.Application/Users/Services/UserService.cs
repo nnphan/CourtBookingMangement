@@ -42,6 +42,7 @@ public sealed class UserService : IUserService
 
         var userResult = User.Create(
             request.Email,
+            request.FullName,
             request.PasswordHash,
             _dateTimeProvider.UtcNow,
             request.PhoneNumber,
