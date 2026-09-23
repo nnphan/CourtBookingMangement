@@ -122,6 +122,12 @@ public partial class User
     [InverseProperty("AssignedByNavigation")]
     public virtual ICollection<UserRole> UserRoleAssignedByNavigations { get; set; } = new List<UserRole>();
 
+    [InverseProperty("CreatedByNavigation")]
+    public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
+
+    [InverseProperty("ProcessedByNavigation")]
+    public virtual ICollection<Refund> Refunds { get; set; } = new List<Refund>();
+
     [InverseProperty("User")]
     public virtual ICollection<UserRole> UserRoleUsers { get; set; } = new List<UserRole>();
 

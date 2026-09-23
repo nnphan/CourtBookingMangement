@@ -35,6 +35,20 @@ public partial class ApplicationDbContext(
     public virtual DbSet<UserRole> UserRoles { get; set; }
 
     public virtual DbSet<UserSession> UserSessions { get; set; }
+
+    public virtual DbSet<Invoice> Invoices { get; set; }
+
+    public virtual DbSet<InvoiceItem> InvoiceItems { get; set; }
+
+    public virtual DbSet<Payment> Payments { get; set; }
+
+    public virtual DbSet<PaymentMethod> PaymentMethods { get; set; }
+
+    public virtual DbSet<Refund> Refunds { get; set; }
+
+    public virtual DbSet<Transaction> Transactions { get; set; }
+
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext1).Assembly);
@@ -288,6 +302,72 @@ public partial class ApplicationDbContext(
             entity.Property(e => e.StartedAt).HasDefaultValueSql("now()");
 
             entity.HasOne(d => d.User).WithMany(p => p.UserSessions).HasConstraintName("user_sessions_user_id_fkey");
+        });
+
+        modelBuilder.Entity<Invoice>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("invoices_pkey");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
+            entity.Property(e => e.IssuedAt).HasDefaultValueSql("now()");
+        });
+
+        modelBuilder.Entity<InvoiceItem>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("invoice_items_pkey");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
+            entity.Property(e => e.Quantity).HasDefaultValueSql("1");
+
+            entity.HasOne(d => d.Invoice).WithMany(p => p.InvoiceItems).HasConstraintName("invoice_items_invoice_id_fkey");
+        });
+
+        modelBuilder.Entity<Payment>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("payments_pkey");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.Status).HasDefaultValueSql("'pending'::character varying");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.Payments).HasConstraintName("payments_created_by_fkey");
+
+            entity.HasOne(d => d.PaymentMethod).WithMany(p => p.Payments)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("payments_payment_method_id_fkey");
+        });
+
+        modelBuilder.Entity<PaymentMethod>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("payment_methods_pkey");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+        });
+
+        modelBuilder.Entity<Refund>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("refunds_pkey");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
+            entity.Property(e => e.RequestedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.Status).HasDefaultValueSql("'pending'::character varying");
+
+            entity.HasOne(d => d.ProcessedByNavigation).WithMany(p => p.Refunds).HasConstraintName("refunds_processed_by_fkey");
+        });
+
+        modelBuilder.Entity<Transaction>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("transactions_pkey");
+
+            entity.HasIndex(e => e.GatewayReference, "ux_transactions_gateway_ref")
+                .IsUnique()
+                .HasFilter("(gateway_reference IS NOT NULL)");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.Status).HasDefaultValueSql("'pending'::character varying");
         });
 
         OnModelCreatingPartial(modelBuilder);
