@@ -1,10 +1,10 @@
-using System.Text;
-using CourtBookingManagement.Application;
-using CourtBookingManagement.Application.Options;
 using CourtBookingManagement.Api.Common.Middleware;
 using CourtBookingManagement.Api.Common.Responses;
+using CourtBookingManagement.Application;
+using CourtBookingManagement.Application.Options;
 using CourtBookingManagement.Infrastructure;
 using CourtBookingManagement.Infrastructure.Auth;
+using Dapper;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -12,9 +12,12 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure Dapper
+DefaultTypeMap.MatchNamesWithUnderscores = true;
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration));
 

@@ -76,6 +76,9 @@ public partial class Booking
     [InverseProperty("Bookings")]
     public virtual Branch Branch { get; set; } = null!;
 
+    [InverseProperty("Booking")]
+    public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();
+
     [ForeignKey("CreatedBy")]
     [InverseProperty("BookingCreatedByNavigations")]
     public virtual User? CreatedByNavigation { get; set; }

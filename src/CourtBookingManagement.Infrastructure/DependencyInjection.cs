@@ -1,6 +1,7 @@
 using CourtBookingManagement.Application.Abstractions.Clock;
 using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.Auth.Interfaces;
+using CourtBookingManagement.Application.CourtStatus.Interfaces;
 using CourtBookingManagement.Application.Options;
 using CourtBookingManagement.Domain.Abstractions;
 using CourtBookingManagement.Domain.Users;
@@ -8,7 +9,9 @@ using CourtBookingManagement.Infrastructure.Auth;
 using CourtBookingManagement.Infrastructure.Clock;
 using CourtBookingManagement.Infrastructure.Data;
 using CourtBookingManagement.Infrastructure.Persistence;
+using CourtBookingManagement.Infrastructure.Persistence.DapperHandlers;
 using CourtBookingManagement.Infrastructure.Repositories;
+using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -58,9 +61,14 @@ public static class DependencyInjection
                 .UseSnakeCaseNamingConvention();
         }, poolSize: 128);
 
+        // Register Dapper Type Handlers here so API doesn't need to know about Dapper
+        SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
+        SqlMapper.AddTypeHandler(new TimeOnlyTypeHandler());
+
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IAuthRepository, AuthRepository>();
+        services.AddScoped<ICourtStatusRepository, CourtStatusRepository>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();

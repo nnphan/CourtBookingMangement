@@ -38,6 +38,10 @@ public partial class BookingDetail
     [StringLength(20)]
     public string Status { get; set; } = null!;
 
+    [ForeignKey("BookingId")]
+    [InverseProperty("BookingDetails")]
+    public virtual Booking Booking { get; set; } = null!;
+
     [Column("price_charged")]
     [Precision(10, 2)]
     public decimal PriceCharged { get; set; }
