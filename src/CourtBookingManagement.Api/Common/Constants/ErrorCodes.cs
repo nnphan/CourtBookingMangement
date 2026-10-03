@@ -8,6 +8,7 @@ public static class ErrorCodes
     public const string Forbidden = "AUTH_002";
     public const string NotFound = "COMMON_003";
     public const string Conflict = "COMMON_004";
+    public const string Database = "DATABASE_001";
     public const string Unexpected = "COMMON_500";
 
     public const string InvalidCredentials = "AUTH_001";
