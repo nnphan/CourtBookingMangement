@@ -12,6 +12,10 @@ public static class ErrorStatusMapper
         "User.NotFound" => StatusCodes.Status404NotFound,
         "User.EmailAlreadyExists" => StatusCodes.Status409Conflict,
         "Error.Validation" => StatusCodes.Status400BadRequest,
+        "CourtBooking.NotFound" => StatusCodes.Status404NotFound,
+        "CourtBooking.Conflict" => StatusCodes.Status409Conflict,
+        "CourtBooking.Blocked" => StatusCodes.Status400BadRequest,
+        "CourtBooking.Invalid" => StatusCodes.Status400BadRequest,
         "Error.Exception" => StatusCodes.Status500InternalServerError,
         _ => StatusCodes.Status400BadRequest
     };

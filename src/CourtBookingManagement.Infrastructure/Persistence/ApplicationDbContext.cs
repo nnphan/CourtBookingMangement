@@ -12,6 +12,7 @@ public partial class ApplicationDbContext(
     public virtual DbSet<Booking> Bookings { get; set; }
 
     public virtual DbSet<BookingDetail> BookingDetails { get; set; }
+
     public virtual DbSet<Branch> Branches { get; set; }
 
     public virtual DbSet<Court> Courts { get; set; }
@@ -40,6 +41,8 @@ public partial class ApplicationDbContext(
 
     public virtual DbSet<InvoiceItem> InvoiceItems { get; set; }
 
+    public virtual DbSet<Customer> Customers { get; set; }
+
     public virtual DbSet<Payment> Payments { get; set; }
 
     public virtual DbSet<PaymentMethod> PaymentMethods { get; set; }
@@ -60,7 +63,7 @@ public partial class ApplicationDbContext(
 
         modelBuilder.Entity<Booking>(entity =>
         {
-            entity.HasKey(e => new { e.Id, e.CreatedAt }).HasName("bookings_pkey");
+            entity.HasKey(e => new { e.Id }).HasName("bookings_pkey");
 
             entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
@@ -320,6 +323,36 @@ public partial class ApplicationDbContext(
             entity.Property(e => e.Quantity).HasDefaultValueSql("1");
 
             entity.HasOne(d => d.Invoice).WithMany(p => p.InvoiceItems).HasConstraintName("invoice_items_invoice_id_fkey");
+        });
+
+        modelBuilder.Entity<Customer>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("customers_pkey");
+
+            entity.HasIndex(e => e.FullName, "ix_customers_name_trgm")
+                .HasMethod("gin")
+                .HasOperators(new[] { "gin_trgm_ops" });
+
+            entity.HasIndex(e => e.UserId, "ux_customers_user")
+                .IsUnique()
+                .HasFilter("((deleted_at IS NULL) AND (user_id IS NOT NULL))");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.IsGuest).HasDefaultValue(false);
+            entity.Property(e => e.LoyaltyPointsBalance).HasDefaultValue(0);
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.CustomerCreatedByNavigations).HasConstraintName("customers_created_by_fkey");
+
+            entity.HasOne(d => d.DeletedByNavigation).WithMany(p => p.CustomerDeletedByNavigations).HasConstraintName("customers_deleted_by_fkey");
+
+            entity.HasOne(d => d.MembershipLevel).WithMany(p => p.Customers).HasConstraintName("customers_membership_level_id_fkey");
+
+            entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.CustomerUpdatedByNavigations).HasConstraintName("customers_updated_by_fkey");
+
+            entity.HasOne(d => d.User).WithOne(p => p.CustomerUser).HasConstraintName("customers_user_id_fkey");
         });
 
         modelBuilder.Entity<Payment>(entity =>

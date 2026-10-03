@@ -28,35 +28,33 @@ public sealed class CourtStatusRepository(ApplicationDbContext db, ISqlConnectio
 
         var first = rows[0];
         var courts = rows
-            .Where(x => x.CourtId.HasValue)
-            .GroupBy(x => x.CourtId!.Value)
+            .GroupBy(x => x.CourtId)
             .Select(group =>
             {
                 var row = group.First();
-                return new CourtDto(row.CourtId!.Value, row.CourtNumber!, row.CourtName ?? row.CourtNumber!, row.CourtStatus!);
+                return new CourtDto(row.CourtId, row.CourtNumber!, row.CourtName ?? row.CourtNumber!, row.CourtStatus!);
             })
             .ToList();
 
         var scheduleItems = rows
-            .Where(x => x.ItemId.HasValue && x.ItemCourtId.HasValue)
+            .Where(x => x.BookingId != null)
             .Select(x => new ScheduleItemDto(
-                x.ItemId!.Value,
-                Enum.Parse<ScheduleItemType>(x.ItemType!, ignoreCase: true),
-                x.ItemCourtId!.Value,
-                x.ItemBookingtId!.Value,
-                x.ItemStartTime!.Value,
-                x.ItemEndTime!.Value,
+                x.BookingId!.Value,
+                x.CourtId,
+                x.StartTime!.Value,
+                x.EndTime!.Value,
+                x.BookingDate!.Value,
                 x.BookingType,
                 x.BookingStatus,
                 x.PaymentStatus,
                 x.CustomerName,
                 x.PhoneNumber,
-                x.ItemTitle!,
-                x.ItemColor!))
+                x.Title!,
+                x.Color!))
             .OrderBy(x => x.StartTime)
             .ToList();
 
-        return new(first.BranchId, first.BranchName!, first.BoardDate, first.OpenTime, first.CloseTime, courts, scheduleItems);
+        return new CourtStatusResponse(first.BranchId, first.BranchName!, date, first.OpenTime, first.CloseTime, courts, scheduleItems);
     }
 
     public async Task<BookingDetailResponse?> GetBookingAsync(Guid id, CancellationToken ct) =>
@@ -70,7 +68,6 @@ public sealed class CourtStatusRepository(ApplicationDbContext db, ISqlConnectio
     public Task<bool> CourtExistsAsync(Guid branchId, Guid courtId, CancellationToken ct) => db.Courts.AnyAsync(x => x.Id == courtId && x.BranchId == branchId && x.IsActive && x.DeletedAt == null, ct);
     public Task<bool> CustomerExistsAsync(Guid id, CancellationToken ct) => db.Customers.AnyAsync(x => x.Id == id && x.IsActive && x.DeletedAt == null, ct);
     public Task<bool> HasOverlappingBookingAsync(Guid courtId, DateOnly date, TimeOnly start, TimeOnly end, Guid? exclude, CancellationToken ct) => db.BookingDetails.AnyAsync(x => x.CourtId == courtId && x.BookingDate == date && x.Booking.IsActive && x.Booking.Status != "cancelled" && (exclude == null || x.BookingId != exclude) && x.StartTime < end && start < x.EndTime, ct);
-    public Task<bool> HasOverlappingBlockAsync(Guid courtId, DateOnly date, TimeOnly start, TimeOnly end, CancellationToken ct) => db.CourtBlocks.AnyAsync(x => x.CourtId == courtId && x.BlockDate == date && x.IsActive && x.StartTime < end && start < x.EndTime, ct);
     public async Task<bool> IsWithinOperatingHoursAsync(Guid branchId, DateOnly date, TimeOnly start, TimeOnly end, CancellationToken ct) { var h = await db.OperatingHours.AsNoTracking().SingleOrDefaultAsync(x => x.BranchId == branchId, ct); return h != null && !h.IsClosed && start >= h.OpenTime && end <= h.CloseTime; }
 
     public async Task<Guid> CreateBookingAsync(Guid branchId, Guid courtId, Guid customerId, DateOnly date, TimeOnly start, TimeOnly end, string type, string? note, CancellationToken ct)
@@ -80,29 +77,44 @@ public sealed class CourtStatusRepository(ApplicationDbContext db, ISqlConnectio
 
     private static string BookingColor(string type) => type.ToUpperInvariant() switch { "FIXED" => "#35A8DB", "DAILY" => "#31D37D", "FLEXIBLE" => "#E2B93B", _ => "#31D37D" };
 
-    private sealed class CourtStatusRow
+    public sealed class CourtStatusRow
     {
-        public Guid BranchId { get; init; }
-        public string? BranchName { get; init; }
-        public DateOnly BoardDate { get; init; }
-        public TimeSpan OpenTime { get; init; }
-        public TimeSpan CloseTime { get; init; }
-        public Guid? CourtId { get; init; }
-        public string? CourtNumber { get; init; }
-        public string? CourtName { get; init; }
-        public string? CourtStatus { get; init; }
-        public Guid? ItemId { get; init; }
-        public string? ItemType { get; init; }
-        public Guid? ItemCourtId { get; init; }
-        public Guid? ItemBookingtId { get; init; }
-        public TimeSpan? ItemStartTime { get; init; }
-        public TimeSpan? ItemEndTime { get; init; }
-        public string? BookingType { get; init; }
-        public string? BookingStatus { get; init; }
-        public string? PaymentStatus { get; init; }
-        public string? CustomerName { get; init; }
-        public string? PhoneNumber { get; init; }
-        public string? ItemTitle { get; init; }
-        public string? ItemColor { get; init; }
+        public Guid BranchId { get; set; }
+
+        public string BranchName { get; set; } = string.Empty;
+
+        public TimeOnly OpenTime { get; set; }
+
+        public TimeOnly CloseTime { get; set; }
+
+        public Guid CourtId { get; set; }
+
+        public string CourtNumber { get; set; } = string.Empty;
+
+        public string CourtName { get; set; } = string.Empty;
+
+        public string CourtStatus { get; set; } = string.Empty;
+
+        public Guid? BookingId { get; set; }
+
+        public TimeOnly? StartTime { get; set; }
+
+        public TimeOnly? EndTime { get; set; }
+
+        public DateOnly? BookingDate { get; set; }
+
+        public string? BookingType { get; set; }
+
+        public string? BookingStatus { get; set; }
+
+        public string? PaymentStatus { get; set; }
+
+        public string? CustomerName { get; set; }
+
+        public string? PhoneNumber { get; set; }
+
+        public string? Title { get; set; }
+
+        public string? Color { get; set; }
     }
 }
