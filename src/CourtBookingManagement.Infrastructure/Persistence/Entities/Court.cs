@@ -59,10 +59,7 @@ public partial class Court
     [ForeignKey("BranchId")]
     [InverseProperty("Courts")]
     public virtual Branch Branch { get; set; } = null!;
-
-    [InverseProperty("Court")]
-    public virtual ICollection<CourtImage> CourtImages { get; set; } = new List<CourtImage>();
-
+   
     [ForeignKey("CourtTypeId")]
     [InverseProperty("Courts")]
     public virtual CourtType? CourtType { get; set; }

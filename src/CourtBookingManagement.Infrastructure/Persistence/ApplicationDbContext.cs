@@ -9,6 +9,8 @@ public partial class ApplicationDbContext(
     DbContextOptions<ApplicationDbContext> options,
     IDateTimeProvider dateTimeProvider) : DbContext(options), IUnitOfWork
 {
+    public virtual DbSet<Amenity> Amenities { get; set; }
+
     public virtual DbSet<Booking> Bookings { get; set; }
 
     public virtual DbSet<BookingDetail> BookingDetails { get; set; }
@@ -17,7 +19,7 @@ public partial class ApplicationDbContext(
 
     public virtual DbSet<Court> Courts { get; set; }
 
-    public virtual DbSet<CourtImage> CourtImages { get; set; }
+    public virtual DbSet<BranchImage> BranchImages { get; set; }
 
     public virtual DbSet<CourtType> CourtTypes { get; set; }
 
@@ -60,6 +62,13 @@ public partial class ApplicationDbContext(
         modelBuilder
             .HasPostgresExtension("pg_trgm")
             .HasPostgresExtension("pgcrypto");
+
+        modelBuilder.Entity<Amenity>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("amenities_pkey");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
+        });
 
         modelBuilder.Entity<Booking>(entity =>
         {
@@ -150,7 +159,7 @@ public partial class ApplicationDbContext(
             entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.CourtUpdatedByNavigations).HasConstraintName("courts_updated_by_fkey");
         });
 
-        modelBuilder.Entity<CourtImage>(entity =>
+        modelBuilder.Entity<BranchImage>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("court_images_pkey");
 
@@ -159,7 +168,7 @@ public partial class ApplicationDbContext(
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.SortOrder).HasDefaultValue((short)0);
 
-            entity.HasOne(d => d.Court).WithMany(p => p.CourtImages).HasConstraintName("court_images_court_id_fkey");
+            entity.HasOne(d => d.Branch).WithMany(p => p.BranchImages).HasConstraintName("barnch_images_barnch_id_fkey");
         });
 
         modelBuilder.Entity<CourtType>(entity =>

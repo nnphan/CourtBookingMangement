@@ -6,16 +6,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CourtBookingManagement.Infrastructure.Persistence.Entities;
 
-[Table("court_images", Schema = "core")]
-[Index("CourtId", Name = "ix_court_images_court")]
-public partial class CourtImage
+[Table("branch_images", Schema = "core")]
+[Index("BranchId", Name = "ix_branch_images_branch")]
+public partial class BranchImage
 {
     [Key]
     [Column("id")]
     public Guid Id { get; set; }
 
-    [Column("court_id")]
-    public Guid CourtId { get; set; }
+    [Column("branch_id")]
+    public Guid BranchId { get; set; }
 
     [Column("image_url")]
     public string ImageUrl { get; set; } = null!;
@@ -29,7 +29,7 @@ public partial class CourtImage
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
 
-    [ForeignKey("CourtId")]
-    [InverseProperty("CourtImages")]
-    public virtual Court Court { get; set; } = null!;
+    [ForeignKey("BranchId")]
+    [InverseProperty("BranchImages")]
+    public virtual Branch Branch { get; set; } = null!;
 }

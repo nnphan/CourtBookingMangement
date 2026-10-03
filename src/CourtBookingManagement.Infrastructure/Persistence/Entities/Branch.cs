@@ -1,8 +1,9 @@
-﻿using System;
+﻿using CourtBookingManagement.Infrastructure.Persistence.Scaffold.Entities;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 
 namespace CourtBookingManagement.Infrastructure.Persistence.Entities;
 
@@ -22,7 +23,7 @@ public partial class Branch
 
     [Column("address")]
     [StringLength(255)]
-    public string Address { get; set; } = null!;
+    public string Address { get; set; } = null!; 
 
     [Column("latitude")]
     [Precision(9, 6)]
@@ -57,11 +58,26 @@ public partial class Branch
     [Column("deleted_by")]
     public Guid? DeletedBy { get; set; }
 
+    [Column("city")]
+    [StringLength(100)]
+    public string? City { get; set; }
+
+    [Column("district")]
+    [StringLength(100)]
+    public string? District { get; set; }
+
+    [Column("time_zone")]
+    [StringLength(100)]
+    public string TimeZone { get; set; } = null!;
+
     [InverseProperty("Branch")]
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
     [InverseProperty("Branch")]
     public virtual ICollection<Court> Courts { get; set; } = new List<Court>();
+
+    [InverseProperty("Branch")]
+    public virtual ICollection<BranchImage> BranchImages { get; set; } = new List<BranchImage>();
 
     [ForeignKey("CreatedBy")]
     [InverseProperty("BranchCreatedByNavigations")]
