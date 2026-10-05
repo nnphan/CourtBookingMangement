@@ -9,7 +9,7 @@ public static class ErrorStatusMapper
         "Auth.InvalidCredentials" or "Auth.RefreshTokenInvalid" or
         "Auth.RefreshTokenRevoked" or "Auth.RefreshTokenExpired" => StatusCodes.Status401Unauthorized,
         "Auth.UserDisabled" or "Auth.EmailNotVerified" or "Auth.Unauthorized" => StatusCodes.Status403Forbidden,
-        "User.NotFound" => StatusCodes.Status404NotFound,
+        "User.NotFound" or "Branch.NotFound" => StatusCodes.Status404NotFound,
         "User.EmailAlreadyExists" => StatusCodes.Status409Conflict,
         "Error.Validation" => StatusCodes.Status400BadRequest,
         "CourtBooking.NotFound" => StatusCodes.Status404NotFound,

@@ -1,6 +1,7 @@
 using CourtBookingManagement.Application.Abstractions.Clock;
 using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.Auth.Interfaces;
+using CourtBookingManagement.Application.Branches.Interfaces;
 using CourtBookingManagement.Application.CourtStatus.Interfaces;
 using CourtBookingManagement.Application.CourtBookings.Interfaces;
 using CourtBookingManagement.Application.Options;
@@ -70,6 +71,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IAuthRepository, AuthRepository>();
+        services.AddScoped<IBranchQueryRepository, BranchQueryRepository>();
         services.AddScoped<ICourtStatusRepository, CourtStatusRepository>();
         services.AddScoped<ICourtBookingRepository, CourtBookingRepository>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
