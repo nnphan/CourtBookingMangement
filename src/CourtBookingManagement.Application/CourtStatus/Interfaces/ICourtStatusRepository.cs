@@ -4,7 +4,7 @@ namespace CourtBookingManagement.Application.CourtStatus.Interfaces;
 
 public interface ICourtStatusRepository
 {
-    Task<IReadOnlyList<BranchDto>> GetBranchesAsync(CancellationToken cancellationToken);
+    Task<BranchSearchResult> SearchBranchesAsync(BranchSearchRequest request, CancellationToken cancellationToken);
     Task<CourtStatusResponse?> GetBoardAsync(Guid branchId, DateOnly date, CancellationToken cancellationToken);
     Task<BookingDetailResponse?> GetBookingAsync(Guid id, CancellationToken cancellationToken);
     Task<Guid?> GetBookingBranchIdAsync(Guid id, CancellationToken cancellationToken);

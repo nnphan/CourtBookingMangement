@@ -1,4 +1,4 @@
-﻿using CourtBookingManagement.Infrastructure.Persistence.Scaffold.Entities;
+﻿using CourtBookingManagement.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;

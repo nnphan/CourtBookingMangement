@@ -7,12 +7,25 @@ namespace CourtBookingManagement.Application.CourtStatus.Services;
 
 public sealed class CourtStatusService(
     ICourtStatusRepository repository,
+    IValidator<BranchSearchRequest> branchSearchValidator,
     IValidator<CreateBookingRequest> createBookingValidator,
     IValidator<UpdateBookingRequest> updateBookingValidator,
     IValidator<CreateCourtBlockRequest> blockValidator,
     IValidator<CreateEventRequest> eventValidator) : ICourtStatusService
 {
-    public async Task<Result<IReadOnlyList<BranchDto>>> GetBranchesAsync(CancellationToken ct) => Result.Success<IReadOnlyList<BranchDto>>(await repository.GetBranchesAsync(ct));
+    public async Task<Result<BranchSearchResult>> SearchBranchesAsync(BranchSearchRequest request, CancellationToken ct)
+    {
+        var validation = await branchSearchValidator.ValidateAsync(request, ct);
+        if (!validation.IsValid) return CourtStatusErrors.Invalid(string.Join("; ", validation.Errors.Select(x => x.ErrorMessage)));
+
+        return await repository.SearchBranchesAsync(request with
+        {
+            Keyword = request.Keyword?.Trim(),
+            City = request.City?.Trim(),
+            District = request.District?.Trim(),
+            SortBy = request.SortBy?.Trim().ToLowerInvariant()
+        }, ct);
+    }
 
     public async Task<Result<CourtStatusResponse>> GetBoardAsync(Guid branchId, DateOnly date, CancellationToken ct) =>
         await repository.GetBoardAsync(branchId, date, ct) is { } board ? board : CourtStatusErrors.NotFound("Branch", branchId);
