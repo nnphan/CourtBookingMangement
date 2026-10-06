@@ -11,6 +11,100 @@ namespace CourtBookingManagement.Infrastructure.Repositories;
 
 public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFactory) : IPlayerMatchRepository
 {
+    public async Task<PlayerMatchDetailResponse?> GetByIdAsync(Guid matchId, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            SELECT
+                pm.id AS Id,
+                pm.title AS Title,
+                pm.description AS Description,
+                pm.branch_id AS BranchId,
+                b.name AS BranchName,
+                b.city AS City,
+                b.district AS District,
+                c.name AS CourtName,
+                pm.match_date AS MatchDate,
+                pm.start_time AS StartTime,
+                pm.end_time AS EndTime,
+                pm.skill_level AS SkillLevel,
+                pm.gender_preference AS GenderPreference,
+                pm.max_players AS MaxPlayers,
+                pm.current_players AS CurrentPlayers,
+                pm.fee_per_player AS FeePerPlayer,
+                pm.status AS Status,
+                pm.created_by AS CreatedBy,
+                u.full_name AS CreatedByName,
+                pm.created_at AS CreatedAt
+            FROM matching.player_matches pm
+            INNER JOIN core.branches b ON b.id = pm.branch_id
+            LEFT JOIN core.courts c ON c.id = pm.court_id
+            INNER JOIN auth.users u ON u.id = pm.created_by
+            WHERE pm.id = @MatchId;
+
+            SELECT
+                p.user_id AS UserId,
+                u.full_name AS FullName,
+                p.role AS Role,
+                p.status AS Status,
+                p.joined_at AS JoinedAt
+            FROM matching.match_participants p
+            INNER JOIN auth.users u ON u.id = p.user_id
+            WHERE p.match_id = @MatchId
+            ORDER BY p.joined_at;
+            """;
+
+        using var connection = sqlConnectionFactory.CreateConnection();
+        using var results = await connection.QueryMultipleAsync(
+            new CommandDefinition(sql, new { MatchId = matchId }, cancellationToken: cancellationToken));
+
+        var match = await results.ReadSingleOrDefaultAsync<PlayerMatchDetailRow>();
+        if (match is null)
+        {
+            return null;
+        }
+
+        var participants = (await results.ReadAsync<PlayerMatchParticipantRow>()).AsList();
+
+        return new PlayerMatchDetailResponse
+        {
+            Id = match.Id,
+            Title = match.Title,
+            Description = match.Description,
+            BranchId = match.BranchId,
+            BranchName = match.BranchName,
+            City = match.City,
+            District = match.District,
+            CourtName = match.CourtName,
+            MatchDate = match.MatchDate,
+            StartTime = match.StartTime,
+            EndTime = match.EndTime,
+            SkillLevel = match.SkillLevel,
+            GenderPreference = match.GenderPreference,
+            MaxPlayers = match.MaxPlayers,
+            CurrentPlayers = match.CurrentPlayers,
+            RemainingSlots = Math.Max(match.MaxPlayers - match.CurrentPlayers, 0),
+            FeePerPlayer = match.FeePerPlayer ?? 0m,
+            Status = match.Status,
+            CreatedBy = match.CreatedBy,
+            CreatedByName = match.CreatedByName,
+            CreatedAt = match.CreatedAt,
+            Participants = participants
+                .Select(participant => new PlayerMatchParticipantResponse
+                {
+                    UserId = participant.UserId,
+                    FullName = participant.FullName,
+                    Role = participant.Role,
+                    Status = participant.Status,
+                    JoinedAt = participant.JoinedAt
+                })
+                .ToArray(),
+            ParticipantCount = participants.Count,
+            CanJoin = string.Equals(match.Status, "OPEN", StringComparison.OrdinalIgnoreCase)
+                && match.CurrentPlayers < match.MaxPlayers,
+            IsFull = match.CurrentPlayers >= match.MaxPlayers
+        };
+    }
+
     public async Task<PagedResult<PlayerMatchResponse>> SearchAsync(
         PlayerMatchSearchRequest request,
         CancellationToken cancellationToken)
@@ -153,5 +247,38 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
                 sql.AppendLine("ORDER BY CreatedAt DESC");
                 break;
         }
+    }
+
+    private sealed class PlayerMatchDetailRow
+    {
+        public Guid Id { get; init; }
+        public string Title { get; init; } = string.Empty;
+        public string? Description { get; init; }
+        public Guid BranchId { get; init; }
+        public string BranchName { get; init; } = string.Empty;
+        public string City { get; init; } = string.Empty;
+        public string District { get; init; } = string.Empty;
+        public string? CourtName { get; init; }
+        public DateOnly MatchDate { get; init; }
+        public TimeOnly StartTime { get; init; }
+        public TimeOnly EndTime { get; init; }
+        public string SkillLevel { get; init; } = string.Empty;
+        public string? GenderPreference { get; init; }
+        public int MaxPlayers { get; init; }
+        public int CurrentPlayers { get; init; }
+        public decimal? FeePerPlayer { get; init; }
+        public string Status { get; init; } = string.Empty;
+        public Guid CreatedBy { get; init; }
+        public string CreatedByName { get; init; } = string.Empty;
+        public DateTime CreatedAt { get; init; }
+    }
+
+    private sealed class PlayerMatchParticipantRow
+    {
+        public Guid UserId { get; init; }
+        public string FullName { get; init; } = string.Empty;
+        public string Role { get; init; } = string.Empty;
+        public string Status { get; init; } = string.Empty;
+        public DateTime JoinedAt { get; init; }
     }
 }

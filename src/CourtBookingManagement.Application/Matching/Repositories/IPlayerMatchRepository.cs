@@ -7,4 +7,6 @@ namespace CourtBookingManagement.Application.Matching.Repositories;
 public interface IPlayerMatchRepository
 {
     Task<PagedResult<PlayerMatchResponse>> SearchAsync(PlayerMatchSearchRequest request, CancellationToken cancellationToken);
+
+    Task<PlayerMatchDetailResponse?> GetByIdAsync(Guid matchId, CancellationToken cancellationToken);
 }

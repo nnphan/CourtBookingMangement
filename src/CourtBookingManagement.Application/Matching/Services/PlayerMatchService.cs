@@ -8,6 +8,10 @@ namespace CourtBookingManagement.Application.Matching.Services;
 
 public sealed class PlayerMatchService(IPlayerMatchRepository repository) : IPlayerMatchService
 {
+    private static readonly Error InvalidMatchId = new("PLAYER_MATCH.INVALID_ID", "A valid player match id is required.");
+
+    private static readonly Error MatchNotFound = new("PLAYER_MATCH.NOT_FOUND", "The player match was not found.");
+
     public async Task<Result<PagedResult<PlayerMatchResponse>>> GetMatchesAsync(
         PlayerMatchSearchRequest request,
         CancellationToken cancellationToken)
@@ -39,6 +43,37 @@ public sealed class PlayerMatchService(IPlayerMatchRepository repository) : IPla
         catch (Exception exception)
         {
             return Result.Failure<PagedResult<PlayerMatchResponse>>(Error.FromException(exception));
+        }
+    }
+
+    public async Task<Result<PlayerMatchDetailResponse>> GetMatchByIdAsync(
+        Guid matchId,
+        CancellationToken cancellationToken)
+    {
+        if (matchId == Guid.Empty)
+        {
+            return Result.Failure<PlayerMatchDetailResponse>(InvalidMatchId);
+        }
+
+        try
+        {
+            var match = await repository.GetByIdAsync(matchId, cancellationToken);
+            if (match is null)
+            {
+                return Result.Failure<PlayerMatchDetailResponse>(MatchNotFound);
+            }
+
+            match.RemainingSlots = Math.Max(match.MaxPlayers - match.CurrentPlayers, 0);
+            match.CanJoin = string.Equals(match.Status, "OPEN", StringComparison.OrdinalIgnoreCase)
+                && match.CurrentPlayers < match.MaxPlayers;
+            match.IsFull = match.CurrentPlayers >= match.MaxPlayers;
+            match.ParticipantCount = match.Participants.Count;
+
+            return Result.Success(match);
+        }
+        catch (Exception exception)
+        {
+            return Result.Failure<PlayerMatchDetailResponse>(Error.FromException(exception));
         }
     }
 
