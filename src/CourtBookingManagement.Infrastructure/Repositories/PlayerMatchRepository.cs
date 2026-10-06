@@ -1,3 +1,4 @@
+using System.Data;
 using System.Text;
 using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.Matching.Models;
@@ -137,6 +138,152 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
             new CommandDefinition(countSql.ToString(), countParameters, cancellationToken: cancellationToken));
 
         return PagedResult<PlayerMatchResponse>.Create(items, request.Page, request.PageSize, totalCount);
+    }
+
+    public Task<bool> BranchExistsAsync(Guid branchId, CancellationToken cancellationToken) =>
+        ScalarAsync<bool>(
+            "SELECT EXISTS (SELECT 1 FROM core.branches WHERE id = @BranchId AND is_active = TRUE AND deleted_at IS NULL);",
+            new { BranchId = branchId },
+            cancellationToken);
+
+    public Task<bool> CourtExistsAsync(Guid courtId, Guid branchId, CancellationToken cancellationToken) =>
+        ScalarAsync<bool>(
+            "SELECT EXISTS (SELECT 1 FROM core.courts WHERE id = @CourtId AND branch_id = @BranchId AND is_active = TRUE AND deleted_at IS NULL);",
+            new { CourtId = courtId, BranchId = branchId },
+            cancellationToken);
+
+    public Task<bool> HasOverlappingMatchAsync(Guid? courtId, DateOnly matchDate, TimeOnly startTime, TimeOnly endTime, CancellationToken cancellationToken)
+    {
+        if (courtId is null)
+        {
+            return Task.FromResult(false);
+        }
+
+        const string sql = """
+            SELECT EXISTS (
+                SELECT 1
+                FROM matching.player_matches pm
+                WHERE pm.court_id = @CourtId
+                  AND pm.match_date = @MatchDate
+                  AND pm.status IN ('OPEN', 'FULL')
+                  AND @StartTime < pm.end_time
+                  AND @EndTime > pm.start_time
+            );
+            """;
+
+        return ScalarAsync<bool>(sql, new { CourtId = courtId.Value, MatchDate = matchDate, StartTime = startTime, EndTime = endTime }, cancellationToken);
+    }
+
+    public Task<bool> DuplicateMatchExistsAsync(Guid createdBy, Guid? courtId, DateOnly matchDate, TimeOnly startTime, TimeOnly endTime, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            SELECT EXISTS (
+                SELECT 1
+                FROM matching.player_matches pm
+                WHERE pm.created_by = @CreatedBy
+                  AND pm.match_date = @MatchDate
+                  AND pm.status IN ('OPEN', 'FULL')
+                  AND @StartTime < pm.end_time
+                  AND @EndTime > pm.start_time
+                  AND (@CourtId IS NULL OR pm.court_id = @CourtId OR pm.court_id IS NULL)
+            );
+            """;
+
+        return ScalarAsync<bool>(sql, new { CreatedBy = createdBy, CourtId = courtId, MatchDate = matchDate, StartTime = startTime, EndTime = endTime }, cancellationToken);
+    }
+
+    public async Task<Guid> CreateAsync(CreatePlayerMatchRequest request, Guid createdBy, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            INSERT INTO matching.player_matches (
+                id,
+                created_by,
+                branch_id,
+                court_id,
+                title,
+                description,
+                match_date,
+                start_time,
+                end_time,
+                skill_level,
+                gender_preference,
+                max_players,
+                current_players,
+                fee_per_player,
+                status,
+                created_at,
+                updated_at
+            )
+            VALUES (
+                uuid_generate_v7(),
+                @CreatedBy,
+                @BranchId,
+                @CourtId,
+                @Title,
+                @Description,
+                @MatchDate,
+                @StartTime,
+                @EndTime,
+                @SkillLevel,
+                @GenderPreference,
+                @MaxPlayers,
+                1,
+                @FeePerPlayer,
+                'OPEN',
+                NOW(),
+                NOW()
+            )
+            RETURNING id;
+            """;
+
+        var command = new CommandDefinition(sql, new
+        {
+            CreatedBy = createdBy,
+            BranchId = request.BranchId,
+            CourtId = request.CourtId,
+            Title = request.Title.Trim(),
+            Description = request.Description,
+            MatchDate = request.MatchDate,
+            StartTime = request.StartTime,
+            EndTime = request.EndTime,
+            SkillLevel = request.SkillLevel.ToDatabaseValue(),
+            GenderPreference = request.GenderPreference,
+            MaxPlayers = request.MaxPlayers,
+            FeePerPlayer = request.FeePerPlayer
+        }, transaction: transaction, cancellationToken: cancellationToken);
+
+        return await transaction.Connection!.QuerySingleAsync<Guid>(command);
+    }
+
+    public async Task CreateParticipantAsync(Guid matchId, Guid userId, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            INSERT INTO matching.match_participants (
+                id,
+                match_id,
+                user_id,
+                joined_at,
+                role,
+                status
+            )
+            VALUES (
+                uuid_generate_v7(),
+                @MatchId,
+                @UserId,
+                NOW(),
+                'HOST',
+                'ACTIVE'
+            );
+            """;
+
+        var command = new CommandDefinition(sql, new { MatchId = matchId, UserId = userId }, transaction: transaction, cancellationToken: cancellationToken);
+        await transaction.Connection!.ExecuteAsync(command);
+    }
+
+    private async Task<T> ScalarAsync<T>(string sql, object parameters, CancellationToken cancellationToken)
+    {
+        using var connection = sqlConnectionFactory.CreateConnection();
+        return await connection.ExecuteScalarAsync<T>(new CommandDefinition(sql, parameters, cancellationToken: cancellationToken));
     }
 
     private static void AppendBaseQuery(StringBuilder sql, DynamicParameters parameters)

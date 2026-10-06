@@ -1,12 +1,18 @@
+using System.Data;
+using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.Matching.Models;
 using CourtBookingManagement.Application.Matching.Models.Requests;
 using CourtBookingManagement.Application.Matching.Models.Responses;
 using CourtBookingManagement.Application.Matching.Repositories;
 using CourtBookingManagement.Domain.Abstractions;
+using FluentValidation;
 
 namespace CourtBookingManagement.Application.Matching.Services;
 
-public sealed class PlayerMatchService(IPlayerMatchRepository repository) : IPlayerMatchService
+public sealed class PlayerMatchService(
+    IPlayerMatchRepository repository,
+    IValidator<CreatePlayerMatchRequest> validator,
+    ISqlConnectionFactory sqlConnectionFactory) : IPlayerMatchService
 {
     private static readonly Error InvalidMatchId = new("PLAYER_MATCH.INVALID_ID", "A valid player match id is required.");
 
@@ -74,6 +80,70 @@ public sealed class PlayerMatchService(IPlayerMatchRepository repository) : IPla
         catch (Exception exception)
         {
             return Result.Failure<PlayerMatchDetailResponse>(Error.FromException(exception));
+        }
+    }
+
+    public async Task<Result<CreatePlayerMatchResponse>> CreateAsync(
+        CreatePlayerMatchRequest request,
+        Guid createdBy,
+        CancellationToken cancellationToken)
+    {
+        if (request is null)
+        {
+            return Result.Failure<CreatePlayerMatchResponse>(new Error("PLAYER_MATCH.INVALID_REQUEST", "Request cannot be null."));
+        }
+
+        var validation = await validator.ValidateAsync(request, cancellationToken);
+        if (!validation.IsValid)
+        {
+            return Result.Failure<CreatePlayerMatchResponse>(
+                new Error("PLAYER_MATCH.VALIDATION", string.Join("; ", validation.Errors.Select(error => error.ErrorMessage))));
+        }
+
+        if (createdBy == Guid.Empty)
+        {
+            return Result.Failure<CreatePlayerMatchResponse>(new Error("PLAYER_MATCH.INVALID_USER", "The user creating the match is invalid."));
+        }
+
+        if (!await repository.BranchExistsAsync(request.BranchId, cancellationToken))
+        {
+            return Result.Failure<CreatePlayerMatchResponse>(new Error("PLAYER_MATCH.BRANCH_NOT_FOUND", "Branch not found."));
+        }
+
+        if (request.CourtId is Guid courtId && !await repository.CourtExistsAsync(courtId, request.BranchId, cancellationToken))
+        {
+            return Result.Failure<CreatePlayerMatchResponse>(new Error("PLAYER_MATCH.COURT_NOT_FOUND", "Court not found for the selected branch."));
+        }
+
+        if (request.CourtId.HasValue && await repository.HasOverlappingMatchAsync(request.CourtId.Value, request.MatchDate, request.StartTime, request.EndTime, cancellationToken))
+        {
+            return Result.Failure<CreatePlayerMatchResponse>(new Error("PLAYER_MATCH.COURT_CONFLICT", "The selected court is already booked for that time."));
+        }
+
+        if (await repository.DuplicateMatchExistsAsync(createdBy, request.CourtId, request.MatchDate, request.StartTime, request.EndTime, cancellationToken))
+        {
+            return Result.Failure<CreatePlayerMatchResponse>(new Error("PLAYER_MATCH.DUPLICATE", "You already have a match scheduled for that time."));
+        }
+
+        using var connection = sqlConnectionFactory.CreateConnection();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var matchId = await repository.CreateAsync(request, createdBy, transaction, cancellationToken);
+            await repository.CreateParticipantAsync(matchId, createdBy, transaction, cancellationToken);
+            transaction.Commit();
+
+            return Result.Success(new CreatePlayerMatchResponse
+            {
+                Id = matchId,
+                Message = "Player match created successfully."
+            });
+        }
+        catch (Exception exception)
+        {
+            transaction.Rollback();
+            return Result.Failure<CreatePlayerMatchResponse>(Error.FromException(exception));
         }
     }
 
