@@ -228,6 +228,112 @@ public sealed class PlayerMatchService(
         }
     }
 
+    public async Task<Result<ApproveJoinRequestResponse>> ApproveJoinRequestAsync(
+        Guid matchId,
+        Guid requestId,
+        Guid currentUserId,
+        CancellationToken cancellationToken)
+    {
+        if (matchId == Guid.Empty)
+        {
+            return Result.Failure<ApproveJoinRequestResponse>(new Error("PLAYER_MATCH.INVALID_ID", "A valid player match id is required."));
+        }
+
+        if (requestId == Guid.Empty)
+        {
+            return Result.Failure<ApproveJoinRequestResponse>(new Error("PLAYER_MATCH.INVALID_REQUEST_ID", "A valid join request id is required."));
+        }
+
+        if (currentUserId == Guid.Empty)
+        {
+            return Result.Failure<ApproveJoinRequestResponse>(new Error("PLAYER_MATCH.INVALID_USER", "The current user is invalid."));
+        }
+
+        var match = await repository.GetMatchByIdAsync(matchId, cancellationToken);
+        if (match is null)
+        {
+            return Result.Failure<ApproveJoinRequestResponse>(new Error("PLAYER_MATCH.NOT_FOUND", "Player match not found."));
+        }
+
+        if (!string.Equals(match.Status, "OPEN", StringComparison.OrdinalIgnoreCase))
+        {
+            return Result.Failure<ApproveJoinRequestResponse>(new Error("PLAYER_MATCH.NOT_OPEN", "Match is not open for new approvals."));
+        }
+
+        if (match.CreatedBy != currentUserId)
+        {
+            return Result.Failure<ApproveJoinRequestResponse>(new Error("PLAYER_MATCH.NOT_HOST", "Only the host can approve join requests."));
+        }
+
+        var joinRequest = await repository.GetJoinRequestAsync(requestId, cancellationToken);
+        if (joinRequest is null)
+        {
+            return Result.Failure<ApproveJoinRequestResponse>(new Error("PLAYER_MATCH.REQUEST_NOT_FOUND", "Join request was not found."));
+        }
+
+        if (joinRequest.MatchId != matchId)
+        {
+            return Result.Failure<ApproveJoinRequestResponse>(new Error("PLAYER_MATCH.REQUEST_MISMATCH", "Join request does not belong to the selected match."));
+        }
+
+        if (!string.Equals(joinRequest.Status, "PENDING", StringComparison.OrdinalIgnoreCase))
+        {
+            return Result.Failure<ApproveJoinRequestResponse>(new Error("PLAYER_MATCH.REQUEST_NOT_PENDING", "Only pending join requests can be approved."));
+        }
+
+        if (match.CurrentPlayers >= match.MaxPlayers)
+        {
+            return Result.Failure<ApproveJoinRequestResponse>(new Error("PLAYER_MATCH.MATCH_FULL", "Match is already full."));
+        }
+
+        if (await repository.IsParticipantAsync(matchId, joinRequest.UserId, cancellationToken))
+        {
+            return Result.Failure<ApproveJoinRequestResponse>(new Error("PLAYER_MATCH.ALREADY_JOINED", "Player is already a participant in this match."));
+        }
+
+        using var connection = sqlConnectionFactory.CreateConnection();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            await repository.ApproveJoinRequestAsync(requestId, currentUserId, transaction, cancellationToken);
+            await repository.CreateParticipantAsync(matchId, joinRequest.UserId, "PLAYER", transaction, cancellationToken);
+            await repository.IncrementCurrentPlayersAsync(matchId, transaction, cancellationToken);
+
+            var updatedPlayerCount = match.CurrentPlayers + 1;
+            if (updatedPlayerCount >= match.MaxPlayers)
+            {
+                await repository.UpdateMatchStatusAsync(matchId, "FULL", transaction, cancellationToken);
+                await repository.CreateMatchFullNotificationsAsync(matchId, transaction, cancellationToken);
+            }
+
+            await repository.CreateNotificationAsync(
+                joinRequest.UserId,
+                matchId,
+                "JOIN_APPROVED",
+                "Join request approved",
+                "Your join request was approved by the match host.",
+                transaction,
+                cancellationToken);
+
+            transaction.Commit();
+
+            return Result.Success(new ApproveJoinRequestResponse
+            {
+                MatchId = matchId,
+                RequestId = requestId,
+                UserId = joinRequest.UserId,
+                Status = "APPROVED",
+                Message = "Join request approved successfully."
+            });
+        }
+        catch (Exception exception)
+        {
+            transaction.Rollback();
+            return Result.Failure<ApproveJoinRequestResponse>(Error.FromException(exception));
+        }
+    }
+
     private static string? NormalizeText(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 

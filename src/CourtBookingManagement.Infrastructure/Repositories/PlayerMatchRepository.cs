@@ -143,6 +143,26 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
     public Task<PlayerMatchDetailResponse?> GetMatchByIdAsync(Guid matchId, CancellationToken cancellationToken) =>
         GetByIdAsync(matchId, cancellationToken);
 
+    public async Task<PlayerMatchJoinRequest?> GetJoinRequestAsync(Guid requestId, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            SELECT
+                id AS Id,
+                match_id AS MatchId,
+                user_id AS UserId,
+                status AS Status,
+                reviewed_at AS ReviewedAt,
+                reviewed_by AS ReviewedBy
+            FROM matching.match_join_requests
+            WHERE id = @RequestId;
+            """;
+
+        using var connection = sqlConnectionFactory.CreateConnection();
+
+        return await connection.QuerySingleOrDefaultAsync<PlayerMatchJoinRequest>(
+            new CommandDefinition(sql, new { RequestId = requestId }, cancellationToken: cancellationToken));
+    }
+
     public Task<bool> IsParticipantAsync(Guid matchId, Guid userId, CancellationToken cancellationToken) =>
         ScalarAsync<bool>(
             "SELECT EXISTS (SELECT 1 FROM matching.match_participants WHERE match_id = @MatchId AND user_id = @UserId AND status = 'ACTIVE');",
@@ -300,6 +320,11 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
 
     public async Task CreateParticipantAsync(Guid matchId, Guid userId, IDbTransaction transaction, CancellationToken cancellationToken)
     {
+        await CreateParticipantAsync(matchId, userId, "HOST", transaction, cancellationToken);
+    }
+
+    public async Task CreateParticipantAsync(Guid matchId, Guid userId, string role, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
         const string sql = """
             INSERT INTO matching.match_participants (
                 id,
@@ -314,12 +339,52 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
                 @MatchId,
                 @UserId,
                 NOW(),
-                'HOST',
+                @Role,
                 'ACTIVE'
             );
             """;
 
-        var command = new CommandDefinition(sql, new { MatchId = matchId, UserId = userId }, transaction: transaction, cancellationToken: cancellationToken);
+        var command = new CommandDefinition(sql, new { MatchId = matchId, UserId = userId, Role = role }, transaction: transaction, cancellationToken: cancellationToken);
+        await transaction.Connection!.ExecuteAsync(command);
+    }
+
+    public async Task ApproveJoinRequestAsync(Guid requestId, Guid currentUserId, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            UPDATE matching.match_join_requests
+            SET status = 'APPROVED',
+                reviewed_at = NOW(),
+                reviewed_by = @CurrentUserId
+            WHERE id = @RequestId;
+            """;
+
+        var command = new CommandDefinition(sql, new { RequestId = requestId, CurrentUserId = currentUserId }, transaction: transaction, cancellationToken: cancellationToken);
+        await transaction.Connection!.ExecuteAsync(command);
+    }
+
+    public async Task IncrementCurrentPlayersAsync(Guid matchId, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            UPDATE matching.player_matches
+            SET current_players = current_players + 1,
+                updated_at = NOW()
+            WHERE id = @MatchId;
+            """;
+
+        var command = new CommandDefinition(sql, new { MatchId = matchId }, transaction: transaction, cancellationToken: cancellationToken);
+        await transaction.Connection!.ExecuteAsync(command);
+    }
+
+    public async Task UpdateMatchStatusAsync(Guid matchId, string status, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            UPDATE matching.player_matches
+            SET status = @Status,
+                updated_at = NOW()
+            WHERE id = @MatchId;
+            """;
+
+        var command = new CommandDefinition(sql, new { MatchId = matchId, Status = status }, transaction: transaction, cancellationToken: cancellationToken);
         await transaction.Connection!.ExecuteAsync(command);
     }
 
@@ -352,6 +417,62 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
 
         var command = new CommandDefinition(sql, new { MatchId = matchId, HostUserId = hostUserId, Message = message }, transaction: transaction, cancellationToken: cancellationToken);
         await transaction.Connection!.ExecuteAsync(command);
+    }
+
+    public async Task CreateNotificationAsync(Guid userId, Guid? matchId, string type, string title, string message, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            INSERT INTO matching.match_notifications (
+                id,
+                user_id,
+                match_id,
+                type,
+                title,
+                message,
+                is_read,
+                created_at,
+                read_at
+            )
+            VALUES (
+                uuid_generate_v7(),
+                @UserId,
+                @MatchId,
+                @Type,
+                @Title,
+                @Message,
+                FALSE,
+                NOW(),
+                NULL
+            );
+            """;
+
+        var command = new CommandDefinition(sql, new { UserId = userId, MatchId = matchId, Type = type, Title = title, Message = message }, transaction: transaction, cancellationToken: cancellationToken);
+        await transaction.Connection!.ExecuteAsync(command);
+    }
+
+    public async Task CreateMatchFullNotificationsAsync(Guid matchId, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            SELECT user_id
+            FROM matching.match_participants
+            WHERE match_id = @MatchId
+              AND status = 'ACTIVE';
+            """;
+
+        var participants = (await transaction.Connection!.QueryAsync<Guid>(
+            new CommandDefinition(sql, new { MatchId = matchId }, transaction: transaction, cancellationToken: cancellationToken))).AsList();
+
+        foreach (var participantUserId in participants)
+        {
+            await CreateNotificationAsync(
+                participantUserId,
+                matchId,
+                "MATCH_FULL",
+                "Match is full",
+                "This match is now full and no new players can join.",
+                transaction,
+                cancellationToken);
+        }
     }
 
     private async Task<T> ScalarAsync<T>(string sql, object parameters, CancellationToken cancellationToken)
