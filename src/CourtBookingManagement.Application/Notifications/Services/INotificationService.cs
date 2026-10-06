@@ -6,6 +6,11 @@ namespace CourtBookingManagement.Application.Notifications.Services;
 
 public interface INotificationService
 {
+    Task<Result<MarkNotificationReadResponse>> MarkAsReadAsync(
+        Guid notificationId,
+        Guid currentUserId,
+        CancellationToken cancellationToken);
+
     Task<Result<NotificationPagedResponse>> GetNotificationsAsync(
         NotificationSearchRequest request,
         Guid currentUserId,

@@ -9,6 +9,8 @@ public static class ErrorStatusMapper
         "Auth.InvalidCredentials" or "Auth.RefreshTokenInvalid" or
         "Auth.RefreshTokenRevoked" or "Auth.RefreshTokenExpired" => StatusCodes.Status401Unauthorized,
         "Auth.UserDisabled" or "Auth.EmailNotVerified" or "Auth.Unauthorized" => StatusCodes.Status403Forbidden,
+        "NOTIFICATION.FORBIDDEN" => StatusCodes.Status403Forbidden,
+        "NOTIFICATION.NOT_FOUND" => StatusCodes.Status404NotFound,
         "User.NotFound" or "Branch.NotFound" or "PLAYER_MATCH.NOT_FOUND" or "PLAYER_MATCH.REQUEST_NOT_FOUND" => StatusCodes.Status404NotFound,
         "PLAYER_MATCH.NOT_HOST" => StatusCodes.Status403Forbidden,
         "User.EmailAlreadyExists" or "PLAYER_MATCH.ALREADY_JOINED" or "PLAYER_MATCH.REQUEST_EXISTS" => StatusCodes.Status409Conflict,

@@ -1,6 +1,7 @@
 using System.Text;
 using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.Matching.Models;
+using CourtBookingManagement.Application.Notifications.Models;
 using CourtBookingManagement.Application.Notifications.Models.Requests;
 using CourtBookingManagement.Application.Notifications.Models.Responses;
 using CourtBookingManagement.Application.Notifications.Repositories;
@@ -10,6 +11,38 @@ namespace CourtBookingManagement.Infrastructure.Repositories;
 
 public sealed class NotificationRepository(ISqlConnectionFactory sqlConnectionFactory) : INotificationRepository
 {
+    public async Task<NotificationRecord?> GetByIdAsync(Guid notificationId, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            SELECT
+                id AS Id,
+                user_id AS UserId,
+                is_read AS IsRead,
+                read_at AS ReadAt
+            FROM matching.match_notifications
+            WHERE id = @NotificationId;
+            """;
+
+        using var connection = sqlConnectionFactory.CreateConnection();
+        return await connection.QuerySingleOrDefaultAsync<NotificationRecord>(
+            new CommandDefinition(sql, new { NotificationId = notificationId }, cancellationToken: cancellationToken));
+    }
+
+    public async Task MarkAsReadAsync(Guid notificationId, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            UPDATE matching.match_notifications
+            SET is_read = TRUE,
+                read_at = NOW()
+            WHERE id = @NotificationId
+              AND is_read = FALSE;
+            """;
+
+        using var connection = sqlConnectionFactory.CreateConnection();
+        await connection.ExecuteAsync(
+            new CommandDefinition(sql, new { NotificationId = notificationId }, cancellationToken: cancellationToken));
+    }
+
     public async Task<PagedResult<NotificationResponse>> GetNotificationsAsync(
         Guid userId,
         NotificationSearchRequest request,

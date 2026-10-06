@@ -31,4 +31,22 @@ public sealed class NotificationsController(INotificationService service, ICurre
             ? Success(result.Value, "Notifications retrieved successfully.")
             : Error(result.Error);
     }
+
+    [HttpPut("{id:guid}/read")]
+    [ProducesResponseType(typeof(ApiResponse<MarkNotificationReadResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> MarkAsRead(Guid id, CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid userId)
+        {
+            return Unauthorized();
+        }
+
+        var result = await service.MarkAsReadAsync(id, userId, cancellationToken);
+        return result.IsSuccess
+            ? Success(result.Value, result.Value.Message)
+            : Error(result.Error);
+    }
 }

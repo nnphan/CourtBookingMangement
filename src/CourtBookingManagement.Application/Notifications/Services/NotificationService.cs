@@ -7,6 +7,64 @@ namespace CourtBookingManagement.Application.Notifications.Services;
 
 public sealed class NotificationService(INotificationRepository repository) : INotificationService
 {
+    public async Task<Result<MarkNotificationReadResponse>> MarkAsReadAsync(
+        Guid notificationId,
+        Guid currentUserId,
+        CancellationToken cancellationToken)
+    {
+        if (notificationId == Guid.Empty)
+        {
+            return Result.Failure<MarkNotificationReadResponse>(
+                new Error("NOTIFICATION.INVALID_ID", "A valid notification id is required."));
+        }
+
+        if (currentUserId == Guid.Empty)
+        {
+            return Result.Failure<MarkNotificationReadResponse>(
+                new Error("NOTIFICATION.INVALID_USER", "The current user is invalid."));
+        }
+
+        try
+        {
+            var notification = await repository.GetByIdAsync(notificationId, cancellationToken);
+            if (notification is null)
+            {
+                return Result.Failure<MarkNotificationReadResponse>(
+                    new Error("NOTIFICATION.NOT_FOUND", "Notification not found."));
+            }
+
+            if (notification.UserId != currentUserId)
+            {
+                return Result.Failure<MarkNotificationReadResponse>(
+                    new Error("NOTIFICATION.FORBIDDEN", "You are not allowed to access this notification."));
+            }
+
+            if (!notification.IsRead)
+            {
+                await repository.MarkAsReadAsync(notificationId, cancellationToken);
+                notification = await repository.GetByIdAsync(notificationId, cancellationToken);
+
+                if (notification is null)
+                {
+                    return Result.Failure<MarkNotificationReadResponse>(
+                        new Error("NOTIFICATION.NOT_FOUND", "Notification not found."));
+                }
+            }
+
+            return Result.Success(new MarkNotificationReadResponse
+            {
+                NotificationId = notification.Id,
+                IsRead = notification.IsRead,
+                ReadAt = notification.ReadAt,
+                Message = "Notification marked as read."
+            });
+        }
+        catch (Exception exception)
+        {
+            return Result.Failure<MarkNotificationReadResponse>(Error.FromException(exception));
+        }
+    }
+
     public async Task<Result<NotificationPagedResponse>> GetNotificationsAsync(
         NotificationSearchRequest request,
         Guid currentUserId,
