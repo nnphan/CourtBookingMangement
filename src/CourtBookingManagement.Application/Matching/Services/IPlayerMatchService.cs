@@ -12,4 +12,6 @@ public interface IPlayerMatchService
     Task<Result<PlayerMatchDetailResponse>> GetMatchByIdAsync(Guid matchId, CancellationToken cancellationToken);
 
     Task<Result<CreatePlayerMatchResponse>> CreateAsync(CreatePlayerMatchRequest request, Guid createdBy, CancellationToken cancellationToken);
+
+    Task<Result<JoinMatchResponse>> JoinMatchAsync(Guid matchId, Guid currentUserId, CancellationToken cancellationToken);
 }

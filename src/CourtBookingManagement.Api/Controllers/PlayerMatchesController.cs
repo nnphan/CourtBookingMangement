@@ -51,4 +51,23 @@ public sealed class PlayerMatchesController(IPlayerMatchService service, ICurren
             ? CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, ApiResponse<CreatePlayerMatchResponse>.Create(result.Value, "Player match created successfully.", HttpContext.TraceIdentifier))
             : Error(result.Error);
     }
+
+    [Authorize]
+    [HttpPost("{id:guid}/join")]
+    [ProducesResponseType(typeof(ApiResponse<JoinMatchResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> JoinMatch(Guid id, CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid userId)
+        {
+            return Unauthorized();
+        }
+
+        var result = await service.JoinMatchAsync(id, userId, cancellationToken);
+        return result.IsSuccess
+            ? Success(result.Value, "Join request submitted successfully.")
+            : Error(result.Error);
+    }
 }

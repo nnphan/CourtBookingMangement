@@ -147,6 +147,87 @@ public sealed class PlayerMatchService(
         }
     }
 
+    public async Task<Result<JoinMatchResponse>> JoinMatchAsync(
+        Guid matchId,
+        Guid currentUserId,
+        CancellationToken cancellationToken)
+    {
+        if (matchId == Guid.Empty)
+        {
+            return Result.Failure<JoinMatchResponse>(new Error("PLAYER_MATCH.INVALID_ID", "A valid player match id is required."));
+        }
+
+        if (currentUserId == Guid.Empty)
+        {
+            return Result.Failure<JoinMatchResponse>(new Error("PLAYER_MATCH.INVALID_USER", "The current user is invalid."));
+        }
+
+        var match = await repository.GetMatchByIdAsync(matchId, cancellationToken);
+        if (match is null)
+        {
+            return Result.Failure<JoinMatchResponse>(new Error("PLAYER_MATCH.NOT_FOUND", "Player match not found."));
+        }
+
+        if (!string.Equals(match.Status, "OPEN", StringComparison.OrdinalIgnoreCase))
+        {
+            return Result.Failure<JoinMatchResponse>(new Error("PLAYER_MATCH.NOT_OPEN", "Match is not open for joining."));
+        }
+
+        if (match.MatchDate < DateOnly.FromDateTime(DateTime.UtcNow))
+        {
+            return Result.Failure<JoinMatchResponse>(new Error("PLAYER_MATCH.MATCH_EXPIRED", "Expired matches cannot be joined."));
+        }
+
+        if (match.CurrentPlayers >= match.MaxPlayers)
+        {
+            return Result.Failure<JoinMatchResponse>(new Error("PLAYER_MATCH.MATCH_FULL", "Match is already full."));
+        }
+
+        if (match.CreatedBy == currentUserId)
+        {
+            return Result.Failure<JoinMatchResponse>(new Error("PLAYER_MATCH.HOST_ALREADY_PARTICIPANT", "Host is already a participant."));
+        }
+
+        if (await repository.IsParticipantAsync(matchId, currentUserId, cancellationToken))
+        {
+            return Result.Failure<JoinMatchResponse>(new Error("PLAYER_MATCH.ALREADY_JOINED", "You have already joined this match."));
+        }
+
+        if (await repository.HasPendingJoinRequestAsync(matchId, currentUserId, cancellationToken))
+        {
+            return Result.Failure<JoinMatchResponse>(new Error("PLAYER_MATCH.REQUEST_EXISTS", "Join request already exists."));
+        }
+
+        using var connection = sqlConnectionFactory.CreateConnection();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var joinRequestId = await repository.CreateJoinRequestAsync(matchId, currentUserId, transaction, cancellationToken);
+            await repository.CreateNotificationAsync(
+                matchId,
+                match.CreatedBy,
+                "A player requested to join your match.",
+                transaction,
+                cancellationToken);
+
+            transaction.Commit();
+
+            return Result.Success(new JoinMatchResponse
+            {
+                MatchId = matchId,
+                JoinRequestId = joinRequestId,
+                Status = "PENDING",
+                Message = "Join request submitted successfully."
+            });
+        }
+        catch (Exception exception)
+        {
+            transaction.Rollback();
+            return Result.Failure<JoinMatchResponse>(Error.FromException(exception));
+        }
+    }
+
     private static string? NormalizeText(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 

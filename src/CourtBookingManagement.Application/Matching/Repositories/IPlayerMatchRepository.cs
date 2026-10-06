@@ -11,6 +11,8 @@ public interface IPlayerMatchRepository
 
     Task<PlayerMatchDetailResponse?> GetByIdAsync(Guid matchId, CancellationToken cancellationToken);
 
+    Task<PlayerMatchDetailResponse?> GetMatchByIdAsync(Guid matchId, CancellationToken cancellationToken);
+
     Task<bool> BranchExistsAsync(Guid branchId, CancellationToken cancellationToken);
 
     Task<bool> CourtExistsAsync(Guid courtId, Guid branchId, CancellationToken cancellationToken);
@@ -19,7 +21,15 @@ public interface IPlayerMatchRepository
 
     Task<bool> DuplicateMatchExistsAsync(Guid createdBy, Guid? courtId, DateOnly matchDate, TimeOnly startTime, TimeOnly endTime, CancellationToken cancellationToken);
 
+    Task<bool> IsParticipantAsync(Guid matchId, Guid userId, CancellationToken cancellationToken);
+
+    Task<bool> HasPendingJoinRequestAsync(Guid matchId, Guid userId, CancellationToken cancellationToken);
+
     Task<Guid> CreateAsync(CreatePlayerMatchRequest request, Guid createdBy, IDbTransaction transaction, CancellationToken cancellationToken);
 
+    Task<Guid> CreateJoinRequestAsync(Guid matchId, Guid userId, IDbTransaction transaction, CancellationToken cancellationToken);
+
     Task CreateParticipantAsync(Guid matchId, Guid userId, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    Task CreateNotificationAsync(Guid matchId, Guid hostUserId, string message, IDbTransaction transaction, CancellationToken cancellationToken);
 }

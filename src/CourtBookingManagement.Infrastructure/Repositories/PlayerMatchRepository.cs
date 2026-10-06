@@ -140,6 +140,21 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
         return PagedResult<PlayerMatchResponse>.Create(items, request.Page, request.PageSize, totalCount);
     }
 
+    public Task<PlayerMatchDetailResponse?> GetMatchByIdAsync(Guid matchId, CancellationToken cancellationToken) =>
+        GetByIdAsync(matchId, cancellationToken);
+
+    public Task<bool> IsParticipantAsync(Guid matchId, Guid userId, CancellationToken cancellationToken) =>
+        ScalarAsync<bool>(
+            "SELECT EXISTS (SELECT 1 FROM matching.match_participants WHERE match_id = @MatchId AND user_id = @UserId AND status = 'ACTIVE');",
+            new { MatchId = matchId, UserId = userId },
+            cancellationToken);
+
+    public Task<bool> HasPendingJoinRequestAsync(Guid matchId, Guid userId, CancellationToken cancellationToken) =>
+        ScalarAsync<bool>(
+            "SELECT EXISTS (SELECT 1 FROM matching.match_join_requests WHERE match_id = @MatchId AND user_id = @UserId AND status = 'PENDING');",
+            new { MatchId = matchId, UserId = userId },
+            cancellationToken);
+
     public Task<bool> BranchExistsAsync(Guid branchId, CancellationToken cancellationToken) =>
         ScalarAsync<bool>(
             "SELECT EXISTS (SELECT 1 FROM core.branches WHERE id = @BranchId AND is_active = TRUE AND deleted_at IS NULL);",
@@ -255,6 +270,34 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
         return await transaction.Connection!.QuerySingleAsync<Guid>(command);
     }
 
+    public async Task<Guid> CreateJoinRequestAsync(Guid matchId, Guid userId, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            INSERT INTO matching.match_join_requests (
+                id,
+                match_id,
+                user_id,
+                status,
+                requested_at,
+                reviewed_at,
+                reviewed_by
+            )
+            VALUES (
+                uuid_generate_v7(),
+                @MatchId,
+                @UserId,
+                'PENDING',
+                NOW(),
+                NULL,
+                NULL
+            )
+            RETURNING id;
+            """;
+
+        var command = new CommandDefinition(sql, new { MatchId = matchId, UserId = userId }, transaction: transaction, cancellationToken: cancellationToken);
+        return await transaction.Connection!.QuerySingleAsync<Guid>(command);
+    }
+
     public async Task CreateParticipantAsync(Guid matchId, Guid userId, IDbTransaction transaction, CancellationToken cancellationToken)
     {
         const string sql = """
@@ -277,6 +320,37 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
             """;
 
         var command = new CommandDefinition(sql, new { MatchId = matchId, UserId = userId }, transaction: transaction, cancellationToken: cancellationToken);
+        await transaction.Connection!.ExecuteAsync(command);
+    }
+
+    public async Task CreateNotificationAsync(Guid matchId, Guid hostUserId, string message, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            INSERT INTO matching.match_notifications (
+                id,
+                user_id,
+                match_id,
+                type,
+                title,
+                message,
+                is_read,
+                created_at,
+                read_at
+            )
+            VALUES (
+                uuid_generate_v7(),
+                @HostUserId,
+                @MatchId,
+                'JOIN_REQUEST',
+                'Join request',
+                @Message,
+                FALSE,
+                NOW(),
+                NULL
+            );
+            """;
+
+        var command = new CommandDefinition(sql, new { MatchId = matchId, HostUserId = hostUserId, Message = message }, transaction: transaction, cancellationToken: cancellationToken);
         await transaction.Connection!.ExecuteAsync(command);
     }
 
