@@ -16,4 +16,6 @@ public interface IPlayerMatchService
     Task<Result<JoinMatchResponse>> JoinMatchAsync(Guid matchId, Guid currentUserId, CancellationToken cancellationToken);
 
     Task<Result<ApproveJoinRequestResponse>> ApproveJoinRequestAsync(Guid matchId, Guid requestId, Guid currentUserId, CancellationToken cancellationToken);
+
+    Task<Result<RejectJoinRequestResponse>> RejectJoinRequestAsync(Guid matchId, Guid requestId, Guid currentUserId, CancellationToken cancellationToken);
 }

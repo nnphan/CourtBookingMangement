@@ -90,4 +90,24 @@ public sealed class PlayerMatchesController(IPlayerMatchService service, ICurren
             ? Success(result.Value, "Join request approved successfully.")
             : Error(result.Error);
     }
+
+    [Authorize]
+    [HttpPost("{id:guid}/join-requests/{requestId:guid}/reject")]
+    [ProducesResponseType(typeof(ApiResponse<RejectJoinRequestResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> RejectJoinRequest(Guid id, Guid requestId, CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid userId)
+        {
+            return Unauthorized();
+        }
+
+        var result = await service.RejectJoinRequestAsync(id, requestId, userId, cancellationToken);
+        return result.IsSuccess
+            ? Success(result.Value, "Join request rejected successfully.")
+            : Error(result.Error);
+    }
 }

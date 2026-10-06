@@ -163,6 +163,26 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
             new CommandDefinition(sql, new { RequestId = requestId }, cancellationToken: cancellationToken));
     }
 
+    public async Task<bool> RejectJoinRequestAsync(Guid requestId, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            UPDATE matching.match_join_requests AS jr
+            SET status = 'REJECTED',
+                reviewed_at = NOW()
+            WHERE jr.id = @RequestId
+              AND jr.status = 'PENDING'
+              AND EXISTS (
+                  SELECT 1
+                  FROM matching.player_matches AS pm
+                  WHERE pm.id = jr.match_id
+                    AND pm.status = 'OPEN'
+              );
+            """;
+
+        var command = new CommandDefinition(sql, new { RequestId = requestId }, transaction: transaction, cancellationToken: cancellationToken);
+        return await transaction.Connection!.ExecuteAsync(command) == 1;
+    }
+
     public Task<bool> IsParticipantAsync(Guid matchId, Guid userId, CancellationToken cancellationToken) =>
         ScalarAsync<bool>(
             "SELECT EXISTS (SELECT 1 FROM matching.match_participants WHERE match_id = @MatchId AND user_id = @UserId AND status = 'ACTIVE');",

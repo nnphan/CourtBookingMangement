@@ -15,6 +15,8 @@ public interface IPlayerMatchRepository
 
     Task<PlayerMatchJoinRequest?> GetJoinRequestAsync(Guid requestId, CancellationToken cancellationToken);
 
+    Task<bool> RejectJoinRequestAsync(Guid requestId, IDbTransaction transaction, CancellationToken cancellationToken);
+
     Task<bool> BranchExistsAsync(Guid branchId, CancellationToken cancellationToken);
 
     Task<bool> CourtExistsAsync(Guid courtId, Guid branchId, CancellationToken cancellationToken);

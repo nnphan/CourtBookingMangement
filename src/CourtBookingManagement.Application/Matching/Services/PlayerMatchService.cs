@@ -334,6 +334,100 @@ public sealed class PlayerMatchService(
         }
     }
 
+    public async Task<Result<RejectJoinRequestResponse>> RejectJoinRequestAsync(
+        Guid matchId,
+        Guid requestId,
+        Guid currentUserId,
+        CancellationToken cancellationToken)
+    {
+        if (matchId == Guid.Empty)
+        {
+            return Result.Failure<RejectJoinRequestResponse>(new Error("PLAYER_MATCH.INVALID_ID", "A valid player match id is required."));
+        }
+
+        if (requestId == Guid.Empty)
+        {
+            return Result.Failure<RejectJoinRequestResponse>(new Error("PLAYER_MATCH.INVALID_REQUEST_ID", "A valid join request id is required."));
+        }
+
+        if (currentUserId == Guid.Empty)
+        {
+            return Result.Failure<RejectJoinRequestResponse>(new Error("PLAYER_MATCH.INVALID_USER", "The current user is invalid."));
+        }
+
+        var match = await repository.GetMatchByIdAsync(matchId, cancellationToken);
+        if (match is null)
+        {
+            return Result.Failure<RejectJoinRequestResponse>(new Error("PLAYER_MATCH.NOT_FOUND", "Player match not found."));
+        }
+
+        var joinRequest = await repository.GetJoinRequestAsync(requestId, cancellationToken);
+        if (joinRequest is null)
+        {
+            return Result.Failure<RejectJoinRequestResponse>(new Error("PLAYER_MATCH.REQUEST_NOT_FOUND", "Join request not found."));
+        }
+
+        if (joinRequest.MatchId != matchId)
+        {
+            return Result.Failure<RejectJoinRequestResponse>(new Error("PLAYER_MATCH.REQUEST_MISMATCH", "Join request does not belong to this match."));
+        }
+
+        if (match.CreatedBy != currentUserId)
+        {
+            return Result.Failure<RejectJoinRequestResponse>(new Error("PLAYER_MATCH.NOT_HOST", "You are not allowed to reject join requests."));
+        }
+
+        if (!string.Equals(match.Status, "OPEN", StringComparison.OrdinalIgnoreCase))
+        {
+            return Result.Failure<RejectJoinRequestResponse>(new Error("PLAYER_MATCH.NOT_OPEN", "Join requests can only be rejected while the match is open."));
+        }
+
+        if (!string.Equals(joinRequest.Status, "PENDING", StringComparison.OrdinalIgnoreCase))
+        {
+            return Result.Failure<RejectJoinRequestResponse>(new Error("PLAYER_MATCH.REQUEST_NOT_PENDING", "Only pending requests can be rejected."));
+        }
+
+        using var connection = sqlConnectionFactory.CreateConnection();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var rejected = await repository.RejectJoinRequestAsync(requestId, transaction, cancellationToken);
+            if (!rejected)
+            {
+                transaction.Rollback();
+                return Result.Failure<RejectJoinRequestResponse>(new Error(
+                    "PLAYER_MATCH.REQUEST_STATE_CHANGED",
+                    "The match or join request changed. Refresh and try again."));
+            }
+
+            await repository.CreateNotificationAsync(
+                joinRequest.UserId,
+                matchId,
+                "JOIN_REJECTED",
+                "Join request rejected",
+                "Your request to join the match has been rejected.",
+                transaction,
+                cancellationToken);
+
+            transaction.Commit();
+
+            return Result.Success(new RejectJoinRequestResponse
+            {
+                MatchId = matchId,
+                RequestId = requestId,
+                UserId = joinRequest.UserId,
+                Status = "REJECTED",
+                Message = "Join request rejected successfully."
+            });
+        }
+        catch (Exception exception)
+        {
+            transaction.Rollback();
+            return Result.Failure<RejectJoinRequestResponse>(Error.FromException(exception));
+        }
+    }
+
     private static string? NormalizeText(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
