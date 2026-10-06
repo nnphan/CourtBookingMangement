@@ -72,6 +72,8 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IAuthRepository, AuthRepository>();
         services.AddScoped<IBranchQueryRepository, BranchQueryRepository>();
+        services.AddScoped<IBranchRepository, BranchRepository>();
+        services.AddScoped<IAmenityRepository, AmenityRepository>();
         services.AddScoped<ICourtStatusRepository, CourtStatusRepository>();
         services.AddScoped<ICourtBookingRepository, CourtBookingRepository>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();

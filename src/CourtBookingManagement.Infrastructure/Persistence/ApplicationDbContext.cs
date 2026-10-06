@@ -117,6 +117,9 @@ public partial class ApplicationDbContext(
                 .HasOperators(new[] { "gin_trgm_ops" });
 
             entity.HasIndex(e => e.OwnerId, "ix_branches_owner").HasFilter("(deleted_at IS NULL)");
+            entity.HasIndex(e => new { e.OwnerId, e.Name }, "ux_branches_owner_name_active")
+                .IsUnique()
+                .HasFilter("(deleted_at IS NULL)");
 
             entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
@@ -132,6 +135,19 @@ public partial class ApplicationDbContext(
                 .HasConstraintName("branches_owner_id_fkey");
 
             entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.BranchUpdatedByNavigations).HasConstraintName("branches_updated_by_fkey");
+
+            entity.HasMany(d => d.Amenities).WithMany(p => p.Branches)
+                .UsingEntity<Dictionary<string, object>>(
+                    "BranchesAmenity",
+                    right => right.HasOne<Amenity>().WithMany().HasForeignKey("AmenityId").HasConstraintName("branches_amenities_amenity_id_fkey"),
+                    left => left.HasOne<Branch>().WithMany().HasForeignKey("BranchId").HasConstraintName("branches_amenities_branch_id_fkey"),
+                    join =>
+                    {
+                        join.HasKey("BranchId", "AmenityId").HasName("branches_amenities_pkey");
+                        join.ToTable("branches_amenities", "core");
+                        join.IndexerProperty<Guid>("BranchId").HasColumnName("branch_id");
+                        join.IndexerProperty<Guid>("AmenityId").HasColumnName("amenity_id");
+                    });
         });
 
         modelBuilder.Entity<Court>(entity =>
@@ -186,7 +202,7 @@ public partial class ApplicationDbContext(
             entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
             entity.Property(e => e.IsClosed).HasDefaultValue(false);
 
-            entity.HasOne(d => d.Branch).WithOne(p => p.OperatingHour)
+            entity.HasOne(d => d.Branch).WithMany(p => p.OperatingHours)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("operating_hours_branch_id_fkey");
         });
@@ -421,5 +437,26 @@ public partial class ApplicationDbContext(
     {
         _ = dateTimeProvider.UtcNow;
         return await base.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task ExecuteInTransactionAsync(
+        Func<CancellationToken, Task> operation,
+        CancellationToken cancellationToken = default)
+    {
+        var executionStrategy = Database.CreateExecutionStrategy();
+        await executionStrategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                await operation(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                throw;
+            }
+        });
     }
 }

@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 namespace CourtBookingManagement.Infrastructure.Persistence.Entities;
 
 [Table("operating_hours", Schema = "core")]
-[Index("BranchId", Name = "ux_operating_hours", IsUnique = true)]
 public partial class OperatingHour
 {
     [Key]
@@ -27,6 +26,6 @@ public partial class OperatingHour
     public bool IsClosed { get; set; }
 
     [ForeignKey("BranchId")]
-    [InverseProperty("OperatingHour")]
+    [InverseProperty("OperatingHours")]
     public virtual Branch Branch { get; set; } = null!;
 }

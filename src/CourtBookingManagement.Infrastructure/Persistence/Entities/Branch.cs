@@ -40,6 +40,9 @@ public partial class Branch
     [Column("is_active")]
     public bool IsActive { get; set; }
 
+    [Column("supports_instant_booking")]
+    public bool SupportsInstantBooking { get; set; }
+
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
 
@@ -88,7 +91,10 @@ public partial class Branch
     public virtual User? DeletedByNavigation { get; set; }
 
     [InverseProperty("Branch")]
-    public virtual OperatingHour? OperatingHour { get; set; }
+    public virtual ICollection<OperatingHour> OperatingHours { get; set; } = new List<OperatingHour>();
+
+    [InverseProperty("Branches")]
+    public virtual ICollection<Amenity> Amenities { get; set; } = new List<Amenity>();
 
     [ForeignKey("OwnerId")]
     [InverseProperty("Branches")]

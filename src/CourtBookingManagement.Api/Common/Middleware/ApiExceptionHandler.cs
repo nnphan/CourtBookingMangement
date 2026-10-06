@@ -1,6 +1,7 @@
 using CourtBookingManagement.Api.Common.Constants;
 using CourtBookingManagement.Api.Common.Exceptions;
 using CourtBookingManagement.Api.Common.Responses;
+using CourtBookingManagement.Application.Branches.Services;
 using Microsoft.AspNetCore.Diagnostics;
 using Npgsql;
 
@@ -17,6 +18,28 @@ public sealed class ApiExceptionHandler(
     {
         var (statusCode, errorCode, message, validationErrors) = exception switch
         {
+            BranchAlreadyExistsException => (
+                StatusCodes.Status409Conflict,
+                ErrorCodes.Conflict,
+                exception.Message,
+                (IReadOnlyCollection<ValidationError>?)null),
+            InvalidBranchAmenitiesException => (
+                StatusCodes.Status400BadRequest,
+                ErrorCodes.BadRequest,
+                exception.Message,
+                (IReadOnlyCollection<ValidationError>?)null),
+            BranchOwnerNotFoundException => (
+                StatusCodes.Status403Forbidden,
+                ErrorCodes.Forbidden,
+                exception.Message,
+                (IReadOnlyCollection<ValidationError>?)null),
+            FluentValidation.ValidationException validationException => (
+                StatusCodes.Status400BadRequest,
+                ErrorCodes.Validation,
+                validationException.Message,
+                validationException.Errors
+                    .Select(error => new ValidationError(error.PropertyName, error.ErrorMessage, error.ErrorCode))
+                    .ToArray()),
             ApiException apiException => (
                 apiException switch
                 {
