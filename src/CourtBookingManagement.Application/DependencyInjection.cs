@@ -8,6 +8,7 @@ using CourtBookingManagement.Application.Branches.Services;
 using CourtBookingManagement.Application.CourtStatus.Interfaces;
 using CourtBookingManagement.Application.CourtStatus.Services;
 using CourtBookingManagement.Application.Matching.Services;
+using CourtBookingManagement.Application.Notifications.Services;
 using CourtBookingManagement.Application.Users.Services;
 using CourtBookingManagement.Application.Validators;
 using FluentValidation;
@@ -30,6 +31,7 @@ public static class DependencyInjection
         services.AddScoped<IBranchService, BranchService>();
         services.AddScoped<IPlayerMatchService, PlayerMatchService>();
         services.AddScoped<IMyMatchService, MyMatchService>();
+        services.AddScoped<INotificationService, NotificationService>();
         services.AddValidatorsFromAssemblyContaining<CreateUserRequestValidator>();
         return services;
     }
