@@ -78,6 +78,7 @@ public static class DependencyInjection
         services.AddScoped<ICourtStatusRepository, CourtStatusRepository>();
         services.AddScoped<ICourtBookingRepository, CourtBookingRepository>();
         services.AddScoped<IPlayerMatchRepository, PlayerMatchRepository>();
+        services.AddScoped<IMyMatchRepository, MyMatchRepository>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();

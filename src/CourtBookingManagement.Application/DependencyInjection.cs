@@ -29,6 +29,7 @@ public static class DependencyInjection
         services.AddScoped<ICourtBookingService, CourtBookingService>();
         services.AddScoped<IBranchService, BranchService>();
         services.AddScoped<IPlayerMatchService, PlayerMatchService>();
+        services.AddScoped<IMyMatchService, MyMatchService>();
         services.AddValidatorsFromAssemblyContaining<CreateUserRequestValidator>();
         return services;
     }
