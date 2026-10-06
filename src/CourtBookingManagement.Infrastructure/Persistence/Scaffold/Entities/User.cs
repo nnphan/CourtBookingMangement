@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace CourtBookingManagement.Infrastructure.Persistence.Entities;
+namespace CourtBookingManagement.Infrastructure.Persistence.Scaffold.Entities;
 
 [Table("users", Schema = "auth")]
 [Index("PhoneNumber", Name = "ix_users_phone")]
@@ -17,10 +17,6 @@ public partial class User
     [Column("email")]
     [StringLength(100)]
     public string Email { get; set; } = null!;
-
-    [Column("full_name")]
-    [StringLength(255)]
-    public string? FullName { get; set; }
 
     [Column("phone_number")]
     [StringLength(20)]
@@ -56,14 +52,9 @@ public partial class User
     [Column("deleted_by")]
     public Guid? DeletedBy { get; set; }
 
-    [InverseProperty("CreatedByNavigation")]
-    public virtual ICollection<Booking> BookingCreatedByNavigations { get; set; } = new List<Booking>();
-
-    [InverseProperty("DeletedByNavigation")]
-    public virtual ICollection<Booking> BookingDeletedByNavigations { get; set; } = new List<Booking>();
-
-    [InverseProperty("UpdatedByNavigation")]
-    public virtual ICollection<Booking> BookingUpdatedByNavigations { get; set; } = new List<Booking>();
+    [Column("full_name")]
+    [StringLength(255)]
+    public string? FullName { get; set; }
 
     [InverseProperty("CreatedByNavigation")]
     public virtual ICollection<Branch> BranchCreatedByNavigations { get; set; } = new List<Branch>();
@@ -95,6 +86,18 @@ public partial class User
     [InverseProperty("User")]
     public virtual Customer? CustomerUser { get; set; }
 
+    [InverseProperty("Requester")]
+    public virtual ICollection<MatchJoinRequest> MatchJoinRequestRequesters { get; set; } = new List<MatchJoinRequest>();
+
+    [InverseProperty("ReviewedByNavigation")]
+    public virtual ICollection<MatchJoinRequest> MatchJoinRequestReviewedByNavigations { get; set; } = new List<MatchJoinRequest>();
+
+    [InverseProperty("User")]
+    public virtual ICollection<MatchNotification> MatchNotifications { get; set; } = new List<MatchNotification>();
+
+    [InverseProperty("User")]
+    public virtual ICollection<MatchParticipant> MatchParticipants { get; set; } = new List<MatchParticipant>();
+
     [InverseProperty("CreatedByNavigation")]
     public virtual ICollection<Owner> OwnerCreatedByNavigations { get; set; } = new List<Owner>();
 
@@ -107,8 +110,17 @@ public partial class User
     [InverseProperty("User")]
     public virtual Owner? OwnerUser { get; set; }
 
+    [InverseProperty("CreatedByNavigation")]
+    public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
+
+    [InverseProperty("CreatedByNavigation")]
+    public virtual ICollection<PlayerMatch> PlayerMatches { get; set; } = new List<PlayerMatch>();
+
     [InverseProperty("User")]
     public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+
+    [InverseProperty("ProcessedByNavigation")]
+    public virtual ICollection<Refund> Refunds { get; set; } = new List<Refund>();
 
     [InverseProperty("CreatedByNavigation")]
     public virtual ICollection<Role> RoleCreatedByNavigations { get; set; } = new List<Role>();
@@ -122,30 +134,9 @@ public partial class User
     [InverseProperty("AssignedByNavigation")]
     public virtual ICollection<UserRole> UserRoleAssignedByNavigations { get; set; } = new List<UserRole>();
 
-    [InverseProperty("CreatedByNavigation")]
-    public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
-
-    [InverseProperty("ProcessedByNavigation")]
-    public virtual ICollection<Refund> Refunds { get; set; } = new List<Refund>();
-
     [InverseProperty("User")]
     public virtual ICollection<UserRole> UserRoleUsers { get; set; } = new List<UserRole>();
 
     [InverseProperty("User")]
     public virtual ICollection<UserSession> UserSessions { get; set; } = new List<UserSession>();
-
-    [InverseProperty("Requester")]
-    public virtual ICollection<MatchJoinRequest> MatchJoinRequestRequesters { get; set; } = new List<MatchJoinRequest>();
-
-    [InverseProperty("ReviewedByNavigation")]
-    public virtual ICollection<MatchJoinRequest> MatchJoinRequestReviewedByNavigations { get; set; } = new List<MatchJoinRequest>();
-
-    [InverseProperty("CreatedByNavigation")]
-    public virtual ICollection<PlayerMatch> PlayerMatches { get; set; } = new List<PlayerMatch>();
-
-    [InverseProperty("User")]
-    public virtual ICollection<MatchNotification> MatchNotifications { get; set; } = new List<MatchNotification>();
-
-    [InverseProperty("User")]
-    public virtual ICollection<MatchParticipant> MatchParticipants { get; set; } = new List<MatchParticipant>();
 }

@@ -53,6 +53,14 @@ public partial class ApplicationDbContext(
 
     public virtual DbSet<Transaction> Transactions { get; set; }
 
+    public virtual DbSet<MatchJoinRequest> MatchJoinRequests { get; set; }
+
+    public virtual DbSet<MatchNotification> MatchNotifications { get; set; }
+
+    public virtual DbSet<MatchParticipant> MatchParticipants { get; set; }
+
+    public virtual DbSet<PlayerMatch> PlayerMatches { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -426,6 +434,81 @@ public partial class ApplicationDbContext(
             entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
             entity.Property(e => e.Status).HasDefaultValueSql("'pending'::character varying");
+        });
+
+
+        modelBuilder.Entity<MatchJoinRequest>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("match_join_requests_pkey");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
+            entity.Property(e => e.RequestedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.Status).HasDefaultValueSql("'PENDING'::character varying");
+
+            entity.HasOne(d => d.Match).WithMany(p => p.MatchJoinRequests)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("match_join_requests_match_id_fkey");
+
+            entity.HasOne(d => d.Requester).WithMany(p => p.MatchJoinRequestRequesters)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("match_join_requests_requester_id_fkey");
+
+            entity.HasOne(d => d.ReviewedByNavigation).WithMany(p => p.MatchJoinRequestReviewedByNavigations).HasConstraintName("match_join_requests_reviewed_by_fkey");
+        });
+
+        modelBuilder.Entity<MatchNotification>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("match_notifications_pkey");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.IsRead).HasDefaultValue(false);
+
+            entity.HasOne(d => d.Match).WithMany(p => p.MatchNotifications).HasConstraintName("match_notifications_match_id_fkey");
+
+            entity.HasOne(d => d.User).WithMany(p => p.MatchNotifications)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("match_notifications_user_id_fkey");
+        });
+
+        modelBuilder.Entity<MatchParticipant>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("match_participants_pkey");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
+            entity.Property(e => e.JoinedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.Role).HasConversion<string>().HasDefaultValueSql("'PLAYER'::character varying");
+            entity.Property(e => e.Status).HasConversion<string>().HasDefaultValueSql("'ACTIVE'::character varying");
+
+            entity.HasOne(d => d.Match).WithMany(p => p.MatchParticipants)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("match_participants_match_id_fkey");
+
+            entity.HasOne(d => d.User).WithMany(p => p.MatchParticipants)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("match_participants_user_id_fkey");
+        });
+
+        modelBuilder.Entity<PlayerMatch>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("player_matches_pkey");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.CurrentPlayers).HasDefaultValue(1);
+            entity.Property(e => e.SkillLevel).HasConversion<string>().HasDefaultValueSql("'BEGINNER'::character varying");
+            entity.Property(e => e.Status).HasConversion<string>().HasDefaultValueSql("'OPEN'::character varying");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.Branch).WithMany(p => p.PlayerMatches)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("player_matches_branch_id_fkey");
+
+            entity.HasOne(d => d.Court).WithMany(p => p.PlayerMatches).HasConstraintName("player_matches_court_id_fkey");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.PlayerMatches)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("player_matches_created_by_fkey");
         });
 
         OnModelCreatingPartial(modelBuilder);

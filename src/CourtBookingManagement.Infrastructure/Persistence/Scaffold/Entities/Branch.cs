@@ -1,11 +1,10 @@
-﻿using CourtBookingManagement.Infrastructure.Persistence.Entities;
-using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
-namespace CourtBookingManagement.Infrastructure.Persistence.Entities;
+namespace CourtBookingManagement.Infrastructure.Persistence.Scaffold.Entities;
 
 [Table("branches", Schema = "core")]
 public partial class Branch
@@ -40,9 +39,6 @@ public partial class Branch
     [Column("is_active")]
     public bool IsActive { get; set; }
 
-    [Column("supports_instant_booking")]
-    public bool SupportsInstantBooking { get; set; }
-
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
 
@@ -73,14 +69,17 @@ public partial class Branch
     [StringLength(100)]
     public string TimeZone { get; set; } = null!;
 
-    [InverseProperty("Branch")]
-    public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
-
-    [InverseProperty("Branch")]
-    public virtual ICollection<Court> Courts { get; set; } = new List<Court>();
+    [Column("supports_instant_booking")]
+    public bool SupportsInstantBooking { get; set; }
 
     [InverseProperty("Branch")]
     public virtual ICollection<BranchImage> BranchImages { get; set; } = new List<BranchImage>();
+
+    [InverseProperty("Branch")]
+    public virtual ICollection<BranchPricing> BranchPricings { get; set; } = new List<BranchPricing>();
+
+    [InverseProperty("Branch")]
+    public virtual ICollection<Court> Courts { get; set; } = new List<Court>();
 
     [ForeignKey("CreatedBy")]
     [InverseProperty("BranchCreatedByNavigations")]
@@ -91,19 +90,20 @@ public partial class Branch
     public virtual User? DeletedByNavigation { get; set; }
 
     [InverseProperty("Branch")]
-    public virtual ICollection<OperatingHour> OperatingHours { get; set; } = new List<OperatingHour>();
-
-    [InverseProperty("Branches")]
-    public virtual ICollection<Amenity> Amenities { get; set; } = new List<Amenity>();
+    public virtual OperatingHour? OperatingHour { get; set; }
 
     [ForeignKey("OwnerId")]
     [InverseProperty("Branches")]
     public virtual Owner Owner { get; set; } = null!;
 
+    [InverseProperty("Branch")]
+    public virtual ICollection<PlayerMatch> PlayerMatches { get; set; } = new List<PlayerMatch>();
+
     [ForeignKey("UpdatedBy")]
     [InverseProperty("BranchUpdatedByNavigations")]
     public virtual User? UpdatedByNavigation { get; set; }
 
-    [InverseProperty("Branch")]
-    public virtual ICollection<PlayerMatch> PlayerMatches { get; set; } = new List<PlayerMatch>();
+    [ForeignKey("BranchId")]
+    [InverseProperty("Branches")]
+    public virtual ICollection<Amenity> Amenities { get; set; } = new List<Amenity>();
 }

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace CourtBookingManagement.Infrastructure.Persistence.Entities;
+namespace CourtBookingManagement.Infrastructure.Persistence.Scaffold.Entities;
 
 [Table("courts", Schema = "core")]
 [Index("BranchId", "CourtNumber", Name = "ux_courts_branch_number", IsUnique = true)]
@@ -21,8 +21,7 @@ public partial class Court
     public Guid? CourtTypeId { get; set; }
 
     [Column("court_number")]
-    [StringLength(20)]
-    public string CourtNumber { get; set; } = null!;
+    public int CourtNumber { get; set; }
 
     [Column("name")]
     [StringLength(100)]
@@ -53,9 +52,6 @@ public partial class Court
     [Column("deleted_by")]
     public Guid? DeletedBy { get; set; }
 
-    [InverseProperty("Court")]
-    public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();
-
     [ForeignKey("BranchId")]
     [InverseProperty("Courts")]
     public virtual Branch Branch { get; set; } = null!;
@@ -72,10 +68,10 @@ public partial class Court
     [InverseProperty("CourtDeletedByNavigations")]
     public virtual User? DeletedByNavigation { get; set; }
 
+    [InverseProperty("Court")]
+    public virtual ICollection<PlayerMatch> PlayerMatches { get; set; } = new List<PlayerMatch>();
+
     [ForeignKey("UpdatedBy")]
     [InverseProperty("CourtUpdatedByNavigations")]
     public virtual User? UpdatedByNavigation { get; set; }
-
-    [InverseProperty("Court")]
-    public virtual ICollection<PlayerMatch> PlayerMatches { get; set; } = new List<PlayerMatch>();
 }
