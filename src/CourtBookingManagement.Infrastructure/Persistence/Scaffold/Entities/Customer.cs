@@ -25,7 +25,7 @@ public partial class Customer
     public string FullName { get; set; } = null!;
 
     [Column("email")]
-    [StringLength(20)]
+    [StringLength(100)]
     public string? Email { get; set; }
 
     [Column("phone_number")]

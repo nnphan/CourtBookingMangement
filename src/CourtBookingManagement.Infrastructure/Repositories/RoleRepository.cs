@@ -108,4 +108,22 @@ public sealed class RoleRepository(ISqlConnectionFactory sqlConnectionFactory) :
         "code_desc" => "ORDER BY Code DESC",
         _ => "ORDER BY CreatedAt DESC"
     };
+
+    public async Task<Guid?> GetRoleIdByCodeAsync(
+        string roleCode,
+        CancellationToken cancellationToken)
+    {
+        const string sql = """
+            SELECT r.id
+            FROM auth.roles r
+            WHERE r.code = @RoleCode
+              AND r.is_active = TRUE
+              AND r.deleted_at IS NULL
+            LIMIT 1;
+            """;
+
+        using var connection = sqlConnectionFactory.CreateConnection();
+        return await connection.ExecuteScalarAsync<Guid?>(
+            new CommandDefinition(sql, new { RoleCode = roleCode }, cancellationToken: cancellationToken));
+    }
 }

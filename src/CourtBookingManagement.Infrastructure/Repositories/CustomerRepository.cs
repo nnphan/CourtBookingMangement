@@ -1,3 +1,4 @@
+using System.Data;
 using System.Text;
 using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.Customers.Models.Requests;
@@ -157,4 +158,75 @@ public sealed class CustomerRepository(ISqlConnectionFactory sqlConnectionFactor
         "points_desc" => "ORDER BY LoyaltyPointsBalance DESC, CreatedAt DESC, Id DESC",
         _ => "ORDER BY CreatedAt DESC, Id DESC"
     };
+
+    public async Task<bool> ExistsByUserIdAsync(
+        Guid userId,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        const string sql = """
+            SELECT EXISTS
+            (
+                SELECT 1
+                FROM customer.customers c
+                WHERE c.user_id = @UserId
+                  AND c.deleted_at IS NULL
+            );
+            """;
+
+        return await transaction.Connection!.ExecuteScalarAsync<bool>(new CommandDefinition(
+            sql,
+            new { UserId = userId },
+            transaction,
+            cancellationToken: cancellationToken));
+    }
+
+    public async Task<Guid> CreateCustomerAsync(
+        CreateCustomerInternalRequest request,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        // ux_customers_user enforces one active profile per user even if a concurrent insert slips past the exists check.
+        const string sql = """
+            INSERT INTO customer.customers
+            (
+                user_id,
+                membership_level_id,
+                full_name,
+                email,
+                phone_number,
+                is_guest,
+                loyalty_points_balance,
+                is_active,
+                created_at,
+                created_by,
+                updated_at,
+                updated_by
+            )
+            VALUES
+            (
+                @UserId,
+                @MembershipLevelId,
+                @FullName,
+                @Email,
+                @PhoneNumber,
+                @IsGuest,
+                @LoyaltyPointsBalance,
+                @IsActive,
+                NOW(),
+                @CreatedBy,
+                NOW(),
+                @CreatedBy
+            )
+            RETURNING id;
+            """;
+
+        return await transaction.Connection!.ExecuteScalarAsync<Guid>(new CommandDefinition(
+            sql,
+            request,
+            transaction,
+            cancellationToken: cancellationToken));
+    }
 }

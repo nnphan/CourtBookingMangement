@@ -1,6 +1,12 @@
+using System.Data;
 using CourtBookingManagement.Application.Abstractions.Clock;
+using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.Auth.DTOs;
 using CourtBookingManagement.Application.Auth.Interfaces;
+using CourtBookingManagement.Application.Customers.Models.Requests;
+using CourtBookingManagement.Application.Customers.Repositories;
+using CourtBookingManagement.Application.Roles.Repositories;
+using CourtBookingManagement.Application.UserRoles.Repositories;
 using CourtBookingManagement.Domain.Abstractions;
 using CourtBookingManagement.Domain.Users;
 
@@ -8,12 +14,33 @@ namespace CourtBookingManagement.Application.Auth.Services;
 
 public sealed class AuthService : IAuthService
 {
+    private const string CustomerRoleCode = "CUSTOMER";
+    private const int MaxCustomerFullNameLength = 150;
+    private const int MaxPhoneNumberLength = 20;
+
+    private static readonly Error CustomerRoleNotConfigured = new(
+        "Auth.CustomerRoleNotConfigured",
+        "Configuration error. CUSTOMER role does not exist.");
+
+    private static readonly Error DefaultMembershipNotConfigured = new(
+        "Auth.DefaultMembershipNotConfigured",
+        "Configuration error. Default membership level does not exist.");
+
+    private static readonly Error CustomerProfileAlreadyExists = new(
+        "Customer.ProfileAlreadyExists",
+        "A customer profile already exists for this user.");
+
     private readonly IUserRepository _userRepository;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IPermissionService _permissionService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IDateTimeProvider _dateTimeProvider;
     private readonly IAuthRepository _authRepository;
+    private readonly IRoleRepository _roleRepository;
+    private readonly IUserRoleRepository _userRoleRepository;
+    private readonly ICustomerRepository _customerRepository;
+    private readonly IMembershipLevelRepository _membershipLevelRepository;
+    private readonly ISqlConnectionFactory _sqlConnectionFactory;
 
     public AuthService(
         IUserRepository userRepository,
@@ -21,7 +48,12 @@ public sealed class AuthService : IAuthService
         IPermissionService permissionService,
         IUnitOfWork unitOfWork,
         IDateTimeProvider dateTimeProvider,
-        IAuthRepository authRepository)
+        IAuthRepository authRepository,
+        IRoleRepository roleRepository,
+        IUserRoleRepository userRoleRepository,
+        ICustomerRepository customerRepository,
+        IMembershipLevelRepository membershipLevelRepository,
+        ISqlConnectionFactory sqlConnectionFactory)
     {
         _userRepository = userRepository;
         _jwtTokenService = jwtTokenService;
@@ -29,28 +61,50 @@ public sealed class AuthService : IAuthService
         _unitOfWork = unitOfWork;
         _dateTimeProvider = dateTimeProvider;
         _authRepository = authRepository;
+        _roleRepository = roleRepository;
+        _userRoleRepository = userRoleRepository;
+        _customerRepository = customerRepository;
+        _membershipLevelRepository = membershipLevelRepository;
+        _sqlConnectionFactory = sqlConnectionFactory;
     }
 
     public async Task<Result<RegisterResponse>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+        var validationError = ValidateRegisterRequest(request);
+        if (validationError != Error.None)
         {
-            return Result.Failure<RegisterResponse>(new Error("Auth.InvalidRequest", "Email and password are required."));
+            return Result.Failure<RegisterResponse>(validationError);
         }
 
         var normalizedEmail = request.Email.Trim();
+        var fullName = request.FullName!.Trim();
+        var phoneNumber = request.PhoneNumber!.Trim();
+
         if (await _userRepository.ExistsByEmailAsync(normalizedEmail, cancellationToken: cancellationToken))
         {
             return Result.Failure<RegisterResponse>(UserErrors.EmailAlreadyExists(normalizedEmail));
         }
 
+        // Resolve reference data before writing anything so a misconfigured system fails without side effects.
+        var customerRoleId = await _roleRepository.GetRoleIdByCodeAsync(CustomerRoleCode, cancellationToken);
+        if (customerRoleId is null)
+        {
+            return Result.Failure<RegisterResponse>(CustomerRoleNotConfigured);
+        }
+
+        var membershipLevelId = await _membershipLevelRepository.GetDefaultMembershipLevelIdAsync(cancellationToken);
+        if (membershipLevelId is null)
+        {
+            return Result.Failure<RegisterResponse>(DefaultMembershipNotConfigured);
+        }
+
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
         var userResult = User.Create(
             normalizedEmail,
-            request.FullName,
+            fullName,
             passwordHash,
             _dateTimeProvider.UtcNow,
-            request.PhoneNumber,
+            phoneNumber,
             null);
 
         if (userResult.IsFailure)
@@ -58,23 +112,48 @@ public sealed class AuthService : IAuthService
             return Result.Failure<RegisterResponse>(userResult.Error);
         }
 
-        await _userRepository.AddAsync(userResult.Value, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        var user = userResult.Value;
 
-        var result = Result.Success(new RegisterResponse
+        using var connection = _sqlConnectionFactory.CreateConnection();
+        connection.Open();
+        using var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
+
+        try
         {
-            User = new CurrentUserResponse
-            {
-                Id = userResult.Value.Id,
-                Email = userResult.Value.Email,
-                FullName = userResult.Value.FullName,
-                PhoneNumber = userResult.Value.PhoneNumber,
-                IsActive = userResult.Value.IsActive,
-                IsEmailVerified = userResult.Value.IsEmailVerified
-            }
-        });
+            var userId = await _userRepository.CreateUserAsync(user, transaction, cancellationToken);
 
-        return result;
+            await _userRoleRepository.AssignRoleAsync(userId, customerRoleId.Value, transaction, cancellationToken);
+
+            if (await _customerRepository.ExistsByUserIdAsync(userId, transaction, cancellationToken))
+            {
+                transaction.Rollback();
+                return Result.Failure<RegisterResponse>(CustomerProfileAlreadyExists);
+            }
+
+            await _customerRepository.CreateCustomerAsync(
+                new CreateCustomerInternalRequest
+                {
+                    UserId = userId,
+                    MembershipLevelId = membershipLevelId.Value,
+                    FullName = fullName,
+                    Email = normalizedEmail,
+                    PhoneNumber = phoneNumber,
+                    IsGuest = false,
+                    LoyaltyPointsBalance = 0,
+                    IsActive = true
+                },
+                transaction,
+                cancellationToken);
+
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+
+        return await CreateRegisterResponseAsync(user, cancellationToken);
     }
 
     public async Task<Result<AuthResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
@@ -286,6 +365,37 @@ public sealed class AuthService : IAuthService
                 Permissions = permissions
             }
         });
+    }
+
+    // customer.customers requires full_name and phone_number, so registration must collect both.
+    private static Error ValidateRegisterRequest(RegisterRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+        {
+            return new Error("Auth.InvalidRequest", "Email and password are required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.FullName))
+        {
+            return new Error("Auth.InvalidRequest", "Full name is required.");
+        }
+
+        if (request.FullName.Trim().Length > MaxCustomerFullNameLength)
+        {
+            return new Error("Auth.InvalidRequest", $"Full name cannot exceed {MaxCustomerFullNameLength} characters.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.PhoneNumber))
+        {
+            return new Error("Auth.InvalidRequest", "Phone number is required.");
+        }
+
+        if (request.PhoneNumber.Trim().Length > MaxPhoneNumberLength)
+        {
+            return new Error("Auth.InvalidRequest", $"Phone number cannot exceed {MaxPhoneNumberLength} characters.");
+        }
+
+        return Error.None;
     }
 
     private async Task<Result<RegisterResponse>> CreateRegisterResponseAsync(User user, CancellationToken cancellationToken)

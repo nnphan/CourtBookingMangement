@@ -9,4 +9,8 @@ public interface IRoleRepository
     Task<PagedResult<RoleResponse>> SearchAsync(
         RoleSearchRequest request,
         CancellationToken cancellationToken);
+
+    Task<Guid?> GetRoleIdByCodeAsync(
+        string roleCode,
+        CancellationToken cancellationToken);
 }

@@ -1,3 +1,4 @@
+using System.Data;
 using CourtBookingManagement.Application.Customers.Models.Requests;
 using CourtBookingManagement.Application.Customers.Models.Responses;
 using CourtBookingManagement.Application.Matching.Models;
@@ -12,5 +13,15 @@ public interface ICustomerRepository
 
     Task<CustomerDetailResponse?> GetByIdAsync(
         Guid customerId,
+        CancellationToken cancellationToken);
+
+    Task<bool> ExistsByUserIdAsync(
+        Guid userId,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
+
+    Task<Guid> CreateCustomerAsync(
+        CreateCustomerInternalRequest request,
+        IDbTransaction transaction,
         CancellationToken cancellationToken);
 }

@@ -181,4 +181,33 @@ public sealed class UserRoleRepository(ISqlConnectionFactory sqlConnectionFactor
         assignment.Roles = roles.AsList();
         return assignment;
     }
+
+    public async Task AssignRoleAsync(
+        Guid userId,
+        Guid roleId,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        const string sql = """
+            INSERT INTO auth.user_roles
+            (
+                user_id,
+                role_id,
+                assigned_at
+            )
+            VALUES
+            (
+                @UserId,
+                @RoleId,
+                NOW()
+            )
+            ON CONFLICT (user_id, role_id) DO NOTHING;
+            """;
+
+        await transaction.Connection!.ExecuteAsync(new CommandDefinition(
+            sql,
+            new { UserId = userId, RoleId = roleId },
+            transaction,
+            cancellationToken: cancellationToken));
+    }
 }

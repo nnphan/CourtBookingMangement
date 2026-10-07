@@ -31,4 +31,10 @@ public interface IUserRoleRepository
     Task<UserRoleAssignmentResponse?> GetUserRoleAssignmentAsync(
         Guid userId,
         CancellationToken cancellationToken);
+
+    Task AssignRoleAsync(
+        Guid userId,
+        Guid roleId,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
 }

@@ -1,3 +1,5 @@
+using System.Data;
+
 namespace CourtBookingManagement.Domain.Users;
 
 public interface IUserRepository
@@ -20,5 +22,10 @@ public interface IUserRepository
 
     Task UpdateAsync(
         User user,
+        CancellationToken cancellationToken = default);
+
+    Task<Guid> CreateUserAsync(
+        User user,
+        IDbTransaction transaction,
         CancellationToken cancellationToken = default);
 }

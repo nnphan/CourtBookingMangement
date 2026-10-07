@@ -18,6 +18,8 @@ public static class ErrorStatusMapper
         "Error.Validation" or "PLAYER_MATCH.NOT_OPEN" or "PLAYER_MATCH.MATCH_EXPIRED" or "PLAYER_MATCH.MATCH_FULL" or "PLAYER_MATCH.HOST_ALREADY_PARTICIPANT" or "PLAYER_MATCH.REQUEST_MISMATCH" or "PLAYER_MATCH.REQUEST_NOT_PENDING" => StatusCodes.Status400BadRequest,
         "Court.NotFound" or "Court.BranchNotFound" => StatusCodes.Status404NotFound,
         "Customer.NotFound" => StatusCodes.Status404NotFound,
+        "Customer.ProfileAlreadyExists" => StatusCodes.Status409Conflict,
+        "Auth.CustomerRoleNotConfigured" or "Auth.DefaultMembershipNotConfigured" => StatusCodes.Status500InternalServerError,
         "Court.DuplicateName" or "Court.DuplicateNumber" => StatusCodes.Status409Conflict,
         "CourtBooking.NotFound" => StatusCodes.Status404NotFound,
         "CourtBooking.Conflict" => StatusCodes.Status409Conflict,

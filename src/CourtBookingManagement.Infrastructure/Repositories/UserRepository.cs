@@ -4,6 +4,8 @@ using CourtBookingManagement.Domain.Users;
 using CourtBookingManagement.Infrastructure.Persistence.Mappings;
 using Microsoft.EntityFrameworkCore;
 using CourtBookingManagement.Infrastructure.Persistence;
+using System.Data;
+using Dapper;
 
 namespace CourtBookingManagement.Infrastructure.Repositories;
 
@@ -80,5 +82,65 @@ public sealed class UserRepository : IUserRepository
             ?? throw new InvalidOperationException($"User '{user.Id}' was not found.");
 
         user.ApplyTo(entity);
+    }
+
+    public async Task<Guid> CreateUserAsync(
+        DomainUser user,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+        ArgumentNullException.ThrowIfNull(transaction);
+
+        const string sql = """
+            INSERT INTO auth.users
+            (
+                id,
+                email,
+                full_name,
+                phone_number,
+                password_hash,
+                is_active,
+                is_email_verified,
+                created_at,
+                created_by,
+                updated_at,
+                updated_by
+            )
+            VALUES
+            (
+                @Id,
+                @Email,
+                @FullName,
+                @PhoneNumber,
+                @PasswordHash,
+                @IsActive,
+                @IsEmailVerified,
+                @CreatedAt,
+                @CreatedBy,
+                @UpdatedAt,
+                @UpdatedBy
+            )
+            RETURNING id;
+            """;
+
+        return await transaction.Connection!.ExecuteScalarAsync<Guid>(new CommandDefinition(
+            sql,
+            new
+            {
+                user.Id,
+                user.Email,
+                user.FullName,
+                user.PhoneNumber,
+                user.PasswordHash,
+                user.IsActive,
+                user.IsEmailVerified,
+                user.CreatedAt,
+                user.CreatedBy,
+                user.UpdatedAt,
+                user.UpdatedBy
+            },
+            transaction,
+            cancellationToken: cancellationToken));
     }
 }
