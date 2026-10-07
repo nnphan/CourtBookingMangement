@@ -6,6 +6,7 @@ using CourtBookingManagement.Application.CourtStatus.Interfaces;
 using CourtBookingManagement.Application.CourtBookings.Interfaces;
 using CourtBookingManagement.Application.Matching.Repositories;
 using CourtBookingManagement.Application.Notifications.Repositories;
+using CourtBookingManagement.Application.Roles.Repositories;
 using CourtBookingManagement.Application.Options;
 using CourtBookingManagement.Domain.Abstractions;
 using CourtBookingManagement.Domain.Users;
@@ -81,6 +82,7 @@ public static class DependencyInjection
         services.AddScoped<IPlayerMatchRepository, PlayerMatchRepository>();
         services.AddScoped<IMyMatchRepository, MyMatchRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
