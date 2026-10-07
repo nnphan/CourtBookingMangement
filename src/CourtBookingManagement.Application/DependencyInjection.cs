@@ -11,6 +11,7 @@ using CourtBookingManagement.Application.Matching.Services;
 using CourtBookingManagement.Application.Notifications.Services;
 using CourtBookingManagement.Application.Permissions.Services;
 using CourtBookingManagement.Application.Roles.Services;
+using CourtBookingManagement.Application.UserRoles.Services;
 using CourtBookingManagement.Application.Users.Services;
 using CourtBookingManagement.Application.Validators;
 using FluentValidation;
@@ -35,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<IMyMatchService, MyMatchService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IRoleService, RoleService>();
+        services.AddScoped<IUserRoleService, UserRoleService>();
         services.AddScoped<CourtBookingManagement.Application.Permissions.Services.IPermissionService, PermissionService>();
         services.AddValidatorsFromAssemblyContaining<CreateUserRequestValidator>();
         return services;
