@@ -1,3 +1,4 @@
+using System.Data;
 using System.Net;
 using System.Net.Http.Json;
 using System.Security.Claims;
@@ -10,6 +11,7 @@ using CourtBookingManagement.Application.Branches.Interfaces;
 using CourtBookingManagement.Application.Branches.Services;
 using CourtBookingManagement.Application.Branches.Validators;
 using CourtBookingManagement.Application.Abstractions.Clock;
+using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Domain.Abstractions;
 using CourtBookingManagement.Infrastructure.Persistence;
 using CourtBookingManagement.Infrastructure.Persistence.Entities;
@@ -176,7 +178,12 @@ public sealed class CreateBranchTests
         StubBranchRepository branchRepository,
         IAmenityRepository amenityRepository,
         IUnitOfWork unitOfWork) =>
-        new BranchService(branchRepository, amenityRepository, unitOfWork, new CreateBranchRequestValidator());
+        new BranchService(
+            branchRepository,
+            amenityRepository,
+            unitOfWork,
+            new CreateBranchRequestValidator(),
+            new StubSqlConnectionFactory());
 
     private static CreateBranchRequest ValidRequest() => new()
     {
@@ -212,6 +219,20 @@ public sealed class CreateBranchTests
             Saved = true;
             return Task.CompletedTask;
         }
+
+        public Task<bool?> IsDeletedAsync(Guid branchId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<bool> SoftDeleteAsync(
+            Guid branchId,
+            Guid deletedBy,
+            IDbTransaction transaction,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
+    }
+
+    private sealed class StubSqlConnectionFactory : ISqlConnectionFactory
+    {
+        public IDbConnection CreateConnection() => throw new NotSupportedException();
     }
 
     private sealed class TestClock : IDateTimeProvider
@@ -244,6 +265,11 @@ public sealed class CreateBranchTests
             CreateBranchRequest request,
             Guid ownerId,
             CancellationToken cancellationToken) => Task.FromResult(response);
+
+        public Task<Result> DeleteAsync(
+            Guid branchId,
+            Guid deletedBy,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 
     private sealed class TestAuthenticationHandler(

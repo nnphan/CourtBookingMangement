@@ -7,6 +7,7 @@ using CourtBookingManagement.Application.Auth.Interfaces;
 using CourtBookingManagement.Application.Branches.DTOs.Requests;
 using CourtBookingManagement.Application.Branches.DTOs.Responses;
 using CourtBookingManagement.Application.Branches.Services;
+using CourtBookingManagement.Infrastructure.Auth;
 using Microsoft.AspNetCore.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -62,5 +63,22 @@ public sealed class BranchesController(
     {
         var result = await sender.Send(new GetBranchDetailsQuery(id), cancellationToken);
         return FromResult(result, "Branch details retrieved successfully.");
+    }
+
+    [HttpDelete("{id:guid}")]
+    [Permission("branch.delete")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid userId)
+        {
+            return Unauthorized();
+        }
+
+        var result = await branchService.DeleteAsync(id, userId, cancellationToken);
+        return FromResult(result, "Branch deleted successfully.");
     }
 }

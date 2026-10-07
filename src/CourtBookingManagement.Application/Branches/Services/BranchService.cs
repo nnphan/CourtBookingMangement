@@ -1,3 +1,4 @@
+using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.Branches.DTOs;
 using CourtBookingManagement.Application.Branches.DTOs.Requests;
 using CourtBookingManagement.Application.Branches.DTOs.Responses;
@@ -11,8 +12,13 @@ public sealed class BranchService(
     IBranchRepository branchRepository,
     IAmenityRepository amenityRepository,
     IUnitOfWork unitOfWork,
-    IValidator<CreateBranchRequest> validator) : IBranchService
+    IValidator<CreateBranchRequest> validator,
+    ISqlConnectionFactory sqlConnectionFactory) : IBranchService
 {
+    private static readonly Error BranchNotFound = new("Branch.NotFound", "Branch not found.");
+
+    private static readonly Error BranchAlreadyDeleted = new("Branch.AlreadyDeleted", "Branch has already been deleted.");
+
     public async Task<CreateBranchResponse> CreateAsync(
         CreateBranchRequest request,
         Guid ownerId,
@@ -77,5 +83,53 @@ public sealed class BranchService(
             Name = request.Name,
             IsActive = true
         };
+    }
+
+    public async Task<Result> DeleteAsync(
+        Guid branchId,
+        Guid deletedBy,
+        CancellationToken cancellationToken)
+    {
+        if (branchId == Guid.Empty)
+        {
+            return Result.Failure(new Error("Branch.InvalidId", "A valid branch id is required."));
+        }
+
+        if (deletedBy == Guid.Empty)
+        {
+            return Result.Failure(new Error("Branch.InvalidUser", "The current user is invalid."));
+        }
+
+        var isDeleted = await branchRepository.IsDeletedAsync(branchId, cancellationToken);
+        if (isDeleted is null)
+        {
+            return Result.Failure(BranchNotFound);
+        }
+
+        if (isDeleted.Value)
+        {
+            return Result.Failure(BranchAlreadyDeleted);
+        }
+
+        using var connection = sqlConnectionFactory.CreateConnection();
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            if (!await branchRepository.SoftDeleteAsync(branchId, deletedBy, transaction, cancellationToken))
+            {
+                transaction.Rollback();
+                return Result.Failure(BranchAlreadyDeleted);
+            }
+
+            transaction.Commit();
+            return Result.Success();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
     }
 }
