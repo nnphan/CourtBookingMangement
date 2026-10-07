@@ -5,6 +5,7 @@ using CourtBookingManagement.Application.Abstractions.Behaviors;
 using CourtBookingManagement.Application.CourtBookings.Interfaces;
 using CourtBookingManagement.Application.CourtBookings.Services;
 using CourtBookingManagement.Application.Branches.Services;
+using CourtBookingManagement.Application.Courts.Services;
 using CourtBookingManagement.Application.CourtStatus.Interfaces;
 using CourtBookingManagement.Application.CourtStatus.Services;
 using CourtBookingManagement.Application.Matching.Services;
@@ -37,6 +38,7 @@ public static class DependencyInjection
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<IUserRoleService, UserRoleService>();
+        services.AddScoped<ICourtService, CourtService>();
         services.AddScoped<CourtBookingManagement.Application.Permissions.Services.IPermissionService, PermissionService>();
         services.AddValidatorsFromAssemblyContaining<CreateUserRequestValidator>();
         return services;
