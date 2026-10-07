@@ -1,3 +1,4 @@
+using CourtBookingManagement.Application.UserRoles.Models.Requests;
 using CourtBookingManagement.Application.UserRoles.Models.Responses;
 using CourtBookingManagement.Domain.Abstractions;
 
@@ -7,5 +8,11 @@ public interface IUserRoleService
 {
     Task<Result<IReadOnlyList<UserRoleResponse>>> GetUserRolesAsync(
         Guid userId,
+        CancellationToken cancellationToken);
+
+    Task<Result<UserRoleAssignmentResponse>> AssignRolesAsync(
+        Guid userId,
+        AssignUserRolesRequest request,
+        Guid assignedBy,
         CancellationToken cancellationToken);
 }

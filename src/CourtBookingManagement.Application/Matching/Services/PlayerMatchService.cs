@@ -126,6 +126,7 @@ public sealed class PlayerMatchService(
         }
 
         using var connection = sqlConnectionFactory.CreateConnection();
+        connection.Open();
         using var transaction = connection.BeginTransaction();
 
         try
@@ -199,6 +200,7 @@ public sealed class PlayerMatchService(
         }
 
         using var connection = sqlConnectionFactory.CreateConnection();
+        connection.Open();
         using var transaction = connection.BeginTransaction();
 
         try
@@ -292,6 +294,7 @@ public sealed class PlayerMatchService(
         }
 
         using var connection = sqlConnectionFactory.CreateConnection();
+        connection.Open();
         using var transaction = connection.BeginTransaction();
 
         try
@@ -388,6 +391,7 @@ public sealed class PlayerMatchService(
         }
 
         using var connection = sqlConnectionFactory.CreateConnection();
+        connection.Open();
         using var transaction = connection.BeginTransaction();
 
         try
