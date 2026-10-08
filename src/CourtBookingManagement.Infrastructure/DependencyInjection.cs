@@ -2,6 +2,7 @@ using CourtBookingManagement.Application.Abstractions.Clock;
 using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.Auth.Interfaces;
 using CourtBookingManagement.Application.Branches.Interfaces;
+using CourtBookingManagement.Application.Amenities.Repositories;
 using CourtBookingManagement.Application.Courts.Repositories;
 using CourtBookingManagement.Application.Customers.Repositories;
 using CourtBookingManagement.Application.CourtStatus.Interfaces;
@@ -80,7 +81,9 @@ public static class DependencyInjection
         services.AddScoped<IAuthRepository, AuthRepository>();
         services.AddScoped<IBranchQueryRepository, BranchQueryRepository>();
         services.AddScoped<IBranchRepository, BranchRepository>();
-        services.AddScoped<IAmenityRepository, AmenityRepository>();
+        services.AddScoped<AmenityRepository>();
+        services.AddScoped<IAmenityRepository>(provider => provider.GetRequiredService<AmenityRepository>());
+        services.AddScoped<IAmenityListRepository>(provider => provider.GetRequiredService<AmenityRepository>());
         services.AddScoped<ICourtStatusRepository, CourtStatusRepository>();
         services.AddScoped<ICourtBookingRepository, CourtBookingRepository>();
         services.AddScoped<IPlayerMatchRepository, PlayerMatchRepository>();

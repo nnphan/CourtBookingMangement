@@ -1,4 +1,5 @@
 using CourtBookingManagement.Application.Abstractions.Data;
+using CourtBookingManagement.Application.Amenities.Models.Responses;
 using CourtBookingManagement.Application.Branches.DTOs;
 using CourtBookingManagement.Application.Branches.Interfaces;
 using Dapper;

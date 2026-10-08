@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using CourtBookingManagement.Application.Amenities.Models.Responses;
 using CourtBookingManagement.Application.Branches.DTOs;
 using CourtBookingManagement.Application.Branches.GetBranchDetails;
 using CourtBookingManagement.Application.Branches.Interfaces;

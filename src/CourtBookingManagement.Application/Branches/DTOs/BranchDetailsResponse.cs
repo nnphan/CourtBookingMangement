@@ -1,3 +1,5 @@
+using CourtBookingManagement.Application.Amenities.Models.Responses;
+
 namespace CourtBookingManagement.Application.Branches.DTOs;
 
 public sealed class BranchDetailsResponse
@@ -27,14 +29,6 @@ public sealed class BranchImageResponse
     public Guid Id { get; set; }
     public string ImageUrl { get; set; } = default!;
     public short SortOrder { get; set; }
-}
-
-public sealed class AmenityResponse
-{
-    public Guid Id { get; set; }
-    public string Code { get; set; } = default!;
-    public string Name { get; set; } = default!;
-    public string? Icon { get; set; }
 }
 
 public sealed class CourtResponse
