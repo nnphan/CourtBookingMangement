@@ -9,6 +9,7 @@ using CourtBookingManagement.Application.Branches.DTOs.Requests;
 using CourtBookingManagement.Application.Branches.DTOs.Responses;
 using CourtBookingManagement.Application.Branches.Interfaces;
 using CourtBookingManagement.Application.Branches.Services;
+using CourtBookingManagement.Application.Branches.UpdateBranch;
 using CourtBookingManagement.Application.Branches.Validators;
 using CourtBookingManagement.Application.Abstractions.Clock;
 using CourtBookingManagement.Application.Abstractions.Data;
@@ -243,7 +244,145 @@ public sealed class CreateBranchTests
     }
 
     [Fact]
-    public async Task Post_branches_returns_created_success_response()
+    public async Task Update_replaces_branch_data_successfully()
+    {
+        var branchRepository = new StubBranchRepository(Guid.NewGuid());
+        var unitOfWork = new StubUnitOfWork();
+        var handler = new UpdateBranchCommandHandler(
+            branchRepository,
+            new StubAmenityRepository([AmenityId]),
+            unitOfWork);
+        var request = ValidRequest();
+        request.AmenityIds = [AmenityId];
+        request.Images = [new CreateBranchImageRequest { ImageUrl = "https://example.test/new.jpg", SortOrder = 0 }];
+        request.Courts = [new CreateCourtRequest { CourtNumber = 1, Name = "Court 1" }];
+        request.BranchPricings = [new CreateBranchPricingRequest
+        {
+            PricingType = "NORMAL",
+            StartTime = TimeSpan.FromHours(5),
+            EndTime = TimeSpan.FromHours(17),
+            PricePerHour = 80000
+        }];
+        var command = new UpdateBranchCommand(branchRepository.BranchId, request, UserId);
+
+        var validation = await new UpdateBranchCommandValidator().ValidateAsync(command);
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        Assert.True(validation.IsValid);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(branchRepository.BranchId, result.Value.Id);
+        Assert.Equal(1, unitOfWork.TransactionCount);
+        Assert.Equal(request.Name, branchRepository.UpdatedBranch!.Name);
+        Assert.Equal([AmenityId], branchRepository.UpdatedBranch.AmenityIds);
+        Assert.Equal(request.Images, branchRepository.UpdatedBranch.Images);
+        Assert.Equal(request.Courts, branchRepository.UpdatedBranch.Courts);
+        Assert.Equal(request.BranchPricings, branchRepository.UpdatedBranch.BranchPricings);
+        Assert.Equal(UserId, branchRepository.UpdatedBy);
+    }
+
+    [Fact]
+    public async Task Update_returns_not_found_for_unknown_branch()
+    {
+        var branchRepository = new StubBranchRepository(Guid.NewGuid()) { UpdateBranchExists = false };
+        var handler = new UpdateBranchCommandHandler(
+            branchRepository,
+            new StubAmenityRepository([]),
+            new StubUnitOfWork());
+
+        var result = await handler.Handle(
+            new UpdateBranchCommand(branchRepository.BranchId, ValidRequest(), UserId),
+            CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("Branch.NotFound", result.Error.Code);
+        Assert.Equal("Branch not found", result.Error.Description);
+    }
+
+    [Fact]
+    public async Task Update_validator_rejects_duplicate_court_numbers()
+    {
+        var request = ValidRequest();
+        request.Courts =
+        [
+            new CreateCourtRequest { CourtNumber = 2, Name = "Court 2" },
+            new CreateCourtRequest { CourtNumber = 2, Name = "Court 2B" }
+        ];
+        var result = await new UpdateBranchCommandValidator().ValidateAsync(
+            new UpdateBranchCommand(Guid.NewGuid(), request, UserId));
+
+        Assert.Contains(result.Errors, error => error.ErrorMessage.Contains("unique", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task Update_validator_rejects_invalid_pricing_type()
+    {
+        var request = ValidRequest();
+        request.BranchPricings = [new CreateBranchPricingRequest
+        {
+            PricingType = "HOLIDAY",
+            StartTime = TimeSpan.FromHours(5),
+            EndTime = TimeSpan.FromHours(17),
+            PricePerHour = 80000
+        }];
+        var result = await new UpdateBranchCommandValidator().ValidateAsync(
+            new UpdateBranchCommand(Guid.NewGuid(), request, UserId));
+
+        Assert.Contains(result.Errors, error => error.PropertyName.Contains("PricingType", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Update_rolls_back_when_image_insert_fails()
+    {
+        var branchRepository = new StubBranchRepository(Guid.NewGuid()) { FailImageInsert = true };
+        var unitOfWork = new StubUnitOfWork();
+        var handler = CreateUpdateHandler(branchRepository, unitOfWork);
+        var request = ValidRequest();
+        request.Images = [new CreateBranchImageRequest { ImageUrl = "https://example.test/new.jpg", SortOrder = 0 }];
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => handler.Handle(
+            new UpdateBranchCommand(branchRepository.BranchId, request, UserId), CancellationToken.None));
+
+        Assert.Equal(1, unitOfWork.RollbackCount);
+    }
+
+    [Fact]
+    public async Task Update_rolls_back_when_pricing_insert_fails()
+    {
+        var branchRepository = new StubBranchRepository(Guid.NewGuid()) { FailPricingInsert = true };
+        var unitOfWork = new StubUnitOfWork();
+        var handler = CreateUpdateHandler(branchRepository, unitOfWork);
+        var request = ValidRequest();
+        request.BranchPricings = [new CreateBranchPricingRequest
+        {
+            PricingType = "NORMAL",
+            StartTime = TimeSpan.FromHours(5),
+            EndTime = TimeSpan.FromHours(17),
+            PricePerHour = 80000
+        }];
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => handler.Handle(
+            new UpdateBranchCommand(branchRepository.BranchId, request, UserId), CancellationToken.None));
+
+        Assert.Equal(1, unitOfWork.RollbackCount);
+    }
+
+    [Fact]
+    public async Task Update_rolls_back_when_court_insert_fails()
+    {
+        var branchRepository = new StubBranchRepository(Guid.NewGuid()) { FailCourtInsert = true };
+        var unitOfWork = new StubUnitOfWork();
+        var handler = CreateUpdateHandler(branchRepository, unitOfWork);
+        var request = ValidRequest();
+        request.Courts = [new CreateCourtRequest { CourtNumber = 1, Name = "Court 1" }];
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => handler.Handle(
+            new UpdateBranchCommand(branchRepository.BranchId, request, UserId), CancellationToken.None));
+
+        Assert.Equal(1, unitOfWork.RollbackCount);
+    }
+
+    [Fact]
+    public async Task Branch_endpoints_enforce_permissions_and_post_returns_created_response()
     {
         var expected = new CreateBranchResponse { Id = Guid.NewGuid() };
         using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
@@ -281,6 +420,11 @@ public sealed class CreateBranchTests
         var data = root.GetProperty("data");
         Assert.Equal(expected.Id, data.GetProperty("id").GetGuid());
         Assert.Single(data.EnumerateObject());
+
+        using var updateResponse = await client.PutAsJsonAsync(
+            $"/api/branches/{expected.Id}",
+            ValidRequest());
+        Assert.Equal(HttpStatusCode.Forbidden, updateResponse.StatusCode);
     }
 
     private static IBranchService CreateService(
@@ -293,6 +437,11 @@ public sealed class CreateBranchTests
             unitOfWork,
             new CreateBranchRequestValidator(),
             new StubSqlConnectionFactory());
+
+    private static UpdateBranchCommandHandler CreateUpdateHandler(
+        StubBranchRepository branchRepository,
+        IUnitOfWork unitOfWork) =>
+        new(branchRepository, new StubAmenityRepository([]), unitOfWork);
 
     private static CreateBranchRequest ValidRequest() => new()
     {
@@ -312,9 +461,13 @@ public sealed class CreateBranchTests
         public bool BranchExists { get; init; }
         public bool FailCourtInsert { get; init; }
         public bool FailPricingInsert { get; init; }
+        public bool FailImageInsert { get; init; }
+        public bool UpdateBranchExists { get; init; } = true;
         public bool Saved { get; private set; }
         public Guid BranchId { get; } = Guid.NewGuid();
         public CreateBranchData? AddedBranch { get; private set; }
+        public UpdateBranchData? UpdatedBranch { get; private set; }
+        public Guid? UpdatedBy { get; private set; }
 
         public Task<Guid?> GetOwnerIdForUserAsync(Guid userId, CancellationToken cancellationToken) =>
             Task.FromResult<Guid?>(userId == UserId ? ownerId : null);
@@ -322,10 +475,36 @@ public sealed class CreateBranchTests
         public Task<bool> ExistsAsync(Guid requestedOwnerId, string name, CancellationToken cancellationToken) =>
             Task.FromResult(BranchExists);
 
+        public Task<bool> ExistsByIdAsync(Guid branchId, CancellationToken cancellationToken) =>
+            Task.FromResult(UpdateBranchExists && branchId == BranchId);
+
         public Task<Guid> AddAsync(CreateBranchData branch, CancellationToken cancellationToken)
         {
             AddedBranch = branch;
             return Task.FromResult(BranchId);
+        }
+
+        public Task<bool> UpdateAsync(
+            Guid branchId,
+            UpdateBranchData branch,
+            Guid updatedBy,
+            CancellationToken cancellationToken)
+        {
+            if (!UpdateBranchExists || branchId != BranchId)
+            {
+                return Task.FromResult(false);
+            }
+
+            UpdatedBranch = branch;
+            UpdatedBy = updatedBy;
+            if ((FailImageInsert && branch.Images.Count > 0)
+                || (FailCourtInsert && branch.Courts.Count > 0)
+                || (FailPricingInsert && branch.BranchPricings.Count > 0))
+            {
+                throw new InvalidOperationException("Simulated replacement insert failure.");
+            }
+
+            return Task.FromResult(true);
         }
 
         public Task SaveChangesAsync(CancellationToken cancellationToken)

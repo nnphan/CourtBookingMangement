@@ -27,6 +27,11 @@ public sealed class BranchRepository(
             branch => branch.OwnerId == ownerId && branch.Name == name && branch.DeletedAt == null,
             cancellationToken);
 
+    public Task<bool> ExistsByIdAsync(Guid branchId, CancellationToken cancellationToken) =>
+        dbContext.Branches.AnyAsync(
+            branch => branch.Id == branchId && branch.DeletedAt == null,
+            cancellationToken);
+
     public async Task<Guid> AddAsync(CreateBranchData data, CancellationToken cancellationToken)
     {
         var branch = new Branch
@@ -79,6 +84,96 @@ public sealed class BranchRepository(
 
         await dbContext.Branches.AddAsync(branch, cancellationToken);
         return branch.Id;
+    }
+
+    public async Task<bool> UpdateAsync(
+        Guid branchId,
+        UpdateBranchData data,
+        Guid updatedBy,
+        CancellationToken cancellationToken)
+    {
+        var branch = await dbContext.Branches
+            .Include(item => item.Amenities)
+            .Include(item => item.BranchImages)
+            .Include(item => item.OperatingHours)
+            .Include(item => item.Courts)
+            .Include(item => item.BranchPricings)
+            .SingleOrDefaultAsync(item => item.Id == branchId && item.DeletedAt == null, cancellationToken);
+
+        if (branch is null)
+        {
+            return false;
+        }
+
+        branch.Name = data.Name;
+        branch.Description = data.Description;
+        branch.Address = data.Address;
+        branch.City = data.City;
+        branch.District = data.District;
+        branch.Latitude = data.Latitude;
+        branch.Longitude = data.Longitude;
+        branch.PhoneNumber = data.PhoneNumber;
+        branch.TimeZone = data.TimeZone;
+        branch.SupportsInstantBooking = data.SupportsInstantBooking;
+        branch.UpdatedAt = DateTime.UtcNow;
+        branch.UpdatedBy = updatedBy;
+
+        await SaveChangesAsync(cancellationToken);
+
+        branch.Amenities.Clear();
+        dbContext.BranchImages.RemoveRange(branch.BranchImages);
+        dbContext.OperatingHours.RemoveRange(branch.OperatingHours);
+        dbContext.BranchPricings.RemoveRange(branch.BranchPricings);
+        dbContext.Courts.RemoveRange(branch.Courts);
+
+        await SaveChangesAsync(cancellationToken);
+
+        branch.Amenities = await dbContext.Amenities
+            .Where(amenity => data.AmenityIds.Contains(amenity.Id))
+            .ToListAsync(cancellationToken);
+        await SaveChangesAsync(cancellationToken);
+
+        dbContext.BranchImages.AddRange(data.Images.Select(image => new BranchImage
+        {
+            BranchId = branchId,
+            ImageUrl = image.ImageUrl,
+            SortOrder = image.SortOrder,
+            IsActive = true
+        }));
+        await SaveChangesAsync(cancellationToken);
+
+        dbContext.OperatingHours.AddRange(data.OperatingHours.Select(hour => new OperatingHour
+        {
+            BranchId = branchId,
+            OpenTime = TimeOnly.FromTimeSpan(hour.OpenTime),
+            CloseTime = TimeOnly.FromTimeSpan(hour.CloseTime),
+            IsClosed = hour.IsClosed
+        }));
+        await SaveChangesAsync(cancellationToken);
+
+        dbContext.BranchPricings.AddRange(data.BranchPricings.Select(pricing => new BranchPricing
+        {
+            BranchId = branchId,
+            PricingType = pricing.PricingType,
+            StartTime = TimeOnly.FromTimeSpan(pricing.StartTime),
+            EndTime = TimeOnly.FromTimeSpan(pricing.EndTime),
+            PricePerHour = pricing.PricePerHour,
+            IsActive = true
+        }));
+        await SaveChangesAsync(cancellationToken);
+
+        dbContext.Courts.AddRange(data.Courts.Select(court => new Court
+        {
+            BranchId = branchId,
+            CourtNumber = court.CourtNumber.ToString(CultureInfo.InvariantCulture),
+            Name = court.Name,
+            Status = "active",
+            IsActive = court.IsActive,
+            CreatedBy = updatedBy,
+            UpdatedBy = updatedBy
+        }));
+        await SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken)

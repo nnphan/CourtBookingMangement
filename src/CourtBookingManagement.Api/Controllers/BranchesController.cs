@@ -1,5 +1,6 @@
 using CourtBookingManagement.Api.Common.Responses;
 using CourtBookingManagement.Api.Common.Constants;
+using CourtBookingManagement.Application.Branches.UpdateBranch;
 using CourtBookingManagement.Application.Branches.DTOs;
 using CourtBookingManagement.Application.Branches.GetBranchDetails;
 using CourtBookingManagement.Application.CourtStatus.DTOs;
@@ -45,6 +46,27 @@ public sealed class BranchesController(
                 result,
                 "Branch created successfully.",
                 HttpContext.TraceIdentifier));
+    }
+
+    [Authorize(Policy = Permissions.BranchUpdate)]
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(ApiResponse<CreateBranchResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Update(
+        Guid id,
+        [FromBody] CreateBranchRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid userId)
+        {
+            return Unauthorized();
+        }
+
+        var result = await sender.Send(new UpdateBranchCommand(id, request, userId), cancellationToken);
+        return FromResult(result, "Branch updated successfully");
     }
 
     [HttpGet]

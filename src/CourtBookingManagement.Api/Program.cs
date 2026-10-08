@@ -116,10 +116,17 @@ if (!string.IsNullOrWhiteSpace(jwtOptions?.SecretKey))
         });
 }
 
-builder.Services.AddAuthorization(options => options.AddPolicy(
-    Permissions.BranchCreate,
-    policy => policy.RequireAuthenticatedUser()
-        .AddRequirements(new PermissionRequirement(Permissions.BranchCreate))));
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(
+        Permissions.BranchCreate,
+        policy => policy.RequireAuthenticatedUser()
+            .AddRequirements(new PermissionRequirement(Permissions.BranchCreate)));
+    options.AddPolicy(
+        Permissions.BranchUpdate,
+        policy => policy.RequireAuthenticatedUser()
+            .AddRequirements(new PermissionRequirement(Permissions.BranchUpdate)));
+});
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 

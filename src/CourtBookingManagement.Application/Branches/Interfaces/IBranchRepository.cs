@@ -9,7 +9,15 @@ public interface IBranchRepository
 
     Task<bool> ExistsAsync(Guid ownerId, string name, CancellationToken cancellationToken);
 
+    Task<bool> ExistsByIdAsync(Guid branchId, CancellationToken cancellationToken);
+
     Task<Guid> AddAsync(CreateBranchData branch, CancellationToken cancellationToken);
+
+    Task<bool> UpdateAsync(
+        Guid branchId,
+        UpdateBranchData branch,
+        Guid updatedBy,
+        CancellationToken cancellationToken);
 
     Task SaveChangesAsync(CancellationToken cancellationToken);
 
