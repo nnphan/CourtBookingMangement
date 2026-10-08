@@ -25,6 +25,8 @@ public partial class ApplicationDbContext(
 
     public virtual DbSet<OperatingHour> OperatingHours { get; set; }
 
+    public virtual DbSet<BranchPricing> BranchPricings { get; set; }
+
     public virtual DbSet<Owner> Owners { get; set; }
 
     public virtual DbSet<Permission> Permissions { get; set; }
@@ -214,6 +216,20 @@ public partial class ApplicationDbContext(
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("operating_hours_branch_id_fkey");
         });
+
+            modelBuilder.Entity<BranchPricing>(entity =>
+            {
+                entity.HasKey(e => e.Id).HasName("branch_pricings_pkey");
+
+                entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+                entity.Property(e => e.IsActive).HasDefaultValue(true);
+                entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+
+                entity.HasOne(d => d.Branch).WithMany(p => p.BranchPricings)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("branch_pricings_branch_id_fkey");
+            });
 
         modelBuilder.Entity<Owner>(entity =>
         {

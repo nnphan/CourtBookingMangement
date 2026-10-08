@@ -63,6 +63,7 @@ public sealed class BranchService(
                 resolvedOwnerId,
                 ownerId,
                 request.Name,
+                request.Description,
                 request.Address,
                 request.City,
                 request.District,
@@ -73,15 +74,15 @@ public sealed class BranchService(
                 request.SupportsInstantBooking,
                 requestedAmenityIds,
                 request.Images,
-                operatingHours), token);
+                operatingHours,
+                request.Courts,
+                request.BranchPricings), token);
             await branchRepository.SaveChangesAsync(token);
         }, cancellationToken);
 
         return new CreateBranchResponse
         {
-            Id = branchId,
-            Name = request.Name,
-            IsActive = true
+            Id = branchId
         };
     }
 

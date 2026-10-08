@@ -7,6 +7,7 @@ public sealed record CreateBranchData(
     Guid OwnerId,
     Guid CreatedByUserId,
     string Name,
+    string? Description,
     string Address,
     string? City,
     string? District,
@@ -17,4 +18,6 @@ public sealed record CreateBranchData(
     bool SupportsInstantBooking,
     IReadOnlyCollection<Guid> AmenityIds,
     IReadOnlyCollection<CreateBranchImageRequest> Images,
-    IReadOnlyCollection<CreateOperatingHourRequest> OperatingHours);
+    IReadOnlyCollection<CreateOperatingHourRequest> OperatingHours,
+    IReadOnlyCollection<CreateCourtRequest> Courts,
+    IReadOnlyCollection<CreateBranchPricingRequest> BranchPricings);

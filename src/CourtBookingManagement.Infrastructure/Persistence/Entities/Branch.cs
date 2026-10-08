@@ -21,6 +21,10 @@ public partial class Branch
     [StringLength(150)]
     public string Name { get; set; } = null!;
 
+    [Column("description")]
+    [StringLength(1000)]
+    public string? Description { get; set; }
+
     [Column("address")]
     [StringLength(255)]
     public string Address { get; set; } = null!;
@@ -92,6 +96,9 @@ public partial class Branch
 
     [InverseProperty("Branch")]
     public virtual ICollection<OperatingHour> OperatingHours { get; set; } = new List<OperatingHour>();
+
+    [InverseProperty("Branch")]
+    public virtual ICollection<BranchPricing> BranchPricings { get; set; } = new List<BranchPricing>();
 
     [InverseProperty("Branches")]
     public virtual ICollection<Amenity> Amenities { get; set; } = new List<Amenity>();

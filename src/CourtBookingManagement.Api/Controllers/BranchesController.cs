@@ -1,4 +1,5 @@
 using CourtBookingManagement.Api.Common.Responses;
+using CourtBookingManagement.Api.Common.Constants;
 using CourtBookingManagement.Application.Branches.DTOs;
 using CourtBookingManagement.Application.Branches.GetBranchDetails;
 using CourtBookingManagement.Application.CourtStatus.DTOs;
@@ -22,7 +23,7 @@ public sealed class BranchesController(
     IBranchService branchService,
     ICurrentUserService currentUserService) : ApiControllerBase
 {
-    [Authorize]
+    [Authorize(Policy = Permissions.BranchCreate)]
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<CreateBranchResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]

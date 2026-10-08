@@ -1,4 +1,5 @@
 using System.Data;
+using System.Globalization;
 using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.Branches.DTOs;
 using CourtBookingManagement.Application.Branches.Interfaces;
@@ -33,6 +34,7 @@ public sealed class BranchRepository(
             Id = data.Id,
             OwnerId = data.OwnerId,
             Name = data.Name,
+            Description = data.Description,
             Address = data.Address,
             City = data.City,
             District = data.District,
@@ -55,6 +57,20 @@ public sealed class BranchRepository(
                 OpenTime = TimeOnly.FromTimeSpan(hour.OpenTime),
                 CloseTime = TimeOnly.FromTimeSpan(hour.CloseTime),
                 IsClosed = hour.IsClosed
+            }).ToList(),
+            Courts = data.Courts.Select(court => new Court
+            {
+                CourtNumber = court.CourtNumber.ToString(CultureInfo.InvariantCulture),
+                Name = court.Name,
+                IsActive = court.IsActive
+            }).ToList(),
+            BranchPricings = data.BranchPricings.Select(pricing => new BranchPricing
+            {
+                PricingType = pricing.PricingType,
+                StartTime = TimeOnly.FromTimeSpan(pricing.StartTime),
+                EndTime = TimeOnly.FromTimeSpan(pricing.EndTime),
+                PricePerHour = pricing.PricePerHour,
+                IsActive = true
             }).ToList(),
             Amenities = await dbContext.Amenities
                 .Where(amenity => data.AmenityIds.Contains(amenity.Id))

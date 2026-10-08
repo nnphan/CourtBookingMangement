@@ -3,6 +3,7 @@ using CourtBookingManagement.Api.Common.Exceptions;
 using CourtBookingManagement.Api.Common.Responses;
 using CourtBookingManagement.Application.Branches.Services;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
 namespace CourtBookingManagement.Api.Common.Middleware;
@@ -57,6 +58,11 @@ public sealed class ApiExceptionHandler(
                 databaseException.IsTransient
                     ? StatusCodes.Status503ServiceUnavailable
                     : StatusCodes.Status500InternalServerError,
+                ErrorCodes.Database,
+                "A database error occurred.",
+                (IReadOnlyCollection<ValidationError>?)null),
+            DbUpdateException => (
+                StatusCodes.Status500InternalServerError,
                 ErrorCodes.Database,
                 "A database error occurred.",
                 (IReadOnlyCollection<ValidationError>?)null),

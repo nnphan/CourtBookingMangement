@@ -1,5 +1,6 @@
 using CourtBookingManagement.Api.Common.Middleware;
 using CourtBookingManagement.Api.Common.Responses;
+using CourtBookingManagement.Api.Common.Constants;
 using CourtBookingManagement.Application;
 using CourtBookingManagement.Application.Options;
 using CourtBookingManagement.Infrastructure;
@@ -115,7 +116,10 @@ if (!string.IsNullOrWhiteSpace(jwtOptions?.SecretKey))
         });
 }
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options => options.AddPolicy(
+    Permissions.BranchCreate,
+    policy => policy.RequireAuthenticatedUser()
+        .AddRequirements(new PermissionRequirement(Permissions.BranchCreate))));
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
