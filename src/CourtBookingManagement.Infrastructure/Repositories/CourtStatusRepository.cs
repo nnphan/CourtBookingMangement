@@ -290,7 +290,7 @@ public sealed class CourtStatusRepository(ApplicationDbContext db, ISqlConnectio
 
     public async Task<BookingDetailResponse?> GetBookingAsync(Guid id, CancellationToken ct) =>
         await db.BookingDetails.AsNoTracking().Where(x => x.BookingId == id && x.Booking.IsActive)
-            .Select(x => new BookingDetailResponse(x.BookingId, x.Booking.BookingCode, x.Court.Name ?? x.Court.CourtNumber, x.Booking.Customer.FullName, x.Booking.Customer.PhoneNumber, x.BookingDate, x.StartTime, x.EndTime, x.Booking.BookingType, x.Booking.Status, "UNPAID", x.Booking.TotalAmount, 0, x.Booking.TotalAmount)).SingleOrDefaultAsync(ct);
+            .Select(x => new BookingDetailResponse(x.BookingId, x.Booking.BookingCode, x.Court.Name ?? x.Court.CourtNumber.ToString(), x.Booking.Customer.FullName, x.Booking.Customer.PhoneNumber, x.BookingDate, x.StartTime, x.EndTime, x.Booking.BookingType, x.Booking.Status, "UNPAID", x.Booking.TotalAmount, 0, x.Booking.TotalAmount)).SingleOrDefaultAsync(ct);
 
     public Task<Guid?> GetBookingBranchIdAsync(Guid id, CancellationToken ct) =>
         db.Bookings.AsNoTracking().Where(x => x.Id == id && x.IsActive).Select(x => (Guid?)x.BranchId).SingleOrDefaultAsync(ct);

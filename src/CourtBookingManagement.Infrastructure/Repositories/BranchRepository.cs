@@ -65,7 +65,7 @@ public sealed class BranchRepository(
             }).ToList(),
             Courts = data.Courts.Select(court => new Court
             {
-                CourtNumber = court.CourtNumber.ToString(CultureInfo.InvariantCulture),
+                CourtNumber = court.CourtNumber,
                 Name = court.Name,
                 IsActive = court.IsActive
             }).ToList(),
@@ -165,7 +165,7 @@ public sealed class BranchRepository(
         dbContext.Courts.AddRange(data.Courts.Select(court => new Court
         {
             BranchId = branchId,
-            CourtNumber = court.CourtNumber.ToString(CultureInfo.InvariantCulture),
+            CourtNumber = court.CourtNumber,
             Name = court.Name,
             Status = "active",
             IsActive = court.IsActive,

@@ -21,8 +21,7 @@ public partial class Court
     public Guid? CourtTypeId { get; set; }
 
     [Column("court_number")]
-    [StringLength(20)]
-    public string CourtNumber { get; set; } = null!;
+    public int CourtNumber { get; set; }
 
     [Column("name")]
     [StringLength(100)]

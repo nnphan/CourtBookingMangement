@@ -24,7 +24,7 @@ public sealed class BranchesController(
     IBranchService branchService,
     ICurrentUserService currentUserService) : ApiControllerBase
 {
-    [Authorize(Policy = Permissions.BranchCreate)]
+    //[Authorize(Policy = Permissions.BranchCreate)]
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<CreateBranchResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
