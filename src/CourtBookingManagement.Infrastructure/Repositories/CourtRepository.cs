@@ -205,7 +205,7 @@ public sealed class CourtRepository(ISqlConnectionFactory sqlConnectionFactory) 
             cancellationToken);
 
     public async Task<Guid> CreateAsync(
-        CreateCourtRequest request,
+        CreateCourtRequestDTO request,
         Guid createdBy,
         CancellationToken cancellationToken)
     {

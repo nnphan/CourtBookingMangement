@@ -48,7 +48,7 @@ public sealed class CourtsController(
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Create(
-        [FromBody] CreateCourtRequest request,
+        [FromBody] CreateCourtRequestDTO request,
         CancellationToken cancellationToken)
     {
         if (currentUserService.UserId is not Guid userId)

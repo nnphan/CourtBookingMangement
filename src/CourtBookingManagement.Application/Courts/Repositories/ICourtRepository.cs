@@ -51,7 +51,7 @@ public interface ICourtRepository
         CancellationToken cancellationToken);
 
     Task<Guid> CreateAsync(
-        CreateCourtRequest request,
+        CreateCourtRequestDTO request,
         Guid createdBy,
         CancellationToken cancellationToken);
 

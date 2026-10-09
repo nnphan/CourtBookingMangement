@@ -94,7 +94,7 @@ public sealed class CourtService(ICourtRepository repository) : ICourtService
     }
 
     public async Task<Result<CourtDetailResponse>> CreateAsync(
-        CreateCourtRequest request,
+        CreateCourtRequestDTO request,
         Guid createdBy,
         CancellationToken cancellationToken)
     {
@@ -119,7 +119,7 @@ public sealed class CourtService(ICourtRepository repository) : ICourtService
             return Result.Failure<CourtDetailResponse>(fieldError);
         }
 
-        var normalizedRequest = new CreateCourtRequest
+        var normalizedRequest = new CreateCourtRequestDTO
         {
             BranchId = request.BranchId,
             CourtNumber = request.CourtNumber,

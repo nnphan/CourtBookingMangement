@@ -67,6 +67,8 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSwaggerGen(options =>
 {
+    //options.CustomSchemaIds(type => type.FullName ?? type.Name);
+
     options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         Name = "Authorization",

@@ -1,6 +1,6 @@
 namespace CourtBookingManagement.Application.Courts.Models.Requests;
 
-public sealed class CreateCourtRequest
+public sealed class CreateCourtRequestDTO
 {
     public Guid BranchId { get; set; }
 

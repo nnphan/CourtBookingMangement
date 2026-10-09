@@ -16,7 +16,7 @@ public interface ICourtService
         CancellationToken cancellationToken);
 
     Task<Result<CourtDetailResponse>> CreateAsync(
-        CreateCourtRequest request,
+        CreateCourtRequestDTO request,
         Guid createdBy,
         CancellationToken cancellationToken);
 
