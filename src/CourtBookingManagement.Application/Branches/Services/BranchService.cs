@@ -1,5 +1,6 @@
 using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.Branches.DTOs;
+using CourtBookingManagement.Application.Branches.DTOs.Admin;
 using CourtBookingManagement.Application.Branches.DTOs.Requests;
 using CourtBookingManagement.Application.Branches.DTOs.Responses;
 using CourtBookingManagement.Application.Branches.Interfaces;
@@ -10,6 +11,7 @@ namespace CourtBookingManagement.Application.Branches.Services;
 
 public sealed class BranchService(
     IBranchRepository branchRepository,
+    IBranchQueryRepository branchQueryRepository,
     IAmenityRepository amenityRepository,
     IUnitOfWork unitOfWork,
     IValidator<CreateBranchRequest> validator,
@@ -18,6 +20,16 @@ public sealed class BranchService(
     private static readonly Error BranchNotFound = new("Branch.NotFound", "Branch not found.");
 
     private static readonly Error BranchAlreadyDeleted = new("Branch.AlreadyDeleted", "Branch has already been deleted.");
+
+    public Task<BranchAdminSearchResult> SearchAsync(
+        BranchAdminSearchRequest request,
+        CancellationToken cancellationToken) =>
+        branchQueryRepository.SearchBranchesAsync(request with
+        {
+            Keyword = request.Keyword?.Trim(),
+            City = request.City?.Trim(),
+            District = request.District?.Trim()
+        }, cancellationToken);
 
     public async Task<CreateBranchResponse> CreateAsync(
         CreateBranchRequest request,

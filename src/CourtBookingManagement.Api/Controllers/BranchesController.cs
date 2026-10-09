@@ -2,11 +2,10 @@ using CourtBookingManagement.Api.Common.Responses;
 using CourtBookingManagement.Api.Common.Constants;
 using CourtBookingManagement.Application.Branches.UpdateBranch;
 using CourtBookingManagement.Application.Branches.DTOs;
-using CourtBookingManagement.Application.Branches.GetBranchDetails;
-using CourtBookingManagement.Application.CourtStatus.DTOs;
-using CourtBookingManagement.Application.CourtStatus.Interfaces;
-using CourtBookingManagement.Application.Auth.Interfaces;
+using CourtBookingManagement.Application.Branches.DTOs.Admin;
 using CourtBookingManagement.Application.Branches.DTOs.Requests;
+using CourtBookingManagement.Application.Branches.GetBranchDetails;
+using CourtBookingManagement.Application.Auth.Interfaces;
 using CourtBookingManagement.Application.Branches.DTOs.Responses;
 using CourtBookingManagement.Application.Branches.Services;
 using CourtBookingManagement.Infrastructure.Auth;
@@ -19,7 +18,6 @@ namespace CourtBookingManagement.Api.Controllers;
 [ApiController]
 [Route("api/branches")]
 public sealed class BranchesController(
-    ICourtStatusService service,
     ISender sender,
     IBranchService branchService,
     ICurrentUserService currentUserService) : ApiControllerBase
@@ -69,13 +67,15 @@ public sealed class BranchesController(
         return FromResult(result, "Branch updated successfully");
     }
 
+    //[Permission(Permissions.BranchView)]
     [HttpGet]
-    public async Task<IActionResult> Get([FromQuery] BranchSearchRequest request, CancellationToken ct)
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<BranchAdminResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> Get([FromQuery] BranchAdminSearchRequest request, CancellationToken ct)
     {
-        var result = await service.SearchBranchesAsync(request, ct);
-        return result.IsSuccess
-            ? Success(result.Value.Items, "Success", result.Value.Metadata)
-            : Error(result.Error);
+        var result = await branchService.SearchAsync(request, ct);
+        return Success(result.Items, "Success", result.Metadata);
     }
 
     [HttpGet("{id:guid}")]

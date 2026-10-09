@@ -11,6 +11,7 @@ using CourtBookingManagement.Application.Branches.Interfaces;
 using CourtBookingManagement.Application.Branches.Services;
 using CourtBookingManagement.Application.Branches.UpdateBranch;
 using CourtBookingManagement.Application.Branches.Validators;
+using CourtBookingManagement.Application.CourtStatus.DTOs;
 using CourtBookingManagement.Application.Abstractions.Clock;
 using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Domain.Abstractions;
@@ -28,6 +29,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
+using BranchAdminSearchResult = CourtBookingManagement.Application.Branches.DTOs.Admin.BranchAdminSearchResult;
 
 namespace CourtBookingManagement.Api.Tests;
 
@@ -421,6 +423,9 @@ public sealed class CreateBranchTests
         Assert.Equal(expected.Id, data.GetProperty("id").GetGuid());
         Assert.Single(data.EnumerateObject());
 
+        using var listResponse = await client.GetAsync("/api/branches");
+        Assert.Equal(HttpStatusCode.Forbidden, listResponse.StatusCode);
+
         using var updateResponse = await client.PutAsJsonAsync(
             $"/api/branches/{expected.Id}",
             ValidRequest());
@@ -433,10 +438,28 @@ public sealed class CreateBranchTests
         IUnitOfWork unitOfWork) =>
         new BranchService(
             branchRepository,
+            new StubBranchQueryRepository(),
             amenityRepository,
             unitOfWork,
             new CreateBranchRequestValidator(),
             new StubSqlConnectionFactory());
+
+    private sealed class StubBranchQueryRepository : IBranchQueryRepository
+    {
+        public Task<BranchAdminSearchResult> SearchBranchesAsync(
+            BranchAdminSearchRequest request,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new BranchAdminSearchResult([], new PaginationMetadata(
+                request.PageNumber,
+                request.PageSize,
+                0,
+                0,
+                false,
+                false)));
+
+        public Task<BranchDetailsResponse?> GetBranchDetailsAsync(Guid branchId, CancellationToken cancellationToken) =>
+            Task.FromResult<BranchDetailsResponse?>(null);
+    }
 
     private static UpdateBranchCommandHandler CreateUpdateHandler(
         StubBranchRepository branchRepository,
@@ -574,6 +597,17 @@ public sealed class CreateBranchTests
 
     private sealed class StubBranchService(CreateBranchResponse response) : IBranchService
     {
+        public Task<BranchAdminSearchResult> SearchAsync(
+            BranchAdminSearchRequest request,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new BranchAdminSearchResult([], new PaginationMetadata(
+                request.PageNumber,
+                request.PageSize,
+                0,
+                0,
+                false,
+                false)));
+
         public Task<CreateBranchResponse> CreateAsync(
             CreateBranchRequest request,
             Guid ownerId,

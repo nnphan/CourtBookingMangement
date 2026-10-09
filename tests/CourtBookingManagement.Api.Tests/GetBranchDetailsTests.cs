@@ -1,16 +1,25 @@
 using System.Net;
 using System.Text.Json;
+using CourtBookingManagement.Api.Common.Responses;
+using CourtBookingManagement.Api.Controllers;
 using CourtBookingManagement.Application.Amenities.Models.Responses;
 using CourtBookingManagement.Application.Branches.DTOs;
+using CourtBookingManagement.Application.Branches.DTOs.Requests;
 using CourtBookingManagement.Application.Branches.GetBranchDetails;
 using CourtBookingManagement.Application.Branches.Interfaces;
+using CourtBookingManagement.Application.Branches.Services;
+using CourtBookingManagement.Application.CourtStatus.DTOs;
+using CourtBookingManagement.Domain.Abstractions;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Xunit;
+using BranchAdminSearchResult = CourtBookingManagement.Application.Branches.DTOs.Admin.BranchAdminSearchResult;
 
 namespace CourtBookingManagement.Api.Tests;
 
@@ -97,6 +106,51 @@ public sealed class GetBranchDetailsTests
         Assert.Single(data.GetProperty("pricings").EnumerateArray());
     }
 
+    [Fact]
+    public async Task Get_branch_list_returns_admin_collections_and_pagination_metadata()
+    {
+        var branch = new CourtBookingManagement.Application.Branches.DTOs.Admin.BranchAdminResponse(
+            Guid.NewGuid(),
+            "Central Badminton",
+            "Indoor courts",
+            "1 Court Street",
+            "Central",
+            "District 1",
+            10.123456m,
+            106.123456m,
+            "0123456789",
+            "Asia/Ho_Chi_Minh",
+            true,
+            [new CourtBookingManagement.Application.Branches.DTOs.Admin.BranchAmenityResponse(Guid.NewGuid(), "PARKING", "Parking", "parking")],
+            [new CourtBookingManagement.Application.Branches.DTOs.Admin.BranchImageResponse("https://example.test/branch.jpg", 0)],
+            [new CourtBookingManagement.Application.Branches.DTOs.Admin.BranchOperatingHourResponse(new TimeOnly(5, 30), new TimeOnly(23, 30), false)],
+            [new CourtBookingManagement.Application.Branches.DTOs.Admin.BranchCourtResponse(1, "Court 1", true)],
+            [new CourtBookingManagement.Application.Branches.DTOs.Admin.BranchPricingResponse("NORMAL", new TimeOnly(5, 0), new TimeOnly(17, 0), 80000m)]);
+        var expectedMetadata = new PaginationMetadata(1, 10, 1, 1, false, false);
+        var controller = new BranchesController(
+            null!,
+            new StubBranchService(new BranchAdminSearchResult([branch], expectedMetadata)),
+            null!)
+        {
+            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
+        };
+
+        var action = await controller.Get(new BranchAdminSearchRequest(), CancellationToken.None);
+
+        var ok = Assert.IsType<OkObjectResult>(action);
+        var response = Assert.IsType<ApiResponse<IReadOnlyList<CourtBookingManagement.Application.Branches.DTOs.Admin.BranchAdminResponse>>>(ok.Value);
+        Assert.Equal(expectedMetadata, Assert.IsType<PaginationMetadata>(response.Metadata));
+
+        using var payload = JsonDocument.Parse(JsonSerializer.Serialize(response, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+        var item = payload.RootElement.GetProperty("data")[0];
+        Assert.Single(item.GetProperty("amenityIds").EnumerateArray());
+        Assert.Single(item.GetProperty("images").EnumerateArray());
+        Assert.Single(item.GetProperty("operatingHours").EnumerateArray());
+        Assert.Single(item.GetProperty("courts").EnumerateArray());
+        Assert.Single(item.GetProperty("branchPricings").EnumerateArray());
+        Assert.Equal(1, payload.RootElement.GetProperty("metadata").GetProperty("pageNumber").GetInt32());
+    }
+
     private static BranchDetailsResponse CreateBranchDetails() => new()
     {
         Id = Guid.NewGuid(),
@@ -121,7 +175,32 @@ public sealed class GetBranchDetailsTests
 
     private sealed class StubBranchQueryRepository(BranchDetailsResponse? response) : IBranchQueryRepository
     {
+        public Task<BranchAdminSearchResult> SearchBranchesAsync(
+            BranchAdminSearchRequest request,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new BranchAdminSearchResult([], new PaginationMetadata(
+                request.PageNumber,
+                request.PageSize,
+                0,
+                0,
+                false,
+                false)));
+
         public Task<BranchDetailsResponse?> GetBranchDetailsAsync(Guid branchId, CancellationToken cancellationToken) =>
             Task.FromResult(response?.Id == branchId ? response : null);
+    }
+
+    private sealed class StubBranchService(BranchAdminSearchResult response) : IBranchService
+    {
+        public Task<BranchAdminSearchResult> SearchAsync(BranchAdminSearchRequest request, CancellationToken cancellationToken) =>
+            Task.FromResult(response);
+
+        public Task<CourtBookingManagement.Application.Branches.DTOs.Responses.CreateBranchResponse> CreateAsync(
+            CourtBookingManagement.Application.Branches.DTOs.Requests.CreateBranchRequest request,
+            Guid ownerId,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<Result> DeleteAsync(Guid branchId, Guid deletedBy, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 }

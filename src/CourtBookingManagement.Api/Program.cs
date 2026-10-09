@@ -69,8 +69,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddSwaggerGen(options =>
 {
     options.OperationFilter<UploadFileExamplesOperationFilter>();
-
-    //options.CustomSchemaIds(type => type.FullName ?? type.Name);
+    options.CustomSchemaIds(GetSwaggerSchemaId);
 
     options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
@@ -194,5 +193,29 @@ app.MapHealthChecks("health/ready", new HealthCheckOptions
 });
 
 app.Run();
+
+static string GetSwaggerSchemaId(Type type)
+{
+    if (type.IsArray)
+    {
+        return $"{GetSwaggerSchemaId(type.GetElementType()!)}Array";
+    }
+
+    if (!type.IsGenericType)
+    {
+        return (type.FullName ?? type.Name).Replace('+', '.');
+    }
+
+    var genericName = type.GetGenericTypeDefinition().FullName ?? type.Name;
+    var arityIndex = genericName.IndexOf('`');
+    if (arityIndex >= 0)
+    {
+        genericName = genericName[..arityIndex];
+    }
+
+    genericName = genericName.Replace('+', '.');
+    var argumentNames = string.Join("_", type.GetGenericArguments().Select(GetSwaggerSchemaId));
+    return $"{genericName}_{argumentNames}";
+}
 
 public partial class Program;
