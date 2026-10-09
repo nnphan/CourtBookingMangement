@@ -1,6 +1,7 @@
 using CourtBookingManagement.Api.Common.Middleware;
 using CourtBookingManagement.Api.Common.Responses;
 using CourtBookingManagement.Api.Common.Constants;
+using CourtBookingManagement.Api.Files;
 using CourtBookingManagement.Application;
 using CourtBookingManagement.Application.Options;
 using CourtBookingManagement.Infrastructure;
@@ -67,6 +68,8 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSwaggerGen(options =>
 {
+    options.OperationFilter<UploadFileExamplesOperationFilter>();
+
     //options.CustomSchemaIds(type => type.FullName ?? type.Name);
 
     options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
@@ -128,6 +131,10 @@ builder.Services.AddAuthorization(options =>
         Permissions.BranchUpdate,
         policy => policy.RequireAuthenticatedUser()
             .AddRequirements(new PermissionRequirement(Permissions.BranchUpdate)));
+    //options.AddPolicy(
+    //    Permissions.FileUpload,
+    //    policy => policy.RequireAuthenticatedUser()
+    //        .AddRequirements(new PermissionRequirement(Permissions.FileUpload)));
 });
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();

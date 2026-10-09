@@ -18,6 +18,7 @@ using CourtBookingManagement.Domain.Users;
 using CourtBookingManagement.Infrastructure.Auth;
 using CourtBookingManagement.Infrastructure.Clock;
 using CourtBookingManagement.Infrastructure.Data;
+using CourtBookingManagement.Infrastructure.FileStorage;
 using CourtBookingManagement.Infrastructure.Persistence;
 using CourtBookingManagement.Infrastructure.Persistence.DapperHandlers;
 using CourtBookingManagement.Infrastructure.Repositories;
@@ -54,6 +55,22 @@ public static class DependencyInjection
             .Bind(configuration.GetSection(JwtOptions.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
+
+        services.AddOptions<CloudinarySettings>()
+            .Bind(configuration.GetSection(CloudinarySettings.SectionName))
+            .ValidateDataAnnotations();
+
+        services.AddSingleton<ICloudinaryFileUploadClient>(serviceProvider =>
+        {
+            var settings = serviceProvider.GetRequiredService<IOptions<CloudinarySettings>>().Value;
+            var account = new CloudinaryDotNet.Account(
+                settings.CloudName,
+                settings.ApiKey,
+                settings.ApiSecret);
+            return new CloudinaryFileUploadClient(new CloudinaryDotNet.Cloudinary(account));
+        });
+        services.AddScoped<IMediaFolderResolver, MediaFolderResolver>();
+        services.AddScoped<IFileStorageService, CloudinaryFileStorageService>();
 
         services.AddDbContextPool<ApplicationDbContext>((serviceProvider, options) =>
         {

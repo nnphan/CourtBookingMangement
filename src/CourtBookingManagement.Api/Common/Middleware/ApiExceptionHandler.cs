@@ -2,6 +2,7 @@ using CourtBookingManagement.Api.Common.Constants;
 using CourtBookingManagement.Api.Common.Exceptions;
 using CourtBookingManagement.Api.Common.Responses;
 using CourtBookingManagement.Application.Branches.Services;
+using CourtBookingManagement.Infrastructure.FileStorage;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -41,6 +42,11 @@ public sealed class ApiExceptionHandler(
                 validationException.Errors
                     .Select(error => new ValidationError(error.PropertyName, error.ErrorMessage, error.ErrorCode))
                     .ToArray()),
+            FileStorageException fileStorageException => (
+                StatusCodes.Status502BadGateway,
+                ErrorCodes.Unexpected,
+                fileStorageException.Message,
+                (IReadOnlyCollection<ValidationError>?)null),
             ApiException apiException => (
                 apiException switch
                 {
