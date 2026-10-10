@@ -1,5 +1,4 @@
 using CourtBookingManagement.Application.Abstractions.Data;
-using CourtBookingManagement.Application.Amenities.Models.Responses;
 using CourtBookingManagement.Application.Branches.DTOs;
 using CourtBookingManagement.Application.Branches.DTOs.Requests;
 using CourtBookingManagement.Application.Branches.Interfaces;
@@ -212,21 +211,24 @@ public sealed class BranchQueryRepository(
         }
     }
 
-    public async Task<BranchDetailsResponse?> GetBranchDetailsAsync(
+    public async Task<AdminBranchResponse?> GetBranchDetailsAsync(
         Guid branchId,
         CancellationToken cancellationToken)
     {
+        var stopwatch = Stopwatch.StartNew();
+        logger.LogInformation("Loading admin branch details for BranchId {BranchId}", branchId);
+
         const string sql = """
             SELECT
                 id AS Id,
-                owner_id AS OwnerId,
                 name AS Name,
+                COALESCE(description, '') AS Description,
                 address AS Address,
-                city AS City,
-                district AS District,
+                COALESCE(city, '') AS City,
+                COALESCE(district, '') AS District,
                 latitude AS Latitude,
                 longitude AS Longitude,
-                phone_number AS PhoneNumber,
+                COALESCE(phone_number, '') AS PhoneNumber,
                 is_active AS IsActive,
                 time_zone AS TimeZone,
                 supports_instant_booking AS SupportsInstantBooking
@@ -234,11 +236,10 @@ public sealed class BranchQueryRepository(
             WHERE id = @Id
               AND deleted_at IS NULL;
 
-            SELECT id AS Id, image_url AS ImageUrl, sort_order AS SortOrder
+            SELECT image_url AS ImageUrl, sort_order AS SortOrder
             FROM core.branch_images
             WHERE branch_id = @Id
-              AND is_active = TRUE
-            ORDER BY sort_order;
+            ORDER BY sort_order ASC;
 
             SELECT a.id AS Id, a.code AS Code, a.name AS Name, a.icon AS Icon
             FROM core.branches_amenities ba
@@ -246,96 +247,102 @@ public sealed class BranchQueryRepository(
             WHERE ba.branch_id = @Id
             ORDER BY a.name;
 
-            SELECT id AS Id, court_number AS CourtNumber, name AS Name, status AS Status
+            SELECT court_number AS CourtNumber, COALESCE(name, '') AS Name, is_active AS IsActive
             FROM core.courts
             WHERE branch_id = @Id
               AND deleted_at IS NULL
             ORDER BY court_number;
 
-            SELECT id AS Id, open_time AS OpenTime, close_time AS CloseTime, is_closed AS IsClosed
+            SELECT open_time AS OpenTime, close_time AS CloseTime, is_closed AS IsClosed
             FROM core.operating_hours
-            WHERE branch_id = @Id;
+            WHERE branch_id = @Id
+            ORDER BY open_time;
 
-            SELECT id AS Id, pricing_type AS PricingType, start_time AS StartTime,
+            SELECT pricing_type AS PricingType, start_time AS StartTime,
                    end_time AS EndTime, price_per_hour AS PricePerHour
             FROM core.branch_pricings
             WHERE branch_id = @Id
               AND is_active = TRUE
-            ORDER BY start_time;
+            ORDER BY pricing_type;
             """;
 
-        using var connection = sqlConnectionFactory.CreateConnection();
-        using var results = await connection.QueryMultipleAsync(
-            new CommandDefinition(sql, new { Id = branchId }, cancellationToken: cancellationToken));
-
-        var branch = await results.ReadFirstOrDefaultAsync<BranchRow>();
-        var images = (await results.ReadAsync<BranchImageResponse>()).AsList();
-        var amenities = (await results.ReadAsync<AmenityResponse>()).AsList();
-        var courts = (await results.ReadAsync<CourtResponse>()).AsList();
-        var operatingHourRows = (await results.ReadAsync<OperatingHourRow>()).AsList();
-        var pricingRows = (await results.ReadAsync<BranchPricingRow>()).AsList();
-
-        if (branch is null)
+        try
         {
-            return null;
-        }
+            using var connection = sqlConnectionFactory.CreateConnection();
+            using var results = await connection.QueryMultipleAsync(
+                new CommandDefinition(sql, new { Id = branchId }, cancellationToken: cancellationToken));
 
-        var pricings = pricingRows.Select(pricing => new BranchPricingResponse
-        {
-            Id = pricing.Id,
-            PricingType = pricing.PricingType,
-            StartTime = pricing.StartTime.ToTimeSpan(),
-            EndTime = pricing.EndTime.ToTimeSpan(),
-            PricePerHour = pricing.PricePerHour
-        }).ToArray();
+            var branch = await results.ReadFirstOrDefaultAsync<BranchRow>();
+            var images = (await results.ReadAsync<AdminBranchImageResponse>()).AsList();
+            var amenities = (await results.ReadAsync<AdminBranchAmenityResponse>()).AsList();
+            var courts = (await results.ReadAsync<AdminBranchCourtResponse>()).AsList();
+            var operatingHours = (await results.ReadAsync<AdminBranchOperatingHourResponse>()).AsList();           
+            var pricings = (await results.ReadAsync<AdminBranchPricingResponse>()).AsList(); 
 
-        return new BranchDetailsResponse
-        {
-            Id = branch.Id,
-            OwnerId = branch.OwnerId,
-            Name = branch.Name,
-            Address = branch.Address,
-            City = branch.City,
-            District = branch.District,
-            Latitude = branch.Latitude,
-            Longitude = branch.Longitude,
-            PhoneNumber = branch.PhoneNumber,
-            IsActive = branch.IsActive,
-            TimeZone = branch.TimeZone,
-            SupportsInstantBooking = branch.SupportsInstantBooking,
-            Images = images,
-            Amenities = amenities,
-            Courts = courts,
-            OperatingHours = operatingHourRows.Select(hour => new OperatingHourResponse
+            stopwatch.Stop();
+            if (branch is null)
             {
-                Id = hour.Id,
-                OpenTime = hour.OpenTime.ToTimeSpan(),
-                CloseTime = hour.CloseTime.ToTimeSpan(),
-                IsClosed = hour.IsClosed
-            }).ToArray(),
-            Pricings = pricings,
-            Statistics = new BranchStatisticsResponse
-            {
-                TotalCourts = courts.Count,
-                TotalAmenities = amenities.Count,
-                TotalImages = images.Count,
-                MinPrice = pricings.Length == 0 ? null : pricings.Min(pricing => pricing.PricePerHour),
-                MaxPrice = pricings.Length == 0 ? null : pricings.Max(pricing => pricing.PricePerHour)
+                logger.LogInformation(
+                    "Admin branch detail not found. BranchId: {BranchId}, ExecutionTimeMs: {ExecutionTimeMs}, ResultCount: 0",
+                    branchId,
+                    stopwatch.Elapsed.TotalMilliseconds);
+                return null;
             }
-        };
+
+            var response = new AdminBranchResponse(
+                branch.Id,
+                branch.Name,
+                branch.Description,
+                branch.Address,
+                branch.City,
+                branch.District,
+                branch.Latitude,
+                branch.Longitude,
+                branch.PhoneNumber,
+                branch.TimeZone,
+                branch.SupportsInstantBooking,
+                branch.IsActive,
+                amenities,
+                images,
+                operatingHours,
+                courts,
+                pricings);
+
+            logger.LogInformation(
+                "Admin branch detail loaded. BranchId: {BranchId}, ExecutionTimeMs: {ExecutionTimeMs}, ResultCount: 1, AmenityCount: {AmenityCount}, ImageCount: {ImageCount}, OperatingHourCount: {OperatingHourCount}, CourtCount: {CourtCount}, PricingCount: {PricingCount}",
+                branchId,
+                stopwatch.Elapsed.TotalMilliseconds,
+                amenities.Count,
+                images.Count,
+                operatingHours.Count,
+                courts.Count,
+                pricings.Count);
+
+            return response;
+        }
+        catch (Exception exception)
+        {
+            stopwatch.Stop();
+            logger.LogError(
+                exception,
+                "Failed to load admin branch detail. BranchId: {BranchId}, ExecutionTimeMs: {ExecutionTimeMs}",
+                branchId,
+                stopwatch.Elapsed.TotalMilliseconds);
+            throw;
+        }
     }
 
     private sealed class BranchRow
     {
         public Guid Id { get; init; }
-        public Guid OwnerId { get; init; }
         public string Name { get; init; } = string.Empty;
+        public string Description { get; init; } = string.Empty;
         public string Address { get; init; } = string.Empty;
-        public string? City { get; init; }
-        public string? District { get; init; }
+        public string City { get; init; } = string.Empty;
+        public string District { get; init; } = string.Empty;
         public decimal? Latitude { get; init; }
         public decimal? Longitude { get; init; }
-        public string? PhoneNumber { get; init; }
+        public string PhoneNumber { get; init; } = string.Empty;
         public bool IsActive { get; init; }
         public string TimeZone { get; init; } = string.Empty;
         public bool SupportsInstantBooking { get; init; }
@@ -398,20 +405,4 @@ public sealed class BranchQueryRepository(
         public decimal PricePerHour { get; init; }
     }
 
-    private sealed class OperatingHourRow
-    {
-        public Guid Id { get; init; }
-        public TimeOnly OpenTime { get; init; }
-        public TimeOnly CloseTime { get; init; }
-        public bool IsClosed { get; init; }
-    }
-
-    private sealed class BranchPricingRow
-    {
-        public Guid Id { get; init; }
-        public string PricingType { get; init; } = string.Empty;
-        public TimeOnly StartTime { get; init; }
-        public TimeOnly EndTime { get; init; }
-        public decimal PricePerHour { get; init; }
-    }
 }

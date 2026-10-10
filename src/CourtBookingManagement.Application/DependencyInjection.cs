@@ -1,6 +1,8 @@
 
 using CourtBookingManagement.Application.Auth.Interfaces;
 using CourtBookingManagement.Application.Auth.Services;
+using CourtBookingManagement.Application.Admin.Branches.Interfaces;
+using CourtBookingManagement.Application.Admin.Branches.Services;
 using CourtBookingManagement.Application.Amenities.Services;
 using CourtBookingManagement.Application.Abstractions.Behaviors;
 using CourtBookingManagement.Application.CourtBookings.Interfaces;
@@ -35,6 +37,7 @@ public static class DependencyInjection
         services.AddScoped<ICourtStatusService, CourtStatusService>();
         services.AddScoped<ICourtBookingService, CourtBookingService>();
         services.AddScoped<IBranchService, BranchService>();
+        services.AddScoped<IAdminBranchService, AdminBranchService>();
         services.AddScoped<IPlayerMatchService, PlayerMatchService>();
         services.AddScoped<IMyMatchService, MyMatchService>();
         services.AddScoped<INotificationService, NotificationService>();

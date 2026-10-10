@@ -46,7 +46,7 @@ public sealed class BranchesController(
                 HttpContext.TraceIdentifier));
     }
 
-    [Authorize(Policy = Permissions.BranchUpdate)]
+    //[Authorize(Policy = Permissions.BranchUpdate)]
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(ApiResponse<CreateBranchResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -79,13 +79,13 @@ public sealed class BranchesController(
     }
 
     [HttpGet("{id:guid}")]
-    [ProducesResponseType(typeof(ApiResponse<BranchDetailsResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<BranchAdminResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetBranchDetailsQuery(id), cancellationToken);
-        return FromResult(result, "Branch details retrieved successfully.");
+        return FromResult(result, "Success");
     }
 
     [HttpDelete("{id:guid}")]

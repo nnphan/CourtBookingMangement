@@ -2,6 +2,7 @@ using CourtBookingManagement.Api.Common.Middleware;
 using CourtBookingManagement.Api.Common.Responses;
 using CourtBookingManagement.Api.Common.Constants;
 using CourtBookingManagement.Api.Files;
+using CourtBookingManagement.Api.Swagger;
 using CourtBookingManagement.Application;
 using CourtBookingManagement.Application.Options;
 using CourtBookingManagement.Infrastructure;
@@ -69,6 +70,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddSwaggerGen(options =>
 {
     options.OperationFilter<UploadFileExamplesOperationFilter>();
+    options.OperationFilter<AdminBranchesExamplesOperationFilter>();
     options.CustomSchemaIds(GetSwaggerSchemaId);
 
     options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme

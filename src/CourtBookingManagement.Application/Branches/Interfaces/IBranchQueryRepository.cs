@@ -10,7 +10,7 @@ public interface IBranchQueryRepository
         BranchAdminSearchRequest request,
         CancellationToken cancellationToken);
 
-    Task<BranchDetailsResponse?> GetBranchDetailsAsync(
+    Task<BranchAdminResponse?> GetBranchDetailsAsync(
         Guid branchId,
         CancellationToken cancellationToken);
 }
