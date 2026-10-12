@@ -32,6 +32,8 @@ public sealed class CourtBookingRepository(ISqlConnectionFactory connectionFacto
     {
         const string sql = "SELECT * FROM booking.fn_create_guest_booking(@BranchId, @CourtId, @BookingDate, @StartTime ::time, @EndTime ::time, @CustomerName, @PhoneNumber, @Note, @PaymentMethod);";
         using var connection = connectionFactory.CreateConnection();
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
         var command = new CommandDefinition(sql, new
         {
             request.BranchId,
@@ -43,8 +45,19 @@ public sealed class CourtBookingRepository(ISqlConnectionFactory connectionFacto
             request.PhoneNumber,
             request.Note,
             request.PaymentMethod
-        }, cancellationToken: cancellationToken);
-        return await connection.QuerySingleOrDefaultAsync<CreateCourtBookingResponse>(command);
+        }, transaction, cancellationToken: cancellationToken);
+        var booking = await connection.QuerySingleOrDefaultAsync<CreateCourtBookingResponse>(command);
+        if (booking is null) return null;
+
+        var updatedRows = await connection.ExecuteAsync(new CommandDefinition(
+            "UPDATE booking.bookings SET booking_type = @BookingType, payment_method = @PaymentMethod WHERE id = @BookingId;",
+            new { request.BookingType, request.PaymentMethod, booking.BookingId },
+            transaction,
+            cancellationToken: cancellationToken));
+        if (updatedRows != 1) return null;
+
+        transaction.Commit();
+        return booking with { BookingType = request.BookingType, PaymentMethod = request.PaymentMethod };
     }
 
     public async Task<IReadOnlyList<CreateCourtBookingResponse>> SearchAsync(string phoneNumber, CancellationToken cancellationToken)
@@ -53,7 +66,7 @@ public sealed class CourtBookingRepository(ISqlConnectionFactory connectionFacto
             SELECT b.id AS BookingId, b.booking_code AS BookingCode, b.status AS BookingStatus,
                    c.full_name AS CustomerName, b.total_amount AS TotalAmount, d.booking_date AS BookingDate,
                    br.name AS BranchName, d.start_time AS StartTime, d.end_time AS EndTime,
-                   'Cash' AS PaymentMethod, b.created_at AS CreatedAt
+                   b.booking_type AS BookingType, b.payment_method AS PaymentMethod, b.created_at AS CreatedAt
             FROM booking.bookings b
             JOIN customer.customers c ON c.id = b.customer_id
             JOIN core.branches br ON br.id = b.branch_id

@@ -1,4 +1,5 @@
 using CourtBookingManagement.Application.CourtStatus.DTOs;
+using CourtBookingManagement.Application.Common.Enums;
 using FluentValidation;
 
 namespace CourtBookingManagement.Application.CourtStatus.Validators;
@@ -8,7 +9,7 @@ public sealed class CreateBookingRequestValidator : AbstractValidator<CreateBook
     public CreateBookingRequestValidator()
     {
         RuleFor(x => x.BranchId).NotEmpty(); RuleFor(x => x.CourtId).NotEmpty(); RuleFor(x => x.CustomerId).NotEmpty();
-        RuleFor(x => x.BookingType).NotEmpty().MaximumLength(20);
+        RuleFor(x => x.BookingType).Must(value => BookingTypes.All.Contains(value)).WithMessage("Invalid booking type.\n\nAllowed values:\nFixed, Flexible.");
         RuleFor(x => x).Must(x => x.StartTime < x.EndTime).WithMessage("Start time must be before end time.");
     }
 }
@@ -17,7 +18,7 @@ public sealed class UpdateBookingRequestValidator : AbstractValidator<UpdateBook
 {
     public UpdateBookingRequestValidator()
     {
-        RuleFor(x => x.CourtId).NotEmpty(); RuleFor(x => x.BookingType).NotEmpty().MaximumLength(20);
+        RuleFor(x => x.CourtId).NotEmpty(); RuleFor(x => x.BookingType).Must(value => BookingTypes.All.Contains(value)).WithMessage("Invalid booking type.\n\nAllowed values:\nFixed, Flexible.");
         RuleFor(x => x).Must(x => x.StartTime < x.EndTime).WithMessage("Start time must be before end time.");
     }
 }

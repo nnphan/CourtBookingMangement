@@ -29,8 +29,12 @@ public partial class Booking
     public string Status { get; set; } = null!;
 
     [Column("booking_type")]
-    [StringLength(20)]
+    [StringLength(50)]
     public string BookingType { get; set; } = null!;
+
+    [Column("payment_method")]
+    [StringLength(50)]
+    public string PaymentMethod { get; set; } = null!;
 
     [Column("subtotal_amount")]
     [Precision(12, 2)]

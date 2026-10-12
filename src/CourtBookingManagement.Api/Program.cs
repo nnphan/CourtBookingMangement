@@ -69,6 +69,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSwaggerGen(options =>
 {
+    options.SchemaFilter<BookingEnumSchemaFilter>();
     options.OperationFilter<UploadFileExamplesOperationFilter>();
     options.OperationFilter<AdminBranchesExamplesOperationFilter>();
     options.CustomSchemaIds(GetSwaggerSchemaId);

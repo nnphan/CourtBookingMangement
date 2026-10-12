@@ -86,7 +86,8 @@ public partial class ApplicationDbContext(
 
             entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
-            entity.Property(e => e.BookingType).HasDefaultValueSql("'instant'::character varying");
+            entity.Property(e => e.BookingType).HasMaxLength(50).HasDefaultValueSql("'Fixed'::character varying");
+            entity.Property(e => e.PaymentMethod).HasMaxLength(50).HasDefaultValueSql("'Cash'::character varying");
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.Status).HasDefaultValueSql("'pending'::character varying");
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
