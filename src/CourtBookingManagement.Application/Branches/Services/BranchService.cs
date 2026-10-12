@@ -21,6 +21,24 @@ public sealed class BranchService(
 
     private static readonly Error BranchAlreadyDeleted = new("Branch.AlreadyDeleted", "Branch has already been deleted.");
 
+    public async Task<IReadOnlyList<BranchLookupResponse>> GetMyBranchesAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("A valid user id is required.", nameof(userId));
+        }
+
+        var ownerId = await branchRepository.GetOwnerIdForUserAsync(userId, cancellationToken);
+        if (ownerId is null)
+        {
+            return Array.Empty<BranchLookupResponse>();
+        }
+
+        return await branchRepository.GetBranchesByOwnerAsync(ownerId.Value, cancellationToken);
+    }
+
     public Task<BranchAdminSearchResult> SearchAsync(
         BranchAdminSearchRequest request,
         CancellationToken cancellationToken) =>

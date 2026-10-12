@@ -8,6 +8,10 @@ namespace CourtBookingManagement.Application.Branches.Services;
 
 public interface IBranchService
 {
+    Task<IReadOnlyList<BranchLookupResponse>> GetMyBranchesAsync(
+        Guid userId,
+        CancellationToken cancellationToken);
+
     Task<BranchAdminSearchResult> SearchAsync(
         BranchAdminSearchRequest request,
         CancellationToken cancellationToken);

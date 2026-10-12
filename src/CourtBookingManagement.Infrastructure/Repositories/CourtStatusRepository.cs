@@ -263,7 +263,7 @@ public sealed class CourtStatusRepository(ApplicationDbContext db, ISqlConnectio
             .Select(group =>
             {
                 var row = group.First();
-                return new CourtDto(row.CourtId, row.CourtNumber!, row.CourtName ?? row.CourtNumber!, row.CourtStatus!);
+                return new CourtDto(row.CourtId, row.CourtNumber!, row.CourtName ?? row.CourtNumber.ToString(), row.CourtStatus!);
             })
             .ToList();
 
@@ -272,6 +272,8 @@ public sealed class CourtStatusRepository(ApplicationDbContext db, ISqlConnectio
             .Select(x => new ScheduleItemDto(
                 x.BookingId!.Value,
                 x.CourtId,
+                x.CourtNumber,
+                x.CourtName,
                 x.StartTime!.Value,
                 x.EndTime!.Value,
                 x.BookingDate!.Value,
@@ -281,7 +283,10 @@ public sealed class CourtStatusRepository(ApplicationDbContext db, ISqlConnectio
                 x.CustomerName,
                 x.PhoneNumber,
                 x.Title!,
-                x.Color!))
+                x.Color!)
+            {
+
+            })
             .OrderBy(x => x.StartTime)
             .ToList();
 
@@ -320,7 +325,7 @@ public sealed class CourtStatusRepository(ApplicationDbContext db, ISqlConnectio
 
         public Guid CourtId { get; set; }
 
-        public string CourtNumber { get; set; } = string.Empty;
+        public int CourtNumber { get; set; }
 
         public string CourtName { get; set; } = string.Empty;
 

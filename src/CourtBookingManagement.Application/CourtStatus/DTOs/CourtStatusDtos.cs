@@ -56,22 +56,27 @@ public sealed record BranchAmenityDto(Guid Id, string Code, string Name);
 public sealed record BranchPriceRangeDto(decimal? Min, decimal? Max, string Currency);
 public sealed record BranchOperatingHoursDto(string Open, string Close, string DaysDescription);
 
-public sealed record CourtDto(Guid CourtId, string CourtNumber, string CourtName, string Status);
+public sealed record CourtDto(Guid CourtId, int CourtNumber, string CourtName, string Status);
 
 public sealed record ScheduleItemDto(
-    Guid BookingId, 
+    Guid BookingId,
     Guid CourtId,
+    int courtNumber,
+    string courtName,
     TimeOnly StartTime,
     TimeOnly EndTime,
     DateOnly BookingDate,
-    string? BookingType, 
+    string? BookingType,
     string? BookingStatus,
-    string? PaymentStatus, 
+    string? PaymentStatus,
     string? CustomerName,
     string? PhoneNumber,
-    string Title, 
+    string Title,
     string Color
-);
+)
+{
+
+};
 
 public sealed record CourtStatusResponse(
     Guid BranchId, 

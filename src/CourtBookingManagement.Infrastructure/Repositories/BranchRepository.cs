@@ -16,6 +16,29 @@ public sealed class BranchRepository(
     ApplicationDbContext dbContext,
     ISqlConnectionFactory sqlConnectionFactory) : IBranchRepository
 {
+    public async Task<IReadOnlyList<BranchLookupResponse>> GetBranchesByOwnerAsync(
+        Guid ownerId,
+        CancellationToken cancellationToken)
+    {
+        const string sql = """
+            SELECT b.id AS Id,
+                   b.owner_id AS OwnerId,
+                   b.name AS Name
+            FROM core.branches b
+            WHERE b.deleted_at IS NULL
+              AND b.owner_id = @OwnerId
+            ORDER BY b.name ASC;
+            """;
+
+        using var connection = sqlConnectionFactory.CreateConnection();
+        var branches = await connection.QueryAsync<BranchLookupResponse>(new CommandDefinition(
+            sql,
+            new { OwnerId = ownerId },
+            cancellationToken: cancellationToken));
+
+        return branches.AsList();
+    }
+
     public Task<Guid?> GetOwnerIdForUserAsync(Guid userId, CancellationToken cancellationToken) =>
         dbContext.Owners
             .Where(owner => owner.UserId == userId && owner.IsActive && owner.DeletedAt == null)

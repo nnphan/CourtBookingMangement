@@ -7,6 +7,10 @@ public interface IBranchRepository
 {
     Task<Guid?> GetOwnerIdForUserAsync(Guid userId, CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<BranchLookupResponse>> GetBranchesByOwnerAsync(
+        Guid ownerId,
+        CancellationToken cancellationToken);
+
     Task<bool> ExistsAsync(Guid ownerId, string name, CancellationToken cancellationToken);
 
     Task<bool> ExistsByIdAsync(Guid branchId, CancellationToken cancellationToken);

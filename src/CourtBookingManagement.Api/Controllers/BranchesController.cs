@@ -78,6 +78,22 @@ public sealed class BranchesController(
         return Success(result.Items, "Success", result.Metadata);
     }
 
+    [HttpGet("my-branches")]
+    //[Permission(Permissions.BranchView)]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<BranchLookupResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetMyBranches(CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid userId || userId == Guid.Empty)
+        {
+            return Unauthorized();
+        }
+
+        var result = await branchService.GetMyBranchesAsync(userId, cancellationToken);
+        return Success(result, "Success");
+    }
+
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(ApiResponse<BranchAdminResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
