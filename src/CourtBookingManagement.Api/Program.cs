@@ -50,6 +50,12 @@ builder.Services.AddControllers()
                 errors));
         };
     });
+var bookingOptions = builder.Configuration.GetSection(BookingOptions.SectionName).Get<BookingOptions>() ?? new BookingOptions();
+System.ComponentModel.DataAnnotations.Validator.ValidateObject(
+    bookingOptions,
+    new System.ComponentModel.DataAnnotations.ValidationContext(bookingOptions),
+    validateAllProperties: true);
+builder.Services.AddSingleton(bookingOptions);
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddCors(options =>

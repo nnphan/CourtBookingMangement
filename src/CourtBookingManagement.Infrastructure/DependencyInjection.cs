@@ -1,5 +1,6 @@
 using CourtBookingManagement.Application.Abstractions.Clock;
 using CourtBookingManagement.Application.Abstractions.Data;
+using CourtBookingManagement.Application.Bookings.Interfaces;
 using CourtBookingManagement.Application.Auth.Interfaces;
 using CourtBookingManagement.Application.Admin.Branches.Interfaces;
 using CourtBookingManagement.Application.Branches.Interfaces;
@@ -104,6 +105,7 @@ public static class DependencyInjection
         services.AddScoped<IAmenityRepository>(provider => provider.GetRequiredService<AmenityRepository>());
         services.AddScoped<IAmenityListRepository>(provider => provider.GetRequiredService<AmenityRepository>());
         services.AddScoped<ICourtStatusRepository, CourtStatusRepository>();
+        services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<ICourtBookingRepository, CourtBookingRepository>();
         services.AddScoped<IPlayerMatchRepository, PlayerMatchRepository>();
         services.AddScoped<IMyMatchRepository, MyMatchRepository>();

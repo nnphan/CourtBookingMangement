@@ -92,7 +92,7 @@ public sealed record BookingDetailResponse(
     Guid BookingId, string BookingCode, string CourtName, string CustomerName, string PhoneNumber,
     DateOnly BookingDate, TimeOnly StartTime, TimeOnly EndTime, string BookingType,
     string PaymentMethod, string BookingStatus, string PaymentStatus, decimal TotalAmount, decimal PaidAmount,
-    decimal RemainingAmount);
+    decimal RemainingAmount, string Notes);
 
 public sealed record CreateBookingRequest(
     Guid BranchId, Guid CourtId, Guid CustomerId, DateOnly BookingDate, TimeOnly StartTime,

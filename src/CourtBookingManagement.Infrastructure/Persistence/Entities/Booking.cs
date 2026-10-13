@@ -40,9 +40,9 @@ public partial class Booking
     [Precision(12, 2)]
     public decimal SubtotalAmount { get; set; }
 
-    [Column("discount_amount")]
+    [Column("paid_amount")]
     [Precision(12, 2)]
-    public decimal DiscountAmount { get; set; }
+    public decimal PaidAmount { get; set; }
 
     [Column("total_amount")]
     [Precision(12, 2)]
