@@ -4,6 +4,7 @@ using CourtBookingManagement.Application.Bookings.Interfaces;
 using CourtBookingManagement.Application.CourtStatus.DTOs;
 using CourtBookingManagement.Application.CourtStatus.Interfaces;
 using CourtBookingManagement.Infrastructure.Auth;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using BookingCreateRequest = CourtBookingManagement.Application.Bookings.DTOs.CreateBookingRequest;
 
@@ -41,6 +42,17 @@ public sealed class BookingsController(ICourtStatusService courtStatusService, I
         return result.IsSuccess
             ? Success(result.Value, "Price calculated successfully.")
             : Error(result.Error);
+    }
+
+    [HttpGet("my-bookings")]
+    //[Authorize(Roles = "CUSTOMER")]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<MyBookingResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetMyBookings(CancellationToken cancellationToken)
+    {
+        var result = await bookingService.GetMyBookingsAsync(cancellationToken);
+        return FromResult(result);
     }
 
     [HttpPut("{id:guid}")]
