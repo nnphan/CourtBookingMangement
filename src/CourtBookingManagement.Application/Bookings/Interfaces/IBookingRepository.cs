@@ -11,4 +11,6 @@ public interface IBookingRepository
     Task<bool> HasBookingOverlapAsync(Guid courtId, DateOnly bookingDate, TimeOnly startTime, TimeOnly endTime, CancellationToken cancellationToken);
     Task<BookingDetailResponse?> CreateBookingAsync(CreateBookingRequest request, decimal calculatedPrice, CancellationToken cancellationToken);
     Task<BookingDetailResponse?> GetBookingDetailAsync(Guid bookingId, CancellationToken cancellationToken);
+    Task<Guid?> GetCustomerIdByUserIdAsync(Guid userId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<MyBookingResponse>> GetMyBookingsAsync(Guid customerId, CancellationToken cancellationToken);
 }

@@ -12,3 +12,394 @@
 2026-10-15 09:12:40.554 +07:00 [INF] Application started. Press Ctrl+C to shut down. {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":14984,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
 2026-10-15 09:12:40.557 +07:00 [INF] Hosting environment: Development {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":14984,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
 2026-10-15 09:12:40.561 +07:00 [INF] Content root path: D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":14984,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:23:41.189 +07:00 [INF] Application is shutting down... {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":14984,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:26:25.488 +07:00 [INF] Now listening on: http://localhost:5117 {"EventId":{"Id":14,"Name":"ListeningOnAddress"},"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":22604,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:26:25.525 +07:00 [INF] Application started. Press Ctrl+C to shut down. {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":22604,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:26:25.530 +07:00 [INF] Hosting environment: Development {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":22604,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:26:25.533 +07:00 [INF] Content root path: D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":22604,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:27:08.030 +07:00 [INF] Application is shutting down... {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":22604,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:29:07.490 +07:00 [INF] Now listening on: http://localhost:5117 {"EventId":{"Id":14,"Name":"ListeningOnAddress"},"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":25480,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:29:07.536 +07:00 [INF] Application started. Press Ctrl+C to shut down. {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":25480,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:29:07.541 +07:00 [INF] Hosting environment: Development {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":25480,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:29:07.547 +07:00 [INF] Content root path: D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":25480,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:30:55.488 +07:00 [INF] Application is shutting down... {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":25480,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:31:31.098 +07:00 [INF] Now listening on: http://localhost:5117 {"EventId":{"Id":14,"Name":"ListeningOnAddress"},"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":7440,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:31:31.133 +07:00 [INF] Application started. Press Ctrl+C to shut down. {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":7440,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:31:31.137 +07:00 [INF] Hosting environment: Development {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":7440,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:31:31.142 +07:00 [INF] Content root path: D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":7440,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:32:44.499 +07:00 [INF] Application is shutting down... {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":7440,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:32:52.317 +07:00 [INF] Now listening on: https://localhost:7047 {"EventId":{"Id":14,"Name":"ListeningOnAddress"},"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:32:52.352 +07:00 [INF] Now listening on: http://localhost:5117 {"EventId":{"Id":14,"Name":"ListeningOnAddress"},"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:32:52.359 +07:00 [INF] Application started. Press Ctrl+C to shut down. {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:32:52.362 +07:00 [INF] Hosting environment: Development {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:32:52.365 +07:00 [INF] Content root path: D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:48:51.215 +07:00 [INF] HTTP GET /api/player-matching/stats responded 404 in 815.7982ms {"RequestHost":"localhost:7047","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0","CorrelationId":"0HNPACIFFOMVF:00000007","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNPACIFFOMVF:00000007","ConnectionId":"0HNPACIFFOMVF","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:48:51.836 +07:00 [INF] Searching admin branches. Keyword: null, City: null, District: null, IsActive: true, PageNumber: 1, PageSize: 9 {"SourceContext":"CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository","ActionId":"97383796-5810-494d-be94-f16ad724f11b","ActionName":"CourtBookingManagement.Api.Controllers.BranchesController.Get (CourtBookingManagement.Api)","RequestId":"0HNPACIFFOMVF:00000005","RequestPath":"/api/branches","ConnectionId":"0HNPACIFFOMVF","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:48:53.936 +07:00 [ERR] Admin branch query failed after 2100.7584 ms. Keyword: null, City: null, District: null, IsActive: true, PageNumber: 1, PageSize: 9 {"SourceContext":"CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository","ActionId":"97383796-5810-494d-be94-f16ad724f11b","ActionName":"CourtBookingManagement.Api.Controllers.BranchesController.Get (CourtBookingManagement.Api)","RequestId":"0HNPACIFFOMVF:00000005","RequestPath":"/api/branches","ConnectionId":"0HNPACIFFOMVF","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.NpgsqlException (0x80004005): Failed to connect to 127.0.0.1:5432
+ ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+   at Npgsql.TaskTimeoutAndCancellation.ExecuteAsync(Func`2 getTaskFunc, NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|213_1(NpgsqlConnector conn, SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|34_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryMultipleAsync(IDbConnection cnn, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 1040
+   at CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository.SearchBranchesAsync(BranchAdminSearchRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\BranchQueryRepository.cs:line 95
+2026-10-15 09:48:53.990 +07:00 [ERR] HTTP GET /api/branches responded 500 in 3592.9406ms {"RequestHost":"localhost:7047","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0","CorrelationId":"0HNPACIFFOMVF:00000005","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNPACIFFOMVF:00000005","ConnectionId":"0HNPACIFFOMVF","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.NpgsqlException (0x80004005): Failed to connect to 127.0.0.1:5432
+ ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+   at Npgsql.TaskTimeoutAndCancellation.ExecuteAsync(Func`2 getTaskFunc, NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|213_1(NpgsqlConnector conn, SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|34_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryMultipleAsync(IDbConnection cnn, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 1040
+   at CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository.SearchBranchesAsync(BranchAdminSearchRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\BranchQueryRepository.cs:line 95
+   at CourtBookingManagement.Api.Controllers.BranchesController.Get(BranchAdminSearchRequest request, CancellationToken ct) in D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\BranchesController.cs:line 75
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+2026-10-15 09:48:54.020 +07:00 [ERR] An unhandled exception has occurred while executing the request. {"EventId":{"Id":1,"Name":"UnhandledException"},"SourceContext":"Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware","RequestId":"0HNPACIFFOMVF:00000005","RequestPath":"/api/branches","ConnectionId":"0HNPACIFFOMVF","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.NpgsqlException (0x80004005): Failed to connect to 127.0.0.1:5432
+ ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+   at Npgsql.TaskTimeoutAndCancellation.ExecuteAsync(Func`2 getTaskFunc, NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|213_1(NpgsqlConnector conn, SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|34_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryMultipleAsync(IDbConnection cnn, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 1040
+   at CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository.SearchBranchesAsync(BranchAdminSearchRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\BranchQueryRepository.cs:line 95
+   at CourtBookingManagement.Api.Controllers.BranchesController.Get(BranchAdminSearchRequest request, CancellationToken ct) in D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\BranchesController.cs:line 75
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+2026-10-15 09:48:54.040 +07:00 [ERR] Unhandled API exception. TraceId: 0HNPACIFFOMVF:00000005 {"SourceContext":"CourtBookingManagement.Api.Common.Middleware.ApiExceptionHandler","RequestId":"0HNPACIFFOMVF:00000005","RequestPath":"/api/branches","ConnectionId":"0HNPACIFFOMVF","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.NpgsqlException (0x80004005): Failed to connect to 127.0.0.1:5432
+ ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+   at Npgsql.TaskTimeoutAndCancellation.ExecuteAsync(Func`2 getTaskFunc, NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|213_1(NpgsqlConnector conn, SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|34_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryMultipleAsync(IDbConnection cnn, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 1040
+   at CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository.SearchBranchesAsync(BranchAdminSearchRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\BranchQueryRepository.cs:line 95
+   at CourtBookingManagement.Api.Controllers.BranchesController.Get(BranchAdminSearchRequest request, CancellationToken ct) in D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\BranchesController.cs:line 75
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+2026-10-15 09:49:00.616 +07:00 [ERR] An error occurred using the connection to database 'Court_Booking_Management' on server 'tcp://127.0.0.1:5432'. {"EventId":{"Id":20004,"Name":"Microsoft.EntityFrameworkCore.Database.Connection.ConnectionError"},"SourceContext":"Microsoft.EntityFrameworkCore.Database.Connection","ActionId":"6f3c6aac-f8be-4897-ac22-1358b762f9ee","ActionName":"CourtBookingManagement.Api.Controllers.AuthController.Login (CourtBookingManagement.Api)","RequestId":"0HNPACIFFOMVF:0000000B","RequestPath":"/api/auth/login/email","ConnectionId":"0HNPACIFFOMVF","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:49:02.643 +07:00 [ERR] An error occurred using the connection to database 'Court_Booking_Management' on server 'tcp://127.0.0.1:5432'. {"EventId":{"Id":20004,"Name":"Microsoft.EntityFrameworkCore.Database.Connection.ConnectionError"},"SourceContext":"Microsoft.EntityFrameworkCore.Database.Connection","ActionId":"6f3c6aac-f8be-4897-ac22-1358b762f9ee","ActionName":"CourtBookingManagement.Api.Controllers.AuthController.Login (CourtBookingManagement.Api)","RequestId":"0HNPACIFFOMVF:0000000B","RequestPath":"/api/auth/login/email","ConnectionId":"0HNPACIFFOMVF","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:49:05.704 +07:00 [ERR] An error occurred using the connection to database 'Court_Booking_Management' on server 'tcp://127.0.0.1:5432'. {"EventId":{"Id":20004,"Name":"Microsoft.EntityFrameworkCore.Database.Connection.ConnectionError"},"SourceContext":"Microsoft.EntityFrameworkCore.Database.Connection","ActionId":"6f3c6aac-f8be-4897-ac22-1358b762f9ee","ActionName":"CourtBookingManagement.Api.Controllers.AuthController.Login (CourtBookingManagement.Api)","RequestId":"0HNPACIFFOMVF:0000000B","RequestPath":"/api/auth/login/email","ConnectionId":"0HNPACIFFOMVF","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:49:10.801 +07:00 [ERR] An error occurred using the connection to database 'Court_Booking_Management' on server 'tcp://127.0.0.1:5432'. {"EventId":{"Id":20004,"Name":"Microsoft.EntityFrameworkCore.Database.Connection.ConnectionError"},"SourceContext":"Microsoft.EntityFrameworkCore.Database.Connection","ActionId":"6f3c6aac-f8be-4897-ac22-1358b762f9ee","ActionName":"CourtBookingManagement.Api.Controllers.AuthController.Login (CourtBookingManagement.Api)","RequestId":"0HNPACIFFOMVF:0000000B","RequestPath":"/api/auth/login/email","ConnectionId":"0HNPACIFFOMVF","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:49:10.832 +07:00 [ERR] An exception occurred while iterating over the results of a query for context type 'CourtBookingManagement.Infrastructure.Persistence.ApplicationDbContext'.
+Microsoft.EntityFrameworkCore.Storage.RetryLimitExceededException: The maximum number of retries (3) was exceeded while executing database operations with 'NpgsqlRetryingExecutionStrategy'. See the inner exception for the most recent failure.
+ ---> Npgsql.NpgsqlException (0x80004005): Failed to connect to 127.0.0.1:5432
+ ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+   at Npgsql.TaskTimeoutAndCancellation.ExecuteAsync(Func`2 getTaskFunc, NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|213_1(NpgsqlConnector conn, SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|34_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.<>c__DisplayClass30_0`2.<<ExecuteAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.ExecuteImplementationAsync[TState,TResult](Func`4 operation, Func`4 verifySucceeded, TState state, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.ExecuteImplementationAsync[TState,TResult](Func`4 operation, Func`4 verifySucceeded, TState state, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync() {"EventId":{"Id":10100,"Name":"Microsoft.EntityFrameworkCore.Query.QueryIterationFailed"},"SourceContext":"Microsoft.EntityFrameworkCore.Query","ActionId":"6f3c6aac-f8be-4897-ac22-1358b762f9ee","ActionName":"CourtBookingManagement.Api.Controllers.AuthController.Login (CourtBookingManagement.Api)","RequestId":"0HNPACIFFOMVF:0000000B","RequestPath":"/api/auth/login/email","ConnectionId":"0HNPACIFFOMVF","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Microsoft.EntityFrameworkCore.Storage.RetryLimitExceededException: The maximum number of retries (3) was exceeded while executing database operations with 'NpgsqlRetryingExecutionStrategy'. See the inner exception for the most recent failure.
+ ---> Npgsql.NpgsqlException (0x80004005): Failed to connect to 127.0.0.1:5432
+ ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+   at Npgsql.TaskTimeoutAndCancellation.ExecuteAsync(Func`2 getTaskFunc, NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|213_1(NpgsqlConnector conn, SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|34_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.<>c__DisplayClass30_0`2.<<ExecuteAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.ExecuteImplementationAsync[TState,TResult](Func`4 operation, Func`4 verifySucceeded, TState state, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.ExecuteImplementationAsync[TState,TResult](Func`4 operation, Func`4 verifySucceeded, TState state, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+2026-10-15 09:49:10.882 +07:00 [ERR] HTTP POST /api/auth/login/email responded 500 in 13452.4891ms {"RequestHost":"localhost:7047","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0","CorrelationId":"0HNPACIFFOMVF:0000000B","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNPACIFFOMVF:0000000B","ConnectionId":"0HNPACIFFOMVF","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Microsoft.EntityFrameworkCore.Storage.RetryLimitExceededException: The maximum number of retries (3) was exceeded while executing database operations with 'NpgsqlRetryingExecutionStrategy'. See the inner exception for the most recent failure.
+ ---> Npgsql.NpgsqlException (0x80004005): Failed to connect to 127.0.0.1:5432
+ ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+   at Npgsql.TaskTimeoutAndCancellation.ExecuteAsync(Func`2 getTaskFunc, NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|213_1(NpgsqlConnector conn, SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|34_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.<>c__DisplayClass30_0`2.<<ExecuteAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.ExecuteImplementationAsync[TState,TResult](Func`4 operation, Func`4 verifySucceeded, TState state, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.ExecuteImplementationAsync[TState,TResult](Func`4 operation, Func`4 verifySucceeded, TState state, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at CourtBookingManagement.Infrastructure.Repositories.AuthRepository.GetByEmailAsync(String email, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\AuthRepository.cs:line 16
+   at CourtBookingManagement.Application.Auth.Services.AuthService.LoginAsync(LoginRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Auth\Services\AuthService.cs:line 166
+   at CourtBookingManagement.Api.Controllers.AuthController.Login(LoginRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\AuthController.cs:line 23
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+2026-10-15 09:49:10.933 +07:00 [ERR] An unhandled exception has occurred while executing the request. {"EventId":{"Id":1,"Name":"UnhandledException"},"SourceContext":"Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware","RequestId":"0HNPACIFFOMVF:0000000B","RequestPath":"/api/auth/login/email","ConnectionId":"0HNPACIFFOMVF","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Microsoft.EntityFrameworkCore.Storage.RetryLimitExceededException: The maximum number of retries (3) was exceeded while executing database operations with 'NpgsqlRetryingExecutionStrategy'. See the inner exception for the most recent failure.
+ ---> Npgsql.NpgsqlException (0x80004005): Failed to connect to 127.0.0.1:5432
+ ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+   at Npgsql.TaskTimeoutAndCancellation.ExecuteAsync(Func`2 getTaskFunc, NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|213_1(NpgsqlConnector conn, SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|34_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.<>c__DisplayClass30_0`2.<<ExecuteAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.ExecuteImplementationAsync[TState,TResult](Func`4 operation, Func`4 verifySucceeded, TState state, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.ExecuteImplementationAsync[TState,TResult](Func`4 operation, Func`4 verifySucceeded, TState state, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at CourtBookingManagement.Infrastructure.Repositories.AuthRepository.GetByEmailAsync(String email, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\AuthRepository.cs:line 16
+   at CourtBookingManagement.Application.Auth.Services.AuthService.LoginAsync(LoginRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Auth\Services\AuthService.cs:line 166
+   at CourtBookingManagement.Api.Controllers.AuthController.Login(LoginRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\AuthController.cs:line 23
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+2026-10-15 09:49:10.959 +07:00 [ERR] Unhandled API exception. TraceId: 0HNPACIFFOMVF:0000000B {"SourceContext":"CourtBookingManagement.Api.Common.Middleware.ApiExceptionHandler","RequestId":"0HNPACIFFOMVF:0000000B","RequestPath":"/api/auth/login/email","ConnectionId":"0HNPACIFFOMVF","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Microsoft.EntityFrameworkCore.Storage.RetryLimitExceededException: The maximum number of retries (3) was exceeded while executing database operations with 'NpgsqlRetryingExecutionStrategy'. See the inner exception for the most recent failure.
+ ---> Npgsql.NpgsqlException (0x80004005): Failed to connect to 127.0.0.1:5432
+ ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+   at Npgsql.TaskTimeoutAndCancellation.ExecuteAsync(Func`2 getTaskFunc, NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|213_1(NpgsqlConnector conn, SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|34_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.<>c__DisplayClass30_0`2.<<ExecuteAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.ExecuteImplementationAsync[TState,TResult](Func`4 operation, Func`4 verifySucceeded, TState state, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.ExecuteImplementationAsync[TState,TResult](Func`4 operation, Func`4 verifySucceeded, TState state, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at CourtBookingManagement.Infrastructure.Repositories.AuthRepository.GetByEmailAsync(String email, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\AuthRepository.cs:line 16
+   at CourtBookingManagement.Application.Auth.Services.AuthService.LoginAsync(LoginRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Auth\Services\AuthService.cs:line 166
+   at CourtBookingManagement.Api.Controllers.AuthController.Login(LoginRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\AuthController.cs:line 23
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+2026-10-15 09:50:04.277 +07:00 [INF] HTTP POST /api/auth/login/email responded 200 in 840.2564ms {"RequestHost":"localhost:7047","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0","CorrelationId":"0HNPACIFFOMVG:00000003","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNPACIFFOMVG:00000003","ConnectionId":"0HNPACIFFOMVG","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:50:11.122 +07:00 [INF] HTTP GET /api/player-matching/stats responded 404 in 10.2116ms {"RequestHost":"localhost:7047","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0","CorrelationId":"0HNPACIFFOMVG:0000000B","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNPACIFFOMVG:0000000B","ConnectionId":"0HNPACIFFOMVG","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:50:11.127 +07:00 [INF] Searching admin branches. Keyword: null, City: null, District: null, IsActive: true, PageNumber: 1, PageSize: 9 {"SourceContext":"CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository","ActionId":"97383796-5810-494d-be94-f16ad724f11b","ActionName":"CourtBookingManagement.Api.Controllers.BranchesController.Get (CourtBookingManagement.Api)","RequestId":"0HNPACIFFOMVG:00000009","RequestPath":"/api/branches","ConnectionId":"0HNPACIFFOMVG","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:50:11.303 +07:00 [INF] Admin branch query completed in 175.8909 ms. BranchCount: 5, TotalCount: 5 {"SourceContext":"CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository","ActionId":"97383796-5810-494d-be94-f16ad724f11b","ActionName":"CourtBookingManagement.Api.Controllers.BranchesController.Get (CourtBookingManagement.Api)","RequestId":"0HNPACIFFOMVG:00000009","RequestPath":"/api/branches","ConnectionId":"0HNPACIFFOMVG","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 09:50:11.357 +07:00 [INF] HTTP GET /api/branches responded 200 in 245.2420ms {"RequestHost":"localhost:7047","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0","CorrelationId":"0HNPACIFFOMVG:00000009","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNPACIFFOMVG:00000009","ConnectionId":"0HNPACIFFOMVG","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:08:04.854 +07:00 [INF] Application is shutting down... {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":26804,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:10:57.543 +07:00 [INF] Now listening on: https://localhost:7047 {"EventId":{"Id":14,"Name":"ListeningOnAddress"},"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":13096,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:10:57.591 +07:00 [INF] Now listening on: http://localhost:5117 {"EventId":{"Id":14,"Name":"ListeningOnAddress"},"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":13096,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:10:57.600 +07:00 [INF] Application started. Press Ctrl+C to shut down. {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":13096,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:10:57.605 +07:00 [INF] Hosting environment: Development {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":13096,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:10:57.610 +07:00 [INF] Content root path: D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":13096,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:15:07.766 +07:00 [ERR] Hosting failed to start {"EventId":{"Id":11,"Name":"HostedServiceStartupFaulted"},"SourceContext":"Microsoft.Extensions.Hosting.Internal.Host","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":15908,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+System.IO.IOException: Failed to bind to address https://127.0.0.1:7047: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
+ ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindAsync(ListenOptions[] listenOptions, AddressBindContext context, Func`2 useHttps, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__15_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+2026-10-15 10:15:30.181 +07:00 [INF] HTTP GET /api/bookings/my-bookings responded 401 in 34.7468ms {"RequestHost":"localhost:7047","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0","CorrelationId":"0HNPADA5HCTDO:00000005","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNPADA5HCTDO:00000005","ConnectionId":"0HNPADA5HCTDO","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":13096,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:19:12.924 +07:00 [INF] HTTP POST /api/auth/login/email responded 200 in 2028.7189ms {"RequestHost":"localhost:7047","UserAgent":"PostmanRuntime/7.29.0","CorrelationId":"0HNPADA5HCTDQ:00000001","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNPADA5HCTDQ:00000001","ConnectionId":"0HNPADA5HCTDQ","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":13096,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:19:40.989 +07:00 [INF] HTTP GET /api/bookings/my-bookings responded 403 in 25.3521ms {"RequestHost":"localhost:7047","UserAgent":"PostmanRuntime/7.29.0","CorrelationId":"0HNPADA5HCTDQ:00000002","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNPADA5HCTDQ:00000002","ConnectionId":"0HNPADA5HCTDQ","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":13096,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:26:46.005 +07:00 [INF] Now listening on: https://localhost:7047 {"EventId":{"Id":14,"Name":"ListeningOnAddress"},"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":31948,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:26:46.057 +07:00 [INF] Now listening on: http://localhost:5117 {"EventId":{"Id":14,"Name":"ListeningOnAddress"},"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":31948,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:26:46.133 +07:00 [INF] Application started. Press Ctrl+C to shut down. {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":31948,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:26:46.138 +07:00 [INF] Hosting environment: Development {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":31948,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:26:46.142 +07:00 [INF] Content root path: D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":31948,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:26:57.895 +07:00 [INF] HTTP GET /api/bookings/my-bookings responded 200 in 1492.8335ms {"RequestHost":"localhost:7047","UserAgent":"PostmanRuntime/7.29.0","CorrelationId":"0HNPADGI2H15K:00000001","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNPADGI2H15K:00000001","ConnectionId":"0HNPADGI2H15K","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":31948,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:30:22.896 +07:00 [INF] Now listening on: https://localhost:7047 {"EventId":{"Id":14,"Name":"ListeningOnAddress"},"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":25240,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:30:22.934 +07:00 [INF] Now listening on: http://localhost:5117 {"EventId":{"Id":14,"Name":"ListeningOnAddress"},"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":25240,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:30:22.942 +07:00 [INF] Application started. Press Ctrl+C to shut down. {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":25240,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:30:22.948 +07:00 [INF] Hosting environment: Development {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":25240,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:30:22.952 +07:00 [INF] Content root path: D:\CODE\CourtsBookingManagement\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":25240,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:30:34.617 +07:00 [INF] HTTP GET /api/player-matching/stats responded 404 in 93.0751ms {"RequestHost":"localhost:7047","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0","CorrelationId":"0HNPADIKHRKRO:00000005","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNPADIKHRKRO:00000005","ConnectionId":"0HNPADIKHRKRO","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":25240,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:30:35.152 +07:00 [INF] Searching admin branches. Keyword: null, City: null, District: null, IsActive: true, PageNumber: 1, PageSize: 9 {"SourceContext":"CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository","ActionId":"7494a526-a795-4408-b649-b62eaf3646b7","ActionName":"CourtBookingManagement.Api.Controllers.BranchesController.Get (CourtBookingManagement.Api)","RequestId":"0HNPADIKHRKRO:00000007","RequestPath":"/api/branches","ConnectionId":"0HNPADIKHRKRO","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":25240,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:30:36.044 +07:00 [INF] Admin branch query completed in 894.4834 ms. BranchCount: 5, TotalCount: 5 {"SourceContext":"CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository","ActionId":"7494a526-a795-4408-b649-b62eaf3646b7","ActionName":"CourtBookingManagement.Api.Controllers.BranchesController.Get (CourtBookingManagement.Api)","RequestId":"0HNPADIKHRKRO:00000007","RequestPath":"/api/branches","ConnectionId":"0HNPADIKHRKRO","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":25240,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-10-15 10:30:36.281 +07:00 [INF] HTTP GET /api/branches responded 200 in 1760.8596ms {"RequestHost":"localhost:7047","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0","CorrelationId":"0HNPADIKHRKRO:00000007","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNPADIKHRKRO:00000007","ConnectionId":"0HNPADIKHRKRO","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":25240,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}

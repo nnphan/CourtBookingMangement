@@ -9,6 +9,53 @@ namespace CourtBookingManagement.Infrastructure.Repositories;
 
 public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) : IBookingRepository
 {
+    public async Task<Guid?> GetCustomerIdByUserIdAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        using var connection = connectionFactory.CreateConnection();
+        return await connection.ExecuteScalarAsync<Guid?>(new CommandDefinition("""
+            SELECT id
+            FROM customer.customers
+            WHERE user_id = @UserId
+              AND is_active = TRUE
+              AND deleted_at IS NULL
+            LIMIT 1;
+            """, new { UserId = userId }, cancellationToken: cancellationToken));
+    }
+
+    public async Task<IReadOnlyList<MyBookingResponse>> GetMyBookingsAsync(
+        Guid customerId,
+        CancellationToken cancellationToken)
+    {
+        using var connection = connectionFactory.CreateConnection();
+        var bookings = await connection.QueryAsync<MyBookingResponse>(new CommandDefinition("""
+            SELECT
+                b.id AS BookingId,
+                b.booking_code AS BookingCode,
+                b.branch_id AS BranchId,
+                br.name AS BranchName,
+                bd.court_id AS CourtId,
+                COALESCE(NULLIF(c.name, ''), c.court_number::text) AS CourtName,
+                bd.booking_date AS BookingDate,
+                bd.start_time AS StartTime,
+                bd.end_time AS EndTime,
+                UPPER(b.booking_type) AS BookingType,
+                UPPER(b.status) AS Status,
+                UPPER(b.payment_method) AS PaymentMethod,
+                b.total_amount AS TotalAmount
+            FROM booking.bookings b
+            INNER JOIN booking.booking_details bd ON bd.booking_id = b.id
+            INNER JOIN core.courts c ON c.id = bd.court_id
+            INNER JOIN core.branches br ON br.id = b.branch_id
+            WHERE b.customer_id = @CustomerId
+              AND b.is_active = TRUE
+              AND b.deleted_at IS NULL
+              AND UPPER(b.status) IN ('PENDING', 'CONFIRMED')
+            ORDER BY bd.booking_date DESC, bd.start_time DESC;
+            """, new { CustomerId = customerId }, cancellationToken: cancellationToken));
+
+        return bookings.AsList();
+    }
+
     public async Task<IReadOnlyList<BranchPricingDto>> GetActivePricingsAsync(Guid branchId, CancellationToken cancellationToken)
     {
         using var connection = connectionFactory.CreateConnection();

@@ -1,5 +1,6 @@
 using CourtBookingManagement.Application.Bookings.DTOs;
 using CourtBookingManagement.Application.Bookings.Interfaces;
+using CourtBookingManagement.Application.Auth.Interfaces;
 using CourtBookingManagement.Application.Common.Enums;
 using CourtBookingManagement.Domain.Abstractions;
 using FluentValidation;
@@ -10,8 +11,28 @@ public sealed class BookingService(
     IBookingRepository repository,
     IBookingPricingService bookingPricingService,
     IValidator<CreateBookingRequest> validator,
-    IValidator<CalculateBookingPriceRequest> calculatePriceValidator) : IBookingService
+    IValidator<CalculateBookingPriceRequest> calculatePriceValidator,
+    ICurrentUserService currentUserService) : IBookingService
 {
+    public async Task<Result<IReadOnlyList<MyBookingResponse>>> GetMyBookingsAsync(
+        CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid userId || userId == Guid.Empty)
+        {
+            return Result.Failure<IReadOnlyList<MyBookingResponse>>(
+                new Error("Auth.InvalidCredentials", "The authenticated user could not be identified."));
+        }
+
+        var customerId = await repository.GetCustomerIdByUserIdAsync(userId, cancellationToken);
+        if (customerId is null)
+        {
+            return Result.Success<IReadOnlyList<MyBookingResponse>>(Array.Empty<MyBookingResponse>());
+        }
+
+        var bookings = await repository.GetMyBookingsAsync(customerId.Value, cancellationToken);
+        return Result.Success(bookings);
+    }
+
     public async Task<Result<CalculateBookingPriceResponse>> CalculatePriceAsync(
         CalculateBookingPriceRequest request,
         CancellationToken cancellationToken)
