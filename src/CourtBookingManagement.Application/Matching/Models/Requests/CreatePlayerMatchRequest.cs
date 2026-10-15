@@ -1,3 +1,5 @@
+using CourtBookingManagement.Application.Common.Constants;
+
 namespace CourtBookingManagement.Application.Matching.Models.Requests;
 
 public sealed class CreatePlayerMatchRequest
@@ -16,9 +18,15 @@ public sealed class CreatePlayerMatchRequest
 
     public TimeOnly EndTime { get; set; }
 
-    public SkillLevel SkillLevel { get; set; }
+    /// <summary>
+    /// Allowed values: BEGINNER, INTERMEDIATE, ADVANCED, PROFESSIONAL.
+    /// </summary>
+    public string SkillLevel { get; set; } = string.Empty;
 
-    public string? GenderPreference { get; set; }
+    /// <summary>
+    /// Allowed values: MALE, FEMALE, BOTH. Defaults to BOTH.
+    /// </summary>
+    public string GenderPreference { get; set; } = GenderPreferences.Both;
 
     public int MaxPlayers { get; set; }
 

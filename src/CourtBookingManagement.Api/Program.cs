@@ -78,6 +78,7 @@ builder.Services.AddSwaggerGen(options =>
     options.SchemaFilter<BookingEnumSchemaFilter>();
     options.OperationFilter<UploadFileExamplesOperationFilter>();
     options.OperationFilter<AdminBranchesExamplesOperationFilter>();
+    options.OperationFilter<BookingPriceExamplesOperationFilter>();
     options.CustomSchemaIds(GetSwaggerSchemaId);
 
     options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme

@@ -69,9 +69,7 @@ public sealed class BranchesController(
 
     //[Permission(Permissions.BranchView)]
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<BranchAdminResponse>>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+    [AllowAnonymous]
     public async Task<IActionResult> Get([FromQuery] BranchAdminSearchRequest request, CancellationToken ct)
     {
         var result = await branchService.SearchAsync(request, ct);

@@ -9,6 +9,23 @@ namespace CourtBookingManagement.Infrastructure.Repositories;
 
 public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) : IBookingRepository
 {
+    public async Task<IReadOnlyList<BranchPricingDto>> GetActivePricingsAsync(Guid branchId, CancellationToken cancellationToken)
+    {
+        using var connection = connectionFactory.CreateConnection();
+        var pricings = await connection.QueryAsync<BranchPricingDto>(new CommandDefinition("""
+            SELECT id AS Id,
+                   pricing_type AS PricingType,
+                   start_time AS StartTime,
+                   end_time AS EndTime,
+                   price_per_hour AS PricePerHour
+            FROM core.branch_pricings
+            WHERE branch_id = @BranchId
+              AND is_active = TRUE
+            ORDER BY start_time;
+            """, new { BranchId = branchId }, cancellationToken: cancellationToken));
+        return pricings.AsList();
+    }
+
     public Task<bool> ExistsBranchAsync(Guid branchId, CancellationToken cancellationToken) =>
         ScalarAsync<bool>("SELECT EXISTS (SELECT 1 FROM core.branches WHERE id = @BranchId AND is_active AND deleted_at IS NULL);", new { BranchId = branchId }, cancellationToken);
 
@@ -34,7 +51,7 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
             );
             """, new { CourtId = courtId, BookingDate = bookingDate, StartTime = startTime, EndTime = endTime }, cancellationToken);
 
-    public async Task<BookingDetailResponse?> CreateBookingAsync(CreateBookingRequest request, CancellationToken cancellationToken)
+    public async Task<BookingDetailResponse?> CreateBookingAsync(CreateBookingRequest request, decimal calculatedPrice, CancellationToken cancellationToken)
     {
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
@@ -80,7 +97,7 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
                  CONCAT('BK', TO_CHAR(clock_timestamp(), 'YYMMDDHH24MISSMS'),
                      UPPER(SUBSTRING(REPLACE(gen_random_uuid()::text, '-', '') FROM 1 FOR 5))),
                  @CustomerId, @BranchId, 'confirmed', @BookingType, @PaymentMethod,
-                 0, 0, 0, @Note, TRUE, NOW(), NOW());
+                 @CalculatedPrice, 0, @CalculatedPrice, @Note, TRUE, NOW(), NOW());
             """;
         await connection.ExecuteAsync(new CommandDefinition(insertBookingSql, new
         {
@@ -89,7 +106,8 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
             request.BranchId,
             BookingType = bookingType,
             request.PaymentMethod,
-            request.Note
+            request.Note,
+            CalculatedPrice = calculatedPrice
         }, transaction, cancellationToken: cancellationToken));
 
         const string insertDetailSql = """
@@ -115,7 +133,7 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
                 @EndTime,
                 NULL,
                 'reserved',
-                0
+                @CalculatedPrice
             );
             """;
         await connection.ExecuteAsync(new CommandDefinition(insertDetailSql, new
@@ -126,6 +144,7 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
             request.BookingDate,
             StartTime = TimeOnly.Parse(request.StartTime),
             EndTime = TimeOnly.Parse(request.EndTime),
+            CalculatedPrice = calculatedPrice
         }, transaction, cancellationToken: cancellationToken));
 
         var response = await GetBookingDetailAsync(connection, transaction, bookingId, cancellationToken);

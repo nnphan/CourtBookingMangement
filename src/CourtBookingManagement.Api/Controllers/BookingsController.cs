@@ -1,4 +1,5 @@
 using CourtBookingManagement.Api.Common.Responses;
+using CourtBookingManagement.Application.Bookings.DTOs;
 using CourtBookingManagement.Application.Bookings.Interfaces;
 using CourtBookingManagement.Application.CourtStatus.DTOs;
 using CourtBookingManagement.Application.CourtStatus.Interfaces;
@@ -22,6 +23,23 @@ public sealed class BookingsController(ICourtStatusService courtStatusService, I
         var result = await bookingService.CreateAsync(request, ct);
         return result.IsSuccess
             ? Created(result.Value, nameof(Get), new { id = result.Value.BookingId }, "Booking created successfully.")
+            : Error(result.Error);
+    }
+
+    [HttpPost("calculate-price")]
+    //[Permission("booking.create")]
+    [ProducesResponseType(typeof(ApiResponse<CalculateBookingPriceResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CalculatePrice(
+        [FromBody] CalculateBookingPriceRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await bookingService.CalculatePriceAsync(request, cancellationToken);
+        return result.IsSuccess
+            ? Success(result.Value, "Price calculated successfully.")
             : Error(result.Error);
     }
 

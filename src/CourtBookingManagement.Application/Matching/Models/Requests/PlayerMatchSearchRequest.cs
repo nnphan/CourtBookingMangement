@@ -12,6 +12,8 @@ public sealed class PlayerMatchSearchRequest
 
     public string? SkillLevel { get; set; }
 
+    public string? GenderPreference { get; set; }
+
     public string? City { get; set; }
 
     public string? District { get; set; }

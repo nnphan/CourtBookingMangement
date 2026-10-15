@@ -1,6 +1,7 @@
 using System.Data;
 using System.Text;
 using CourtBookingManagement.Application.Abstractions.Data;
+using CourtBookingManagement.Application.Common.Constants;
 using CourtBookingManagement.Application.Matching.Models;
 using CourtBookingManagement.Application.Matching.Models.Requests;
 using CourtBookingManagement.Application.Matching.Models.Responses;
@@ -301,7 +302,7 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
             MatchDate = request.MatchDate,
             StartTime = request.StartTime,
             EndTime = request.EndTime,
-            SkillLevel = request.SkillLevel.ToDatabaseValue(),
+            SkillLevel = request.SkillLevel,
             GenderPreference = request.GenderPreference,
             MaxPlayers = request.MaxPlayers,
             FeePerPlayer = request.FeePerPlayer
@@ -517,6 +518,7 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
                     pm.start_time AS StartTime,
                     pm.end_time AS EndTime,
                     pm.skill_level AS SkillLevel,
+                    pm.gender_preference AS GenderPreference,
                     pm.max_players AS MaxPlayers,
                     pm.current_players AS CurrentPlayers,
                     (pm.max_players - pm.current_players) AS RemainingSlots,
@@ -579,6 +581,12 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
             parameters.Add("SkillLevel", request.SkillLevel.Trim());
         }
 
+        if (!string.IsNullOrWhiteSpace(request.GenderPreference))
+        {
+            sql.AppendLine("AND GenderPreference = @GenderPreference");
+            parameters.Add("GenderPreference", request.GenderPreference.Trim());
+        }
+
         if (!string.IsNullOrWhiteSpace(request.City))
         {
             sql.AppendLine("AND City ILIKE @City");
@@ -625,7 +633,7 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
         public TimeOnly StartTime { get; init; }
         public TimeOnly EndTime { get; init; }
         public string SkillLevel { get; init; } = string.Empty;
-        public string? GenderPreference { get; init; }
+        public string GenderPreference { get; init; } = GenderPreferences.Both;
         public int MaxPlayers { get; init; }
         public int CurrentPlayers { get; init; }
         public decimal? FeePerPlayer { get; init; }

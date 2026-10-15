@@ -1,4 +1,5 @@
 ﻿using CourtBookingManagement.Application.Abstractions.Clock;
+using CourtBookingManagement.Application.Common.Constants;
 using CourtBookingManagement.Domain.Abstractions;
 using CourtBookingManagement.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -513,7 +514,8 @@ public partial class ApplicationDbContext(
             entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
             entity.Property(e => e.CurrentPlayers).HasDefaultValue(1);
-            entity.Property(e => e.SkillLevel).HasConversion<string>().HasDefaultValueSql("'BEGINNER'::character varying");
+            entity.Property(e => e.SkillLevel).HasMaxLength(30).HasDefaultValue(SkillLevels.Beginner);
+            entity.Property(e => e.GenderPreference).HasMaxLength(20).HasDefaultValue(GenderPreferences.Both).IsRequired();
             entity.Property(e => e.Status).HasConversion<string>().HasDefaultValueSql("'OPEN'::character varying");
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
 

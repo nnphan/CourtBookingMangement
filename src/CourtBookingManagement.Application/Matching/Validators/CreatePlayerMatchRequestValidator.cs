@@ -1,3 +1,4 @@
+using CourtBookingManagement.Application.Common.Constants;
 using CourtBookingManagement.Application.Matching.Models.Requests;
 using FluentValidation;
 
@@ -8,6 +9,14 @@ public sealed class CreatePlayerMatchRequestValidator : AbstractValidator<Create
     public CreatePlayerMatchRequestValidator()
     {
         RuleFor(x => x.BranchId).NotEmpty();
+
+        RuleFor(x => x.SkillLevel)
+            .Must(skillLevel => SkillLevels.All.Contains(skillLevel, StringComparer.Ordinal))
+            .WithMessage("Invalid Skill Level.");
+
+        RuleFor(x => x.GenderPreference)
+            .Must(genderPreference => GenderPreferences.All.Contains(genderPreference, StringComparer.Ordinal))
+            .WithMessage("Invalid gender preference.");
 
         RuleFor(x => x.Title)
             .NotEmpty()

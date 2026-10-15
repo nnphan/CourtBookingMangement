@@ -12,6 +12,7 @@ namespace CourtBookingManagement.Application.Matching.Services;
 public sealed class PlayerMatchService(
     IPlayerMatchRepository repository,
     IValidator<CreatePlayerMatchRequest> validator,
+    IValidator<PlayerMatchSearchRequest> searchRequestValidator,
     ISqlConnectionFactory sqlConnectionFactory) : IPlayerMatchService
 {
     private static readonly Error InvalidMatchId = new("PLAYER_MATCH.INVALID_ID", "A valid player match id is required.");
@@ -27,6 +28,13 @@ public sealed class PlayerMatchService(
             return Result.Failure<PagedResult<PlayerMatchResponse>>(new Error("INVALID_REQUEST", "Request cannot be null."));
         }
 
+        var validation = await searchRequestValidator.ValidateAsync(request, cancellationToken);
+        if (!validation.IsValid)
+        {
+            return Result.Failure<PagedResult<PlayerMatchResponse>>(
+                new Error("PLAYER_MATCH.VALIDATION", string.Join("; ", validation.Errors.Select(error => error.ErrorMessage))));
+        }
+
         var normalizedRequest = new PlayerMatchSearchRequest
         {
             Keyword = NormalizeText(request.Keyword),
@@ -34,6 +42,7 @@ public sealed class PlayerMatchService(
             StartTime = request.StartTime,
             EndTime = request.EndTime,
             SkillLevel = NormalizeText(request.SkillLevel),
+            GenderPreference = NormalizeText(request.GenderPreference),
             City = NormalizeText(request.City),
             District = NormalizeText(request.District),
             SortBy = NormalizeSort(request.SortBy),

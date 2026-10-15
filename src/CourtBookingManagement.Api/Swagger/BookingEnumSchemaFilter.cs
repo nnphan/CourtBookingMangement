@@ -1,8 +1,11 @@
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using CourtBookingManagement.Application.Common.Constants;
 using CourtBookingManagement.Application.Common.Enums;
 using CourtBookingManagement.Application.CourtBookings.DTOs;
+using CourtBookingManagement.Application.Matching.Models.Requests;
+using CourtBookingManagement.Application.Matching.Models.Responses;
 using CourtBookingManagement.Application.CourtStatus.DTOs;
 
 namespace CourtBookingManagement.Api.Swagger;
@@ -33,6 +36,33 @@ public sealed class BookingEnumSchemaFilter : ISchemaFilter
         {
             ApplyValues(schema, "BookingType", BookingTypes.All, "Flexible");
             ApplyValues(schema, "PaymentMethod", PaymentMethods.All, "BankTransfer");
+        }
+
+        if (context.Type == typeof(CreatePlayerMatchRequest))
+        {
+            ApplyValues(schema, "SkillLevel", SkillLevels.All, SkillLevels.Beginner);
+            var skillLevelProperty = schema.Properties.FirstOrDefault(property =>
+                string.Equals(property.Key, "SkillLevel", StringComparison.OrdinalIgnoreCase)).Value;
+            if (skillLevelProperty is not null)
+            {
+                skillLevelProperty.Description =
+                    "Allowed values: BEGINNER, INTERMEDIATE, ADVANCED, PROFESSIONAL.";
+            }
+        }
+
+        if (context.Type == typeof(CreatePlayerMatchRequest)
+            || context.Type == typeof(PlayerMatchSearchRequest)
+            || context.Type == typeof(PlayerMatchDetailResponse)
+            || context.Type == typeof(PlayerMatchResponse)
+            || context.Type == typeof(MyMatchResponse))
+        {
+            ApplyValues(schema, "GenderPreference", GenderPreferences.All, GenderPreferences.Both);
+            var genderPreferenceProperty = schema.Properties.FirstOrDefault(property =>
+                string.Equals(property.Key, "GenderPreference", StringComparison.OrdinalIgnoreCase)).Value;
+            if (genderPreferenceProperty is not null)
+            {
+                genderPreferenceProperty.Description = "Allowed values: MALE, FEMALE, BOTH.";
+            }
         }
     }
 

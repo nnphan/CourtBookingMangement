@@ -1,3 +1,5 @@
+using CourtBookingManagement.Application.Common.Constants;
+
 namespace CourtBookingManagement.Application.Matching.Models.Responses;
 
 public sealed class PlayerMatchDetailResponse
@@ -26,7 +28,7 @@ public sealed class PlayerMatchDetailResponse
 
     public string SkillLevel { get; set; } = string.Empty;
 
-    public string? GenderPreference { get; set; }
+    public string GenderPreference { get; set; } = GenderPreferences.Both;
 
     public int MaxPlayers { get; set; }
 

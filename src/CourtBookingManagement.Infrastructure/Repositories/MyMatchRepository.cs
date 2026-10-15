@@ -74,6 +74,7 @@ public sealed class MyMatchRepository(ISqlConnectionFactory sqlConnectionFactory
                     pm.start_time AS StartTime,
                     pm.end_time AS EndTime,
                     pm.skill_level AS SkillLevel,
+                    pm.gender_preference AS GenderPreference,
                     pm.status AS Status,
                     pm.max_players AS MaxPlayers,
                     pm.current_players AS CurrentPlayers,

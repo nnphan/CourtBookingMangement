@@ -1,3 +1,5 @@
+using CourtBookingManagement.Application.Common.Constants;
+
 namespace CourtBookingManagement.Application.Matching.Models.Responses;
 
 public sealed class MyMatchResponse
@@ -19,6 +21,8 @@ public sealed class MyMatchResponse
     public TimeOnly EndTime { get; set; }
 
     public string SkillLevel { get; set; } = string.Empty;
+
+    public string GenderPreference { get; set; } = GenderPreferences.Both;
 
     public string Status { get; set; } = string.Empty;
 

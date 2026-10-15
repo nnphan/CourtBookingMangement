@@ -8,8 +8,56 @@ namespace CourtBookingManagement.Application.Bookings.Services;
 
 public sealed class BookingService(
     IBookingRepository repository,
-    IValidator<CreateBookingRequest> validator) : IBookingService
+    IBookingPricingService bookingPricingService,
+    IValidator<CreateBookingRequest> validator,
+    IValidator<CalculateBookingPriceRequest> calculatePriceValidator) : IBookingService
 {
+    public async Task<Result<CalculateBookingPriceResponse>> CalculatePriceAsync(
+        CalculateBookingPriceRequest request,
+        CancellationToken cancellationToken)
+    {
+        var validation = await calculatePriceValidator.ValidateAsync(request, cancellationToken);
+        if (!validation.IsValid)
+        {
+            return Result.Failure<CalculateBookingPriceResponse>(new Error(
+                "Error.Validation",
+                string.Join("; ", validation.Errors.Select(error => error.ErrorMessage))));
+        }
+
+        if (!await repository.ExistsBranchAsync(request.BranchId, cancellationToken))
+        {
+            return Result.Failure<CalculateBookingPriceResponse>(new Error("Branch.NotFound", "Branch not found."));
+        }
+
+        var durationHours = (decimal)(request.EndTime - request.StartTime).TotalHours;
+        decimal totalAmount;
+        try
+        {
+            totalAmount = await bookingPricingService.CalculatePriceAsync(
+                request.BranchId,
+                request.BookingDate,
+                request.StartTime,
+                request.EndTime,
+                cancellationToken);
+        }
+        catch (BookingPricingException exception)
+        {
+            return Result.Failure<CalculateBookingPriceResponse>(new Error("Booking.PricingConfiguration", exception.Message));
+        }
+
+        return Result.Success(new CalculateBookingPriceResponse
+        {
+            BranchId = request.BranchId,
+            BookingDate = request.BookingDate,
+            StartTime = request.StartTime,
+            EndTime = request.EndTime,
+            DurationHours = durationHours,
+            SubtotalAmount = totalAmount,
+            PaidAmount = 0m,
+            TotalAmount = totalAmount
+        });
+    }
+
     public async Task<Result<BookingDetailResponse>> CreateAsync(CreateBookingRequest request, CancellationToken cancellationToken)
     {
         var validation = await validator.ValidateAsync(request, cancellationToken);
@@ -41,7 +89,22 @@ public sealed class BookingService(
             return Result.Failure<BookingDetailResponse>(new Error("CourtStatus.Conflict", "The court is not available for the requested time."));
         }
 
-        var booking = await repository.CreateBookingAsync(request, cancellationToken);
+        decimal calculatedPrice;
+        try
+        {
+            calculatedPrice = await bookingPricingService.CalculatePriceAsync(
+                request.BranchId,
+                request.BookingDate,
+                TimeOnly.Parse(request.StartTime),
+                TimeOnly.Parse(request.EndTime),
+                cancellationToken);
+        }
+        catch (BookingPricingException exception)
+        {
+            return Result.Failure<BookingDetailResponse>(new Error("Booking.PricingConfiguration", exception.Message));
+        }
+
+        var booking = await repository.CreateBookingAsync(request, calculatedPrice, cancellationToken);
         return booking is null
             ? Result.Failure<BookingDetailResponse>(new Error("CourtStatus.Conflict", "The court is not available for the requested time."))
             : Result.Success(booking);

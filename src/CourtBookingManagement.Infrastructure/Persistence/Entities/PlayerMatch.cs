@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using CourtBookingManagement.Application.Common.Constants;
 using Microsoft.EntityFrameworkCore;
 
 namespace CourtBookingManagement.Infrastructure.Persistence.Entities;
@@ -46,8 +47,8 @@ public partial class PlayerMatch
     public string SkillLevel { get; set; } = null!;
 
     [Column("gender_preference")]
-    [StringLength(30)]
-    public string? GenderPreference { get; set; }
+    [StringLength(20)]
+    public string GenderPreference { get; set; } = GenderPreferences.Both;
 
     [Column("max_players")]
     public int MaxPlayers { get; set; }

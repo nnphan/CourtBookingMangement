@@ -39,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<ICourtStatusService, CourtStatusService>();
         services.AddScoped<ICourtBookingService, CourtBookingService>();
         services.AddScoped<IBookingService, BookingService>();
+        services.AddScoped<IBookingPricingService, BookingPricingService>();
         services.AddScoped<IBranchService, BranchService>();
         services.AddScoped<IAdminBranchService, AdminBranchService>();
         services.AddScoped<IPlayerMatchService, PlayerMatchService>();
