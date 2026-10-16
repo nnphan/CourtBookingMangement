@@ -150,6 +150,7 @@ public sealed class UserService : IUserService
     private static UserResponseDto ToResponse(User user) => new()
     {
         Id = user.Id,
+        FullName = user.FullName,
         Email = user.Email,
         PhoneNumber = user.PhoneNumber,
         IsActive = user.IsActive,

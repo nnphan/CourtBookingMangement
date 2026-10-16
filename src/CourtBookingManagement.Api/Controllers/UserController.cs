@@ -31,7 +31,7 @@ public sealed class UserController(IUserService userService) : ApiControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    [Permission("user.view")]
+    //[Permission("user.view")]
     public async Task<IActionResult> GetById(
         Guid id,
         CancellationToken cancellationToken)

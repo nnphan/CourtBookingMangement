@@ -4,6 +4,8 @@ public sealed class UserResponseDto
 {
     public Guid Id { get; init; }
 
+    public string FullName { get; init; }
+
     public required string Email { get; init; }
 
     public string? PhoneNumber { get; init; }
