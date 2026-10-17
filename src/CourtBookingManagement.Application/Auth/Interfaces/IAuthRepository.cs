@@ -18,6 +18,8 @@ public interface IAuthRepository
 {
     Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
 
+    Task<User?> GetByPhoneNumberAsync(string phoneNumber, CancellationToken cancellationToken = default);
+
     Task<RefreshTokenRecord?> GetRefreshTokenByHashAsync(string tokenHash, CancellationToken cancellationToken = default);
 
     Task AddRefreshTokenAsync(RefreshTokenRecord refreshToken, CancellationToken cancellationToken = default);

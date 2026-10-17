@@ -212,12 +212,12 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
 
     private async Task<Guid?> ResolveCustomerAsync(IDbConnection connection, IDbTransaction transaction, CreateBookingRequest request, CancellationToken cancellationToken)
     {
-        if (request.CustomerId is Guid customerId)
-        {
-            return await connection.ExecuteScalarAsync<Guid?>(new CommandDefinition(
-                "SELECT id FROM customer.customers WHERE id = @CustomerId AND is_active AND deleted_at IS NULL;",
-                new { CustomerId = customerId }, transaction, cancellationToken: cancellationToken));
-        }
+        //if (request.CustomerId is Guid customerId)
+        //{
+        //    return await connection.ExecuteScalarAsync<Guid?>(new CommandDefinition(
+        //        "SELECT id FROM customer.customers WHERE id = @CustomerId AND is_active AND deleted_at IS NULL;",
+        //        new { CustomerId = customerId }, transaction, cancellationToken: cancellationToken));
+        //}
 
         await connection.ExecuteAsync(new CommandDefinition(
             "SELECT pg_advisory_xact_lock(hashtextextended(@LockKey, 0));",

@@ -81,7 +81,7 @@ public sealed class User : Entity
             Guid.NewGuid(),
             email.Trim(),
             fullName,
-            phoneNumber,
+            phoneNumber?.Trim(),
             passwordHash,
             true,
             false,
@@ -148,7 +148,7 @@ public sealed class User : Entity
         }
 
         Email = email.Trim();
-        PhoneNumber = phoneNumber;
+        PhoneNumber = phoneNumber?.Trim();
         UpdatedAt = updatedAt;
         UpdatedBy = updatedBy;
 

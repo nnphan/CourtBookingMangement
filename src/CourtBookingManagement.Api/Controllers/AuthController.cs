@@ -24,6 +24,14 @@ public sealed class AuthController(IAuthService authService, ICurrentUserService
         return FromResult(result);
     }
 
+    [AllowAnonymous]
+    [HttpPost("login/phonenumber")]
+    public async Task<IActionResult> LoginByPhoneNumber([FromBody] LoginByPhoneNumberRequest request, CancellationToken cancellationToken)
+    {
+        var result = await authService.LoginByPhoneNumberAsync(request, cancellationToken);
+        return FromResult(result);
+    }
+
     [HttpPost("refresh-token")]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request, CancellationToken cancellationToken)
     {

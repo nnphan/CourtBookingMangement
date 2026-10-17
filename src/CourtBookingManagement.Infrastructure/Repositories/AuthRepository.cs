@@ -20,6 +20,17 @@ public sealed class AuthRepository(ApplicationDbContext dbContext) : IAuthReposi
         return entity is null ? null : entity.ToDomain();
     }
 
+    public async Task<CourtBookingManagement.Domain.Users.User?> GetByPhoneNumberAsync(string phoneNumber, CancellationToken cancellationToken = default)
+    {
+        var entities = await _dbContext.Set<CourtBookingManagement.Infrastructure.Persistence.Entities.User>()
+            .AsNoTracking()
+            .Where(user => user.PhoneNumber == phoneNumber && user.DeletedAt == null)
+            .Take(2)
+            .ToListAsync(cancellationToken);
+
+        return entities.Count == 1 ? entities[0].ToDomain() : null;
+    }
+
     public async Task<RefreshTokenRecord?> GetRefreshTokenByHashAsync(string tokenHash, CancellationToken cancellationToken = default)
     {
         var entity = await _dbContext.RefreshTokens

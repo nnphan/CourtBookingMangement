@@ -185,6 +185,7 @@ public sealed class UserRoleRepository(ISqlConnectionFactory sqlConnectionFactor
     public async Task AssignRoleAsync(
         Guid userId,
         Guid roleId,
+        Guid assignedBy,
         IDbTransaction transaction,
         CancellationToken cancellationToken)
     {
@@ -193,20 +194,22 @@ public sealed class UserRoleRepository(ISqlConnectionFactory sqlConnectionFactor
             (
                 user_id,
                 role_id,
-                assigned_at
+                assigned_at,
+                assigned_by
             )
             VALUES
             (
                 @UserId,
                 @RoleId,
-                NOW()
+                NOW(),
+                @AssignedBy
             )
             ON CONFLICT (user_id, role_id) DO NOTHING;
             """;
 
         await transaction.Connection!.ExecuteAsync(new CommandDefinition(
             sql,
-            new { UserId = userId, RoleId = roleId },
+            new { UserId = userId, RoleId = roleId, AssignedBy = assignedBy },
             transaction,
             cancellationToken: cancellationToken));
     }
