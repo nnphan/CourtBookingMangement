@@ -16,6 +16,10 @@ public interface IUserRepository
         Guid? excludingId = null,
         CancellationToken cancellationToken = default);
 
+    Task<bool> ExistsByPhoneNumberAsync(
+        string phoneNumber,
+        CancellationToken cancellationToken = default);
+
     Task AddAsync(
         User user,
         CancellationToken cancellationToken = default);

@@ -1,8 +1,10 @@
 using DomainUser = CourtBookingManagement.Domain.Users.User;
 using EfUser = CourtBookingManagement.Infrastructure.Persistence.Entities.User;
+using CourtBookingManagement.Application.Auth.Exceptions;
 using CourtBookingManagement.Domain.Users;
 using CourtBookingManagement.Infrastructure.Persistence.Mappings;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using CourtBookingManagement.Infrastructure.Persistence;
 using System.Data;
 using Dapper;
@@ -56,6 +58,17 @@ public sealed class UserRepository : IUserRepository
                 user => user.DeletedAt == null
                     && user.Email.ToLower() == email.ToLower()
                     && (excludingId == null || user.Id != excludingId),
+                cancellationToken);
+    }
+
+    public Task<bool> ExistsByPhoneNumberAsync(
+        string phoneNumber,
+        CancellationToken cancellationToken = default)
+    {
+        return _dbContext
+            .Set<EfUser>()
+            .AnyAsync(
+                user => user.DeletedAt == null && user.PhoneNumber == phoneNumber,
                 cancellationToken);
     }
 
@@ -124,23 +137,32 @@ public sealed class UserRepository : IUserRepository
             RETURNING id;
             """;
 
-        return await transaction.Connection!.ExecuteScalarAsync<Guid>(new CommandDefinition(
-            sql,
-            new
-            {
-                user.Id,
-                user.Email,
-                user.FullName,
-                user.PhoneNumber,
-                user.PasswordHash,
-                user.IsActive,
-                user.IsEmailVerified,
-                user.CreatedAt,
-                user.CreatedBy,
-                user.UpdatedAt,
-                user.UpdatedBy
-            },
-            transaction,
-            cancellationToken: cancellationToken));
+        try
+        {
+            return await transaction.Connection!.ExecuteScalarAsync<Guid>(new CommandDefinition(
+                sql,
+                new
+                {
+                    user.Id,
+                    user.Email,
+                    user.FullName,
+                    user.PhoneNumber,
+                    user.PasswordHash,
+                    user.IsActive,
+                    user.IsEmailVerified,
+                    user.CreatedAt,
+                    user.CreatedBy,
+                    user.UpdatedAt,
+                    user.UpdatedBy
+                },
+                transaction,
+                cancellationToken: cancellationToken));
+        }
+        catch (PostgresException exception) when (
+            exception.SqlState == PostgresErrorCodes.UniqueViolation
+            && exception.ConstraintName is "ux_users_email" or "ux_users_active_phone_number")
+        {
+            throw new RegistrationConflictException(exception.ConstraintName!, exception);
+        }
     }
 }

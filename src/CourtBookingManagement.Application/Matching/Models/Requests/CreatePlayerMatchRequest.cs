@@ -4,6 +4,8 @@ namespace CourtBookingManagement.Application.Matching.Models.Requests;
 
 public sealed class CreatePlayerMatchRequest
 {
+    public Guid BookingId { get; set; }
+
     public Guid BranchId { get; set; }
 
     public Guid? CourtId { get; set; }

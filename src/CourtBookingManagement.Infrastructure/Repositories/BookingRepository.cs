@@ -9,6 +9,34 @@ namespace CourtBookingManagement.Infrastructure.Repositories;
 
 public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) : IBookingRepository
 {
+    public async Task<IReadOnlyList<BookingForPlayerMatchDto>> GetPlayerMatchBookingAsync(
+        Guid bookingId,
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        using var connection = connectionFactory.CreateConnection();
+        var bookingRows = await connection.QueryAsync<BookingForPlayerMatchDto>(new CommandDefinition("""
+            SELECT
+                b.branch_id AS BranchId,
+                UPPER(b.status) AS Status,
+                bd.court_id AS CourtId,
+                bd.booking_date AS BookingDate,
+                bd.start_time AS StartTime,
+                bd.end_time AS EndTime
+            FROM booking.bookings b
+            INNER JOIN customer.customers c ON c.id = b.customer_id
+            INNER JOIN booking.booking_details bd ON bd.booking_id = b.id
+            WHERE b.id = @BookingId
+              AND c.user_id = @UserId
+              AND c.is_active = TRUE
+              AND c.deleted_at IS NULL
+              AND b.is_active = TRUE
+              AND b.deleted_at IS NULL;
+            """, new { BookingId = bookingId, UserId = userId }, cancellationToken: cancellationToken));
+
+        return bookingRows.AsList();
+    }
+
     public async Task<Guid?> GetCustomerIdByUserIdAsync(Guid userId, CancellationToken cancellationToken)
     {
         using var connection = connectionFactory.CreateConnection();

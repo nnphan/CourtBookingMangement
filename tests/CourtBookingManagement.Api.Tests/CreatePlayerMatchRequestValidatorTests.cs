@@ -21,6 +21,18 @@ public sealed class CreatePlayerMatchRequestValidatorTests
         Assert.True(result.IsValid);
     }
 
+    [Fact]
+    public async Task Validate_rejects_empty_booking_id()
+    {
+        var request = CreateRequest(SkillLevels.Beginner);
+        request.BookingId = Guid.Empty;
+        var validator = new CreatePlayerMatchRequestValidator();
+
+        var result = await validator.ValidateAsync(request);
+
+        Assert.Contains(result.Errors, error => error.PropertyName == nameof(CreatePlayerMatchRequest.BookingId));
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("0")]
@@ -66,6 +78,7 @@ public sealed class CreatePlayerMatchRequestValidatorTests
 
     private static CreatePlayerMatchRequest CreateRequest(string skillLevel) => new()
     {
+        BookingId = Guid.NewGuid(),
         BranchId = Guid.NewGuid(),
         Title = "Weekend badminton",
         MatchDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)),

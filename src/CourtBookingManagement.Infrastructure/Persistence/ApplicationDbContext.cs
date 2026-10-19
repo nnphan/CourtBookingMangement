@@ -325,6 +325,10 @@ public partial class ApplicationDbContext(
                 .IsUnique()
                 .HasFilter("(deleted_at IS NULL)");
 
+            entity.HasIndex(e => e.PhoneNumber, "ux_users_active_phone_number")
+                .IsUnique()
+                .HasFilter("(deleted_at IS NULL AND phone_number IS NOT NULL)");
+
             entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
             entity.Property(e => e.IsActive).HasDefaultValue(true);

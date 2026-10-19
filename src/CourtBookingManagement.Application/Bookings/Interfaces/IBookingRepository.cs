@@ -4,6 +4,7 @@ namespace CourtBookingManagement.Application.Bookings.Interfaces;
 
 public interface IBookingRepository
 {
+    Task<IReadOnlyList<BookingForPlayerMatchDto>> GetPlayerMatchBookingAsync(Guid bookingId, Guid userId, CancellationToken cancellationToken);
     Task<IReadOnlyList<BranchPricingDto>> GetActivePricingsAsync(Guid branchId, CancellationToken cancellationToken);
     Task<bool> ExistsBranchAsync(Guid branchId, CancellationToken cancellationToken);
     Task<bool> ExistsCourtAsync(Guid courtId, CancellationToken cancellationToken);

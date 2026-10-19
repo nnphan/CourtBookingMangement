@@ -1,5 +1,6 @@
 using System.Data;
 using CourtBookingManagement.Application.Abstractions.Data;
+using CourtBookingManagement.Application.Bookings.Interfaces;
 using CourtBookingManagement.Application.Matching.Models;
 using CourtBookingManagement.Application.Matching.Models.Requests;
 using CourtBookingManagement.Application.Matching.Models.Responses;
@@ -11,6 +12,7 @@ namespace CourtBookingManagement.Application.Matching.Services;
 
 public sealed class PlayerMatchService(
     IPlayerMatchRepository repository,
+    IBookingRepository bookingRepository,
     IValidator<CreatePlayerMatchRequest> validator,
     IValidator<PlayerMatchSearchRequest> searchRequestValidator,
     ISqlConnectionFactory sqlConnectionFactory) : IPlayerMatchService
@@ -112,6 +114,32 @@ public sealed class PlayerMatchService(
         if (createdBy == Guid.Empty)
         {
             return Result.Failure<CreatePlayerMatchResponse>(new Error("PLAYER_MATCH.INVALID_USER", "The user creating the match is invalid."));
+        }
+
+        var bookingRows = await bookingRepository.GetPlayerMatchBookingAsync(request.BookingId, createdBy, cancellationToken);
+        if (bookingRows.Count == 0)
+        {
+            return Result.Failure<CreatePlayerMatchResponse>(new Error("PLAYER_MATCH.BOOKING_NOT_FOUND", "Booking not found or unavailable."));
+        }
+
+        var booking = bookingRows[0];
+        if (booking.Status is not ("PENDING" or "CONFIRMED"))
+        {
+            return Result.Failure<CreatePlayerMatchResponse>(new Error("PLAYER_MATCH.BOOKING_INVALID_STATUS", "The booking cannot be used to create a player match."));
+        }
+
+        if (request.BranchId != booking.BranchId)
+        {
+            return Result.Failure<CreatePlayerMatchResponse>(new Error("PLAYER_MATCH.BOOKING_BRANCH_MISMATCH", "The selected branch does not match the booking."));
+        }
+
+        if (!bookingRows.Any(row =>
+                row.BookingDate == request.MatchDate
+                && row.StartTime == request.StartTime
+                && row.EndTime == request.EndTime
+                && (request.CourtId is null || row.CourtId == request.CourtId.Value)))
+        {
+            return Result.Failure<CreatePlayerMatchResponse>(new Error("PLAYER_MATCH.BOOKING_SESSION_MISMATCH", "The player match schedule and court must match a booking session."));
         }
 
         if (!await repository.BranchExistsAsync(request.BranchId, cancellationToken))

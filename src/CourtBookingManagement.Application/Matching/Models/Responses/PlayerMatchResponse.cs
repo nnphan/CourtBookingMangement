@@ -10,6 +10,8 @@ public sealed class PlayerMatchResponse
 
     public Guid BranchId { get; set; }
 
+    public Guid? BookingId { get; set; }
+
     public string BranchName { get; set; } = string.Empty;
 
     public string CourtName { get; set; } = string.Empty;

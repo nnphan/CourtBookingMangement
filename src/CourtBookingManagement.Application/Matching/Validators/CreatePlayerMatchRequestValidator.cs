@@ -8,6 +8,9 @@ public sealed class CreatePlayerMatchRequestValidator : AbstractValidator<Create
 {
     public CreatePlayerMatchRequestValidator()
     {
+
+        RuleFor(x => x.BookingId).NotEmpty();
+
         RuleFor(x => x.BranchId).NotEmpty();
 
         RuleFor(x => x.SkillLevel)

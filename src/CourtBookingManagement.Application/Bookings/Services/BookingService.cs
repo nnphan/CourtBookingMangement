@@ -14,7 +14,7 @@ public sealed class BookingService(
     IValidator<CalculateBookingPriceRequest> calculatePriceValidator,
     ICurrentUserService currentUserService) : IBookingService
 {
-    public async Task<Result<IReadOnlyList<MyBookingResponse>>> GetMyBookingsAsync(
+    public async Task<Result<IReadOnlyList<MyBookingResponse>>> GetMyBookingsAsync( 
         CancellationToken cancellationToken)
     {
         if (currentUserService.UserId is not Guid userId || userId == Guid.Empty)

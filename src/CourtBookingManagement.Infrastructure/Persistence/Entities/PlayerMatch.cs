@@ -26,6 +26,9 @@ public partial class PlayerMatch
     [Column("court_id")]
     public Guid? CourtId { get; set; }
 
+    [Column("booking_id")]
+    public Guid? BookingId { get; set; }
+
     [Column("title")]
     [StringLength(200)]
     public string Title { get; set; } = null!;

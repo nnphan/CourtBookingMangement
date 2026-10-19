@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 namespace CourtBookingManagement.Infrastructure.Persistence.Entities;
 
 [Table("users", Schema = "auth")]
-[Index("PhoneNumber", Name = "ix_users_phone")]
 public partial class User
 {
     [Key]

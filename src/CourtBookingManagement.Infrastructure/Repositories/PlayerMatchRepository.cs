@@ -21,6 +21,7 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
                 pm.title AS Title,
                 pm.description AS Description,
                 pm.branch_id AS BranchId,
+                pm.booking_id AS BookingId,
                 b.name AS BranchName,
                 b.city AS City,
                 b.district AS District,
@@ -73,6 +74,7 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
             Title = match.Title,
             Description = match.Description,
             BranchId = match.BranchId,
+            BookingId = match.BookingId,
             BranchName = match.BranchName,
             City = match.City,
             District = match.District,
@@ -256,6 +258,7 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
                 created_by,
                 branch_id,
                 court_id,
+                booking_id,
                 title,
                 description,
                 match_date,
@@ -275,6 +278,7 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
                 @CreatedBy,
                 @BranchId,
                 @CourtId,
+                @BookingId,
                 @Title,
                 @Description,
                 @MatchDate,
@@ -297,6 +301,7 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
             CreatedBy = createdBy,
             BranchId = request.BranchId,
             CourtId = request.CourtId,
+            BookingId = request.BookingId,
             Title = request.Title.Trim(),
             Description = request.Description,
             MatchDate = request.MatchDate,
@@ -510,6 +515,7 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
                     pm.id AS Id,
                     pm.title AS Title,
                     pm.branch_id AS BranchId,
+                    pm.booking_id AS BookingId,
                     b.name AS BranchName,
                     b.city AS City,
                     b.district AS District,
@@ -624,6 +630,7 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
         public Guid Id { get; init; }
         public string Title { get; init; } = string.Empty;
         public string? Description { get; init; }
+        public Guid BookingId { get; init; }
         public Guid BranchId { get; init; }
         public string BranchName { get; init; } = string.Empty;
         public string City { get; init; } = string.Empty;

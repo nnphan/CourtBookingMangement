@@ -1,9 +1,9 @@
 using System.Data;
-using System.Data.Common;
 using System.Net.Mail;
 using CourtBookingManagement.Application.Abstractions.Clock;
 using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.Auth.DTOs;
+using CourtBookingManagement.Application.Auth.Exceptions;
 using CourtBookingManagement.Application.Auth.Interfaces;
 using CourtBookingManagement.Application.Customers.Models.Requests;
 using CourtBookingManagement.Application.Customers.Repositories;
@@ -29,6 +29,14 @@ public sealed class AuthService : IAuthService
     private static readonly Error CustomerProfileAlreadyExists = new(
         "Customer.ProfileAlreadyExists",
         "A customer profile already exists for this user.");
+
+    private static readonly Error RegistrationEmailAlreadyExists = new(
+        "AUTH_EMAIL_ALREADY_EXISTS",
+        "Email address is already registered.");
+
+    private static readonly Error RegistrationPhoneAlreadyExists = new(
+        "AUTH_PHONE_ALREADY_EXISTS",
+        "Phone number is already registered.");
 
     private readonly IUserRepository _userRepository;
     private readonly IJwtTokenService _jwtTokenService;
@@ -88,7 +96,14 @@ public sealed class AuthService : IAuthService
 
         if (await _userRepository.ExistsByEmailAsync(normalizedEmail, cancellationToken: cancellationToken))
         {
-            return Result.Failure<RegisterResponse>(UserErrors.EmailAlreadyExists(normalizedEmail));
+            _logger.LogInformation("Registration rejected because email is already registered.");
+            return Result.Failure<RegisterResponse>(RegistrationEmailAlreadyExists);
+        }
+
+        if (await _userRepository.ExistsByPhoneNumberAsync(phoneNumber, cancellationToken))
+        {
+            _logger.LogInformation("Registration rejected because phone number is already registered.");
+            return Result.Failure<RegisterResponse>(RegistrationPhoneAlreadyExists);
         }
 
         // Resolve reference data before writing anything so a misconfigured system fails without side effects.
@@ -128,10 +143,17 @@ public sealed class AuthService : IAuthService
             {
                 userId = await _userRepository.CreateUserAsync(user, transaction, cancellationToken);
             }
-            catch (DbException exception) when (exception.SqlState == "23505")
+            catch (RegistrationConflictException exception) when (
+                exception.ConstraintName == "ux_users_email")
             {
                 transaction.Rollback();
-                return Result.Failure<RegisterResponse>(UserErrors.EmailAlreadyExists(normalizedEmail));
+                return Result.Failure<RegisterResponse>(RegistrationEmailAlreadyExists);
+            }
+            catch (RegistrationConflictException exception) when (
+                exception.ConstraintName == "ux_users_active_phone_number")
+            {
+                transaction.Rollback();
+                return Result.Failure<RegisterResponse>(RegistrationPhoneAlreadyExists);
             }
 
             _logger.LogInformation("Registration user record created. UserId={UserId}", userId);
@@ -152,7 +174,7 @@ public sealed class AuthService : IAuthService
                     MembershipLevelId = membershipLevelId,
                     FullName = fullName,
                     Email = normalizedEmail,
-                    PhoneNumber = phoneNumber, 
+                    PhoneNumber = phoneNumber,
                     IsGuest = false,
                     LoyaltyPointsBalance = 0,
                     IsActive = true,

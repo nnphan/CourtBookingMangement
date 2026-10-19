@@ -12,6 +12,8 @@ public sealed class PlayerMatchDetailResponse
 
     public Guid BranchId { get; set; }
 
+    public Guid? BookingId { get; set; }
+
     public string BranchName { get; set; } = string.Empty;
 
     public string City { get; set; } = string.Empty;

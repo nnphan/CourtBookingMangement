@@ -1,9 +1,9 @@
 using System.Data;
-using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using CourtBookingManagement.Application.Abstractions.Clock;
 using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.Auth.DTOs;
+using CourtBookingManagement.Application.Auth.Exceptions;
 using CourtBookingManagement.Application.Auth.Interfaces;
 using CourtBookingManagement.Application.Auth.Services;
 using CourtBookingManagement.Application.Auth.Validators;
@@ -76,9 +76,70 @@ public sealed class AuthRegistrationTests
         var result = await fixture.Service.RegisterAsync(ValidRequest());
 
         Assert.True(result.IsFailure);
-        Assert.Equal("User.EmailAlreadyExists", result.Error.Code);
+        Assert.Equal("AUTH_EMAIL_ALREADY_EXISTS", result.Error.Code);
         Assert.Equal(0, fixture.Connection.BeginTransactionCount);
         Assert.Null(fixture.Customers.CustomerRequest);
+    }
+
+    [Fact]
+    public async Task Register_rejects_existing_phone_before_user_creation()
+    {
+        var fixture = new RegistrationFixture();
+        fixture.Users.PhoneNumberExists = true;
+
+        var result = await fixture.Service.RegisterAsync(ValidRequest());
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("AUTH_PHONE_ALREADY_EXISTS", result.Error.Code);
+        Assert.Equal("+15551234567", fixture.Users.LastCheckedPhoneNumber);
+        Assert.Equal(0, fixture.Users.CreateUserCount);
+        Assert.Equal(0, fixture.Connection.BeginTransactionCount);
+        Assert.Null(fixture.Customers.CustomerRequest);
+    }
+
+    [Fact]
+    public async Task Register_prioritizes_email_when_both_credentials_exist()
+    {
+        var fixture = new RegistrationFixture();
+        fixture.Users.EmailExists = true;
+        fixture.Users.PhoneNumberExists = true;
+
+        var result = await fixture.Service.RegisterAsync(ValidRequest());
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("AUTH_EMAIL_ALREADY_EXISTS", result.Error.Code);
+        Assert.Null(fixture.Users.LastCheckedPhoneNumber);
+    }
+
+    [Fact]
+    public async Task Register_checks_case_insensitive_normalized_email()
+    {
+        var fixture = new RegistrationFixture();
+        fixture.Users.EmailExists = true;
+        var request = ValidRequest();
+        request.Email = " User@Test.com ";
+
+        var result = await fixture.Service.RegisterAsync(request);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("AUTH_EMAIL_ALREADY_EXISTS", result.Error.Code);
+        Assert.Equal("user@test.com", fixture.Users.LastCheckedEmail);
+    }
+
+    [Fact]
+    public async Task Register_maps_phone_unique_violation_to_phone_conflict()
+    {
+        var fixture = new RegistrationFixture();
+        fixture.Users.CreateException = new RegistrationConflictException(
+            "ux_users_active_phone_number",
+            new InvalidOperationException("Unique violation."));
+
+        var result = await fixture.Service.RegisterAsync(ValidRequest());
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("AUTH_PHONE_ALREADY_EXISTS", result.Error.Code);
+        Assert.Equal(1, fixture.Connection.Transaction.RollbackCount);
+        Assert.Equal(0, fixture.Connection.Transaction.CommitCount);
     }
 
     [Fact]
@@ -112,7 +173,7 @@ public sealed class AuthRegistrationTests
     {
         var fixture = new RegistrationFixture();
         using var cancellation = new CancellationTokenSource();
-        cancellation.Cancel();
+        fixture.Customers.BeforeCreate = cancellation.Cancel;
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
             () => fixture.Service.RegisterAsync(ValidRequest(), cancellation.Token));
@@ -125,12 +186,14 @@ public sealed class AuthRegistrationTests
     public async Task Register_maps_concurrent_email_unique_violation_to_existing_error()
     {
         var fixture = new RegistrationFixture();
-        fixture.Users.CreateException = new UniqueViolationException();
+        fixture.Users.CreateException = new RegistrationConflictException(
+            "ux_users_email",
+            new InvalidOperationException("Unique violation."));
 
         var result = await fixture.Service.RegisterAsync(ValidRequest());
 
         Assert.True(result.IsFailure);
-        Assert.Equal("User.EmailAlreadyExists", result.Error.Code);
+        Assert.Equal("AUTH_EMAIL_ALREADY_EXISTS", result.Error.Code);
         Assert.Equal(1, fixture.Connection.Transaction.RollbackCount);
         Assert.Equal(0, fixture.Connection.Transaction.CommitCount);
     }
@@ -346,8 +409,11 @@ public sealed class AuthRegistrationTests
     private sealed class FakeUserRepository : IUserRepository
     {
         public bool EmailExists { get; set; }
+        public bool PhoneNumberExists { get; set; }
         public Exception? CreateException { get; set; }
         public string? LastCheckedEmail { get; private set; }
+        public string? LastCheckedPhoneNumber { get; private set; }
+        public int CreateUserCount { get; private set; }
         public User? UpdatedUser { get; private set; }
 
         public Task<bool> ExistsByEmailAsync(string email, Guid? excludingId = null, CancellationToken cancellationToken = default)
@@ -356,8 +422,16 @@ public sealed class AuthRegistrationTests
             return Task.FromResult(EmailExists);
         }
 
+        public Task<bool> ExistsByPhoneNumberAsync(string phoneNumber, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            LastCheckedPhoneNumber = phoneNumber;
+            return Task.FromResult(PhoneNumberExists);
+        }
+
         public Task<Guid> CreateUserAsync(User user, IDbTransaction transaction, CancellationToken cancellationToken = default)
         {
+            CreateUserCount++;
             if (CreateException is not null)
             {
                 throw CreateException;
@@ -407,9 +481,11 @@ public sealed class AuthRegistrationTests
     {
         public CreateCustomerInternalRequest? CustomerRequest { get; private set; }
         public Exception? CreateException { get; set; }
+        public Action? BeforeCreate { get; set; }
 
         public Task<Guid> CreateCustomerAsync(CreateCustomerInternalRequest request, IDbTransaction transaction, CancellationToken cancellationToken)
         {
+            BeforeCreate?.Invoke();
             cancellationToken.ThrowIfCancellationRequested();
             if (CreateException is not null)
             {
@@ -550,8 +626,4 @@ public sealed class AuthRegistrationTests
         public void Dispose() { }
     }
 
-    private sealed class UniqueViolationException : DbException
-    {
-        public override string? SqlState => "23505";
-    }
 }
