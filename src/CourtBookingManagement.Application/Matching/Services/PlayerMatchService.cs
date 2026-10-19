@@ -336,12 +336,22 @@ public sealed class PlayerMatchService(
 
         try
         {
-            await repository.ApproveJoinRequestAsync(requestId, currentUserId, transaction, cancellationToken);
-            await repository.CreateParticipantAsync(matchId, joinRequest.UserId, "PLAYER", transaction, cancellationToken);
-            await repository.IncrementCurrentPlayersAsync(matchId, transaction, cancellationToken);
+            if (!await repository.ApproveJoinRequestAsync(requestId, currentUserId, transaction, cancellationToken))
+            {
+                transaction.Rollback();
+                return Result.Failure<ApproveJoinRequestResponse>(new Error("PLAYER_MATCH.REQUEST_NOT_PENDING", "Only pending join requests can be approved."));
+            }
 
-            var updatedPlayerCount = match.CurrentPlayers + 1;
-            if (updatedPlayerCount >= match.MaxPlayers)
+            var updatedPlayerCount = await repository.TryIncrementCurrentPlayersAsync(matchId, transaction, cancellationToken);
+            if (updatedPlayerCount is null)
+            {
+                transaction.Rollback();
+                return Result.Failure<ApproveJoinRequestResponse>(new Error("PLAYER_MATCH.MATCH_FULL", "Match is already full."));
+            }
+
+            await repository.CreateParticipantAsync(matchId, joinRequest.UserId, "PLAYER", transaction, cancellationToken);
+
+            if (updatedPlayerCount.Value >= match.MaxPlayers)
             {
                 await repository.UpdateMatchStatusAsync(matchId, "FULL", transaction, cancellationToken);
                 await repository.CreateMatchFullNotificationsAsync(matchId, transaction, cancellationToken);

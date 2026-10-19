@@ -52,6 +52,12 @@ public sealed class CreatePlayerMatchRequestValidator : AbstractValidator<Create
             .InclusiveBetween(2, 20)
             .WithMessage("Max players must be between 2 and 20.");
 
+        RuleFor(x => x.CurrentPlayers)
+            .GreaterThanOrEqualTo(1)
+            .WithMessage("Current players must include the match host.")
+            .LessThanOrEqualTo(x => x.MaxPlayers)
+            .WithMessage("Current players cannot exceed maximum players.");
+
         RuleFor(x => x.FeePerPlayer)
             .GreaterThanOrEqualTo(0m)
             .When(x => x.FeePerPlayer.HasValue)

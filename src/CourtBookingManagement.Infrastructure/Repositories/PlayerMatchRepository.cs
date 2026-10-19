@@ -287,9 +287,9 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
                 @SkillLevel,
                 @GenderPreference,
                 @MaxPlayers,
-                1,
+                @CurrentPlayers,
                 @FeePerPlayer,
-                'OPEN',
+                CASE WHEN @CurrentPlayers >= @MaxPlayers THEN 'FULL' ELSE 'OPEN' END,
                 NOW(),
                 NOW()
             )
@@ -310,6 +310,7 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
             SkillLevel = request.SkillLevel,
             GenderPreference = request.GenderPreference,
             MaxPlayers = request.MaxPlayers,
+            CurrentPlayers = request.CurrentPlayers,
             FeePerPlayer = request.FeePerPlayer
         }, transaction: transaction, cancellationToken: cancellationToken);
 
@@ -374,31 +375,35 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
         await transaction.Connection!.ExecuteAsync(command);
     }
 
-    public async Task ApproveJoinRequestAsync(Guid requestId, Guid currentUserId, IDbTransaction transaction, CancellationToken cancellationToken)
+    public async Task<bool> ApproveJoinRequestAsync(Guid requestId, Guid currentUserId, IDbTransaction transaction, CancellationToken cancellationToken)
     {
         const string sql = """
             UPDATE matching.match_join_requests
             SET status = 'APPROVED',
                 reviewed_at = NOW(),
                 reviewed_by = @CurrentUserId
-            WHERE id = @RequestId;
+            WHERE id = @RequestId
+              AND status = 'PENDING';
             """;
 
         var command = new CommandDefinition(sql, new { RequestId = requestId, CurrentUserId = currentUserId }, transaction: transaction, cancellationToken: cancellationToken);
-        await transaction.Connection!.ExecuteAsync(command);
+        return await transaction.Connection!.ExecuteAsync(command) == 1;
     }
 
-    public async Task IncrementCurrentPlayersAsync(Guid matchId, IDbTransaction transaction, CancellationToken cancellationToken)
+    public async Task<int?> TryIncrementCurrentPlayersAsync(Guid matchId, IDbTransaction transaction, CancellationToken cancellationToken)
     {
         const string sql = """
             UPDATE matching.player_matches
             SET current_players = current_players + 1,
                 updated_at = NOW()
-            WHERE id = @MatchId;
+            WHERE id = @MatchId
+              AND status = 'OPEN'
+              AND current_players < max_players
+            RETURNING current_players;
             """;
 
         var command = new CommandDefinition(sql, new { MatchId = matchId }, transaction: transaction, cancellationToken: cancellationToken);
-        await transaction.Connection!.ExecuteAsync(command);
+        return await transaction.Connection!.QuerySingleOrDefaultAsync<int?>(command);
     }
 
     public async Task UpdateMatchStatusAsync(Guid matchId, string status, IDbTransaction transaction, CancellationToken cancellationToken)

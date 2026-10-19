@@ -32,5 +32,7 @@ public sealed class CreatePlayerMatchRequest
 
     public int MaxPlayers { get; set; }
 
+    public int CurrentPlayers { get; set; } = 1;
+
     public decimal? FeePerPlayer { get; set; }
 }
