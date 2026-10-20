@@ -22,6 +22,42 @@ public sealed class PlayerMatchesController(IPlayerMatchService service, ICurren
             : Error(result.Error);
     }
 
+    [Authorize]
+    [HttpGet("hosted")]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<HostedPlayerMatchResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetHostedMatches([FromQuery] GetHostedMatchesRequest request, CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid userId)
+        {
+            return Unauthorized();
+        }
+
+        var result = await service.GetHostedMatchesAsync(request, userId, cancellationToken);
+        return result.IsSuccess
+            ? Success(result.Value.Items, "Hosted player matches retrieved successfully.", result.Value.Metadata)
+            : Error(result.Error);
+    }
+
+    [Authorize]
+    [HttpGet("participating")]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<ParticipatingPlayerMatchResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetParticipatingMatches([FromQuery] GetParticipatingMatchesRequest request, CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid userId)
+        {
+            return Unauthorized();
+        }
+
+        var result = await service.GetParticipatingMatchesAsync(request, userId, cancellationToken);
+        return result.IsSuccess
+            ? Success(result.Value.Items, "Participating player matches retrieved successfully.", result.Value.Metadata)
+            : Error(result.Error);
+    }
+
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(ApiResponse<PlayerMatchDetailResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]

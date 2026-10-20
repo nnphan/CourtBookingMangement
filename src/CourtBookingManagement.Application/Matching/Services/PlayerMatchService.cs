@@ -1,12 +1,13 @@
-using System.Data;
 using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.Bookings.Interfaces;
+using CourtBookingManagement.Application.Common.Enums;
 using CourtBookingManagement.Application.Matching.Models;
 using CourtBookingManagement.Application.Matching.Models.Requests;
 using CourtBookingManagement.Application.Matching.Models.Responses;
 using CourtBookingManagement.Application.Matching.Repositories;
 using CourtBookingManagement.Domain.Abstractions;
 using FluentValidation;
+using System.Data;
 
 namespace CourtBookingManagement.Application.Matching.Services;
 
@@ -18,6 +19,8 @@ public sealed class PlayerMatchService(
     ISqlConnectionFactory sqlConnectionFactory) : IPlayerMatchService
 {
     private static readonly Error InvalidMatchId = new("PLAYER_MATCH.INVALID_ID", "A valid player match id is required.");
+
+    private static readonly Error InvalidUser = new("PLAYER_MATCH.INVALID_USER", "The current user is invalid.");
 
     private static readonly Error MatchNotFound = new("PLAYER_MATCH.NOT_FOUND", "The player match was not found.");
 
@@ -62,6 +65,90 @@ public sealed class PlayerMatchService(
             return Result.Failure<PagedResult<PlayerMatchResponse>>(Error.FromException(exception));
         }
     }
+
+    public async Task<Result<PagedResult<HostedPlayerMatchResponse>>> GetHostedMatchesAsync(
+        GetHostedMatchesRequest request,
+        Guid currentUserId,
+        CancellationToken cancellationToken)
+    {
+        if (currentUserId == Guid.Empty)
+        {
+            return Result.Failure<PagedResult<HostedPlayerMatchResponse>>(InvalidUser);
+        }
+
+        var status = NormalizeStatus(request.Status);
+        if (status is not null && !PlayerMatchStatus.All.Contains(status))
+        {
+            return Result.Failure<PagedResult<HostedPlayerMatchResponse>>(
+                new Error("PLAYER_MATCH.INVALID_STATUS", "Status must be OPEN, FULL, COMPLETED, or CANCELLED."));
+        }
+
+        var normalizedRequest = new GetHostedMatchesRequest
+        {
+            Keyword = NormalizeText(request.Keyword),
+            MatchDate = request.MatchDate,
+            Status = status,
+            Page = request.Page <= 0 ? 1 : request.Page,
+            PageSize = request.PageSize <= 0 ? 10 : Math.Min(request.PageSize, 50)
+        };
+
+        try
+        {
+            var matches = await repository.GetHostedMatchesAsync(currentUserId, normalizedRequest, cancellationToken);
+            return Result.Success(matches);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            return Result.Failure<PagedResult<HostedPlayerMatchResponse>>(Error.FromException(exception));
+        }
+    }
+
+    public async Task<Result<PagedResult<ParticipatingPlayerMatchResponse>>> GetParticipatingMatchesAsync(
+        GetParticipatingMatchesRequest request,
+        Guid currentUserId,
+        CancellationToken cancellationToken)
+    {
+        if (currentUserId == Guid.Empty)
+        {
+            return Result.Failure<PagedResult<ParticipatingPlayerMatchResponse>>(InvalidUser);
+        }
+
+        var participationStatus = NormalizeStatus(request.ParticipationStatus);
+        if (participationStatus is not null && !JoinRequestStatus.All.Contains(participationStatus))
+        {
+            return Result.Failure<PagedResult<ParticipatingPlayerMatchResponse>>(
+                new Error("PLAYER_MATCH.INVALID_PARTICIPATION_STATUS", "ParticipationStatus must be PENDING, APPROVED, REJECTED, or CANCELLED."));
+        }
+
+        var matchStatus = NormalizeStatus(request.MatchStatus);
+        if (matchStatus is not null && !PlayerMatchStatus.All.Contains(matchStatus))
+        {
+            return Result.Failure<PagedResult<ParticipatingPlayerMatchResponse>>(
+                new Error("PLAYER_MATCH.INVALID_STATUS", "MatchStatus must be OPEN, FULL, COMPLETED, or CANCELLED."));
+        }
+
+        var normalizedRequest = new GetParticipatingMatchesRequest
+        {
+            ParticipationStatus = participationStatus,
+            MatchStatus = matchStatus,
+            FromDate = request.FromDate,
+            Page = request.Page <= 0 ? 1 : request.Page,
+            PageSize = request.PageSize <= 0 ? 10 : Math.Min(request.PageSize, 50)
+        };
+
+        try
+        {
+            var matches = await repository.GetParticipatingMatchesAsync(currentUserId, normalizedRequest, cancellationToken);
+            return Result.Success(matches);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            return Result.Failure<PagedResult<ParticipatingPlayerMatchResponse>>(Error.FromException(exception));
+        }
+    }
+
+    private static string? NormalizeStatus(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim().ToUpperInvariant();
 
     public async Task<Result<PlayerMatchDetailResponse>> GetMatchByIdAsync(
         Guid matchId,
@@ -294,7 +381,7 @@ public sealed class PlayerMatchService(
             return Result.Failure<ApproveJoinRequestResponse>(new Error("PLAYER_MATCH.NOT_FOUND", "Player match not found."));
         }
 
-        if (!string.Equals(match.Status, "OPEN", StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(match.Status, PlayerMatchStatus.Open, StringComparison.OrdinalIgnoreCase))
         {
             return Result.Failure<ApproveJoinRequestResponse>(new Error("PLAYER_MATCH.NOT_OPEN", "Match is not open for new approvals."));
         }
@@ -315,7 +402,7 @@ public sealed class PlayerMatchService(
             return Result.Failure<ApproveJoinRequestResponse>(new Error("PLAYER_MATCH.REQUEST_MISMATCH", "Join request does not belong to the selected match."));
         }
 
-        if (!string.Equals(joinRequest.Status, "PENDING", StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(joinRequest.Status, JoinRequestStatus.Pending, StringComparison.OrdinalIgnoreCase))
         {
             return Result.Failure<ApproveJoinRequestResponse>(new Error("PLAYER_MATCH.REQUEST_NOT_PENDING", "Only pending join requests can be approved."));
         }

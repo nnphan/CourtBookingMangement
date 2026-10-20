@@ -194,7 +194,7 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
 
     public Task<bool> HasPendingJoinRequestAsync(Guid matchId, Guid userId, CancellationToken cancellationToken) =>
         ScalarAsync<bool>(
-            "SELECT EXISTS (SELECT 1 FROM matching.match_join_requests WHERE match_id = @MatchId AND user_id = @UserId AND status = 'PENDING');",
+            "SELECT EXISTS (SELECT 1 FROM matching.match_join_requests WHERE match_id = @MatchId AND requester_id = @UserId AND status = 'PENDING');",
             new { MatchId = matchId, UserId = userId },
             cancellationToken);
 
@@ -323,7 +323,7 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
             INSERT INTO matching.match_join_requests (
                 id,
                 match_id,
-                user_id,
+                requester_id,
                 status,
                 requested_at,
                 reviewed_at,
@@ -504,6 +504,197 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
                 transaction,
                 cancellationToken);
         }
+    }
+
+    public async Task<PagedResult<HostedPlayerMatchResponse>> GetHostedMatchesAsync(
+        Guid userId,
+        GetHostedMatchesRequest request,
+        CancellationToken cancellationToken)
+    {
+        const string baseQuery = """
+            WITH hosted AS (
+                SELECT
+                    pm.id AS Id,
+                    pm.title AS Title,
+                    pm.branch_id AS BranchId,
+                    b.name AS BranchName,
+                    pm.court_id AS CourtId,
+                    c.name AS CourtName,
+                    pm.match_date AS MatchDate,
+                    pm.start_time AS StartTime,
+                    pm.end_time AS EndTime,
+                    pm.skill_level AS SkillLevel,
+                    pm.gender_preference AS GenderPreference,
+                    pm.max_players AS MaxPlayers,
+                    pm.current_players AS CurrentPlayers,
+                    GREATEST(pm.max_players - pm.current_players, 0) AS RemainingSlots,
+                    pm.fee_per_player AS FeePerPlayer,
+                    pm.status AS Status,
+                    (
+                        SELECT COUNT(*)::int
+                        FROM matching.match_join_requests jr
+                        WHERE jr.match_id = pm.id
+                          AND jr.status = 'PENDING'
+                    ) AS PendingRequestCount,
+                    (pm.current_players >= pm.max_players) AS IsFull
+                FROM matching.player_matches pm
+                INNER JOIN core.branches b ON b.id = pm.branch_id
+                LEFT JOIN core.courts c ON c.id = pm.court_id
+                WHERE pm.created_by = @UserId
+            )
+            """;
+
+        var filters = new StringBuilder();
+        var parameters = new DynamicParameters();
+        parameters.Add("UserId", userId);
+
+        if (!string.IsNullOrWhiteSpace(request.Keyword))
+        {
+            filters.AppendLine("AND (Title ILIKE @Keyword OR BranchName ILIKE @Keyword OR CourtName ILIKE @Keyword)");
+            parameters.Add("Keyword", $"%{request.Keyword.Trim()}%");
+        }
+
+        if (request.MatchDate.HasValue)
+        {
+            filters.AppendLine("AND MatchDate = @MatchDate");
+            parameters.Add("MatchDate", request.MatchDate.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Status))
+        {
+            filters.AppendLine("AND Status = @Status");
+            parameters.Add("Status", request.Status);
+        }
+
+        var dataSql = $"""
+            {baseQuery}
+            SELECT * FROM hosted WHERE 1 = 1
+            {filters}
+            ORDER BY MatchDate ASC, StartTime ASC, Id ASC
+            LIMIT @PageSize OFFSET @Offset;
+            """;
+
+        var countSql = $"""
+            {baseQuery}
+            SELECT COUNT(*) FROM hosted WHERE 1 = 1
+            {filters};
+            """;
+
+        parameters.Add("PageSize", request.PageSize);
+        parameters.Add("Offset", ((long)request.Page - 1) * request.PageSize);
+
+        using var connection = sqlConnectionFactory.CreateConnection();
+
+        var items = (await connection.QueryAsync<HostedPlayerMatchResponse>(
+            new CommandDefinition(dataSql, parameters, cancellationToken: cancellationToken))).AsList();
+
+        var totalCount = await connection.ExecuteScalarAsync<long>(
+            new CommandDefinition(countSql, parameters, cancellationToken: cancellationToken));
+
+        return PagedResult<HostedPlayerMatchResponse>.Create(items, request.Page, request.PageSize, totalCount);
+    }
+
+    public async Task<PagedResult<ParticipatingPlayerMatchResponse>> GetParticipatingMatchesAsync(
+        Guid userId,
+        GetParticipatingMatchesRequest request,
+        CancellationToken cancellationToken)
+    {
+        // One join request per (match, user); an active non-host participant row takes precedence as APPROVED.
+        const string baseQuery = """
+            WITH participating AS (
+                SELECT
+                    pm.id AS MatchId,
+                    pm.title AS Title,
+                    pm.branch_id AS BranchId,
+                    b.name AS BranchName,
+                    pm.court_id AS CourtId,
+                    c.name AS CourtName,
+                    pm.match_date AS MatchDate,
+                    pm.start_time AS StartTime,
+                    pm.end_time AS EndTime,
+                    pm.skill_level AS SkillLevel,
+                    pm.gender_preference AS GenderPreference,
+                    pm.max_players AS MaxPlayers,
+                    pm.current_players AS CurrentPlayers,
+                    GREATEST(pm.max_players - pm.current_players, 0) AS RemainingSlots,
+                    pm.fee_per_player AS FeePerPlayer,
+                    pm.status AS MatchStatus,
+                    CASE
+                        WHEN EXISTS (
+                            SELECT 1
+                            FROM matching.match_participants mp
+                            WHERE mp.match_id = pm.id
+                              AND mp.user_id = @UserId
+                              AND mp.status = 'ACTIVE'
+                        ) THEN 'APPROVED'
+                        ELSE jr.status
+                    END AS ParticipationStatus,
+                    jr.id AS RequestId,
+                    jr.requested_at AS RequestedAt,
+                    u.full_name AS CreatedByName
+                FROM matching.match_join_requests jr
+                INNER JOIN matching.player_matches pm ON pm.id = jr.match_id
+                INNER JOIN core.branches b ON b.id = pm.branch_id
+                LEFT JOIN core.courts c ON c.id = pm.court_id
+                INNER JOIN auth.users u ON u.id = pm.created_by
+                WHERE jr.user_id = @UserId
+                  AND pm.created_by <> @UserId
+            )
+            """;
+
+        var filters = new StringBuilder();
+        var parameters = new DynamicParameters();
+        parameters.Add("UserId", userId);
+
+        if (!string.IsNullOrWhiteSpace(request.ParticipationStatus))
+        {
+            filters.AppendLine("AND ParticipationStatus = @ParticipationStatus");
+            parameters.Add("ParticipationStatus", request.ParticipationStatus);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.MatchStatus))
+        {
+            filters.AppendLine("AND MatchStatus = @MatchStatus");
+            parameters.Add("MatchStatus", request.MatchStatus);
+        }
+
+        if (request.FromDate.HasValue)
+        {
+            filters.AppendLine("AND MatchDate >= @FromDate");
+            parameters.Add("FromDate", request.FromDate.Value);
+        }
+
+        var dataSql = $"""
+            {baseQuery}
+            SELECT
+                MatchId, Title, BranchId, BranchName, CourtId, CourtName, MatchDate, StartTime, EndTime,
+                SkillLevel, GenderPreference, MaxPlayers, CurrentPlayers, RemainingSlots, FeePerPlayer,
+                MatchStatus, ParticipationStatus, RequestId, RequestedAt, CreatedByName,
+                (ParticipationStatus = 'PENDING' AND MatchStatus = 'OPEN') AS CanCancelRequest
+            FROM participating WHERE 1 = 1
+            {filters}
+            ORDER BY MatchDate ASC, StartTime ASC, MatchId ASC
+            LIMIT @PageSize OFFSET @Offset;
+            """;
+
+        var countSql = $"""
+            {baseQuery}
+            SELECT COUNT(*) FROM participating WHERE 1 = 1
+            {filters};
+            """;
+
+        parameters.Add("PageSize", request.PageSize);
+        parameters.Add("Offset", ((long)request.Page - 1) * request.PageSize);
+
+        using var connection = sqlConnectionFactory.CreateConnection();
+
+        var items = (await connection.QueryAsync<ParticipatingPlayerMatchResponse>(
+            new CommandDefinition(dataSql, parameters, cancellationToken: cancellationToken))).AsList();
+
+        var totalCount = await connection.ExecuteScalarAsync<long>(
+            new CommandDefinition(countSql, parameters, cancellationToken: cancellationToken));
+
+        return PagedResult<ParticipatingPlayerMatchResponse>.Create(items, request.Page, request.PageSize, totalCount);
     }
 
     private async Task<T> ScalarAsync<T>(string sql, object parameters, CancellationToken cancellationToken)
