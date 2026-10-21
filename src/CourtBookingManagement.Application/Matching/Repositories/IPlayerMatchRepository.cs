@@ -11,6 +11,10 @@ public interface IPlayerMatchRepository
 
     Task<PagedResult<HostedPlayerMatchResponse>> GetHostedMatchesAsync(Guid userId, GetHostedMatchesRequest request, CancellationToken cancellationToken);
 
+    Task<Guid?> GetMatchHostIdAsync(Guid matchId, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<PlayerMatchJoinRequestResponse>> GetJoinRequestsAsync(Guid matchId, string? status, CancellationToken cancellationToken);
+
     Task<PagedResult<ParticipatingPlayerMatchResponse>> GetParticipatingMatchesAsync(Guid userId, GetParticipatingMatchesRequest request, CancellationToken cancellationToken);
 
     Task<PlayerMatchDetailResponse?> GetByIdAsync(Guid matchId, CancellationToken cancellationToken);

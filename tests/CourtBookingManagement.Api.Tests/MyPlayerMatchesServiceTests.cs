@@ -61,6 +61,106 @@ public sealed class MyPlayerMatchesServiceTests
     }
 
     [Fact]
+    public async Task Join_requests_uses_current_host_and_normalizes_status()
+    {
+        var (service, recorder) = CreateService();
+        var matchId = Guid.NewGuid();
+        var hostId = Guid.NewGuid();
+        recorder.HostId = hostId;
+
+        var result = await service.GetJoinRequestsAsync(
+            matchId,
+            new GetPlayerMatchJoinRequestsRequest { Status = " pending " },
+            hostId,
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Value);
+        Assert.Equal(matchId, recorder.MatchId);
+        Assert.Equal("PENDING", recorder.Status);
+    }
+
+    [Fact]
+    public async Task Join_requests_returns_all_statuses_when_status_is_omitted()
+    {
+        var (service, recorder) = CreateService();
+        recorder.HostId = Guid.NewGuid();
+
+        var result = await service.GetJoinRequestsAsync(
+            Guid.NewGuid(),
+            new GetPlayerMatchJoinRequestsRequest(),
+            recorder.HostId.Value,
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(recorder.Status);
+    }
+
+    [Fact]
+    public async Task Join_requests_rejects_non_host_without_loading_requests()
+    {
+        var (service, recorder) = CreateService();
+        recorder.HostId = Guid.NewGuid();
+
+        var result = await service.GetJoinRequestsAsync(
+            Guid.NewGuid(),
+            new GetPlayerMatchJoinRequestsRequest(),
+            Guid.NewGuid(),
+            CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("PLAYER_MATCH.NOT_HOST", result.Error.Code);
+        Assert.False(recorder.JoinRequestsLoaded);
+    }
+
+    [Fact]
+    public async Task Join_requests_returns_not_found_for_missing_match()
+    {
+        var (service, recorder) = CreateService();
+
+        var result = await service.GetJoinRequestsAsync(
+            Guid.NewGuid(),
+            new GetPlayerMatchJoinRequestsRequest(),
+            Guid.NewGuid(),
+            CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("PLAYER_MATCH.NOT_FOUND", result.Error.Code);
+        Assert.False(recorder.JoinRequestsLoaded);
+    }
+
+    [Fact]
+    public async Task Join_requests_rejects_unknown_status_before_database_access()
+    {
+        var (service, recorder) = CreateService();
+
+        var result = await service.GetJoinRequestsAsync(
+            Guid.NewGuid(),
+            new GetPlayerMatchJoinRequestsRequest { Status = "UNKNOWN" },
+            Guid.NewGuid(),
+            CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("PLAYER_MATCH.INVALID_REQUEST_STATUS", result.Error.Code);
+        Assert.Null(recorder.MatchId);
+    }
+
+    [Fact]
+    public async Task Join_requests_propagates_repository_cancellation()
+    {
+        var (service, recorder) = CreateService();
+        recorder.HostId = Guid.NewGuid();
+        recorder.ExceptionToThrow = new OperationCanceledException();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            service.GetJoinRequestsAsync(
+                Guid.NewGuid(),
+                new GetPlayerMatchJoinRequestsRequest(),
+                recorder.HostId.Value,
+                CancellationToken.None));
+    }
+
+    [Fact]
     public void FromException_does_not_expose_internal_exception_message()
     {
         var error = Error.FromException(new InvalidOperationException("database credentials"));
@@ -189,8 +289,35 @@ public sealed class MyPlayerMatchesServiceTests
 
         public PlayerMatchDetailResponse? Match { get; set; }
 
+        public Guid? HostId { get; set; }
+
+        public Guid? MatchId { get; private set; }
+
+        public string? Status { get; private set; }
+
+        public bool JoinRequestsLoaded { get; private set; }
+
         protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
         {
+            if (targetMethod!.Name == nameof(IPlayerMatchRepository.GetMatchHostIdAsync))
+            {
+                MatchId = (Guid)args![0]!;
+                return Task.FromResult(HostId);
+            }
+
+            if (targetMethod.Name == nameof(IPlayerMatchRepository.GetJoinRequestsAsync))
+            {
+                MatchId = (Guid)args![0]!;
+                Status = (string?)args[1];
+                JoinRequestsLoaded = true;
+                if (ExceptionToThrow is not null)
+                {
+                    throw ExceptionToThrow;
+                }
+
+                return Task.FromResult<IReadOnlyList<PlayerMatchJoinRequestResponse>>([]);
+            }
+
             UserId = (Guid)args![0]!;
             Request = args[1];
 

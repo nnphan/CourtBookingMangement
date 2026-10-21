@@ -23,7 +23,7 @@ public static class ErrorStatusMapper
         "PLAYER_MATCH.MATCH_EXPIRED" or "PLAYER_MATCH.REQUEST_STATE_CHANGED" or
         "PLAYER_MATCH.REQUEST_NOT_PENDING" or "PLAYER_MATCH.HOST_ALREADY_PARTICIPANT" or
         "PLAYER_MATCH.BOOKING_INVALID_STATUS" => StatusCodes.Status409Conflict,
-        "Error.Validation" => StatusCodes.Status400BadRequest,
+        "PLAYER_MATCH.INVALID_REQUEST_STATUS" or "Error.Validation" => StatusCodes.Status400BadRequest,
         "Court.NotFound" or "Court.BranchNotFound" => StatusCodes.Status404NotFound,
         "Customer.NotFound" => StatusCodes.Status404NotFound,
         "Customer.ProfileAlreadyExists" => StatusCodes.Status409Conflict,

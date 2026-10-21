@@ -635,6 +635,50 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
         return PagedResult<HostedPlayerMatchResponse>.Create(items, request.Page, request.PageSize, totalCount);
     }
 
+    public async Task<Guid?> GetMatchHostIdAsync(Guid matchId, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            SELECT created_by
+            FROM matching.player_matches
+            WHERE id = @MatchId;
+            """;
+
+        using var connection = sqlConnectionFactory.CreateConnection();
+        return await connection.QuerySingleOrDefaultAsync<Guid?>(
+            new CommandDefinition(sql, new { MatchId = matchId }, cancellationToken: cancellationToken));
+    }
+
+    public async Task<IReadOnlyList<PlayerMatchJoinRequestResponse>> GetJoinRequestsAsync(
+        Guid matchId,
+        string? status,
+        CancellationToken cancellationToken)
+    {
+        const string sql = """
+            SELECT
+                jr.id AS RequestId,
+                jr.match_id AS MatchId,
+                jr.requester_id AS UserId,
+                u.full_name AS FullName,
+                NULL::text AS SkillLevel,
+                jr.status AS Status,
+                jr.requested_at AS RequestedAt
+            FROM matching.match_join_requests jr
+            INNER JOIN auth.users u ON u.id = jr.requester_id
+            WHERE jr.match_id = @MatchId
+              AND (@Status IS NULL OR jr.status = @Status)
+            ORDER BY jr.requested_at ASC, jr.id ASC;
+            """;
+
+        using var connection = sqlConnectionFactory.CreateConnection();
+        var requests = await connection.QueryAsync<PlayerMatchJoinRequestResponse>(
+            new CommandDefinition(
+                sql,
+                new { MatchId = matchId, Status = status },
+                cancellationToken: cancellationToken));
+
+        return requests.AsList();
+    }
+
     public async Task<PagedResult<ParticipatingPlayerMatchResponse>> GetParticipatingMatchesAsync(
         Guid userId,
         GetParticipatingMatchesRequest request,

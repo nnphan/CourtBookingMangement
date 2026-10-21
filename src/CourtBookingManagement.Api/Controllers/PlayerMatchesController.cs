@@ -42,6 +42,29 @@ public sealed class PlayerMatchesController(IPlayerMatchService service, ICurren
     }
 
     [Authorize]
+    [HttpGet("{matchId:guid}/join-requests")]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<PlayerMatchJoinRequestResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetJoinRequests(
+        [FromRoute] Guid matchId,
+        [FromQuery] GetPlayerMatchJoinRequestsRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid userId)
+        {
+            return Error(new Error("PLAYER_MATCH.INVALID_USER", "A valid authenticated user is required."));
+        }
+
+        var result = await service.GetJoinRequestsAsync(matchId, request, userId, cancellationToken);
+        return result.IsSuccess
+            ? Success(result.Value, "Join requests retrieved successfully.")
+            : Error(result.Error);
+    }
+
+    [Authorize]
     [HttpGet("participating")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<ParticipatingPlayerMatchResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]

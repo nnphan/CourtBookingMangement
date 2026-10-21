@@ -1,5 +1,15 @@
 @CourtBookingManagement.Api_HostAddress = http://localhost:5117
 
+@matchId = 019a2e4b-0000-7000-8000-000000000001
+@accessToken = replace-with-jwt
+
+### Get pending join requests (host only)
+GET {{CourtBookingManagement.Api_HostAddress}}/api/player-matches/{{matchId}}/join-requests?status=PENDING
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+###
+
 GET {{CourtBookingManagement.Api_HostAddress}}/weatherforecast/
 Accept: application/json
 

@@ -9,3 +9,5 @@ ALTER TABLE matching.player_matches
     CHECK (current_players <= max_players);
 
 COMMIT;
+
+-- dotnet run --launch-profile https

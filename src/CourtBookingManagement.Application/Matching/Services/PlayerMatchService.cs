@@ -89,6 +89,51 @@ public sealed class PlayerMatchService(
         return Result.Success(matches);
     }
 
+    public async Task<Result<IReadOnlyList<PlayerMatchJoinRequestResponse>>> GetJoinRequestsAsync(
+        Guid matchId,
+        GetPlayerMatchJoinRequestsRequest request,
+        Guid currentUserId,
+        CancellationToken cancellationToken)
+    {
+        if (matchId == Guid.Empty)
+        {
+            return Result.Failure<IReadOnlyList<PlayerMatchJoinRequestResponse>>(InvalidMatchId);
+        }
+
+        if (currentUserId == Guid.Empty)
+        {
+            return Result.Failure<IReadOnlyList<PlayerMatchJoinRequestResponse>>(InvalidUser);
+        }
+
+        if (request is null)
+        {
+            return Result.Failure<IReadOnlyList<PlayerMatchJoinRequestResponse>>(
+                new Error("INVALID_REQUEST", "Request cannot be null."));
+        }
+
+        var status = NormalizeStatus(request.Status);
+        if (status is not null && !JoinRequestStatus.All.Contains(status))
+        {
+            return Result.Failure<IReadOnlyList<PlayerMatchJoinRequestResponse>>(
+                new Error("PLAYER_MATCH.INVALID_REQUEST_STATUS", "Status must be PENDING, APPROVED, REJECTED, or CANCELLED."));
+        }
+
+        var hostId = await repository.GetMatchHostIdAsync(matchId, cancellationToken);
+        if (hostId is null)
+        {
+            return Result.Failure<IReadOnlyList<PlayerMatchJoinRequestResponse>>(MatchNotFound);
+        }
+
+        if (hostId.Value != currentUserId)
+        {
+            return Result.Failure<IReadOnlyList<PlayerMatchJoinRequestResponse>>(
+                new Error("PLAYER_MATCH.NOT_HOST", "You are not allowed to manage join requests for this match."));
+        }
+
+        var joinRequests = await repository.GetJoinRequestsAsync(matchId, status, cancellationToken);
+        return Result.Success(joinRequests);
+    }
+
     public async Task<Result<PagedResult<ParticipatingPlayerMatchResponse>>> GetParticipatingMatchesAsync(
         GetParticipatingMatchesRequest request,
         Guid currentUserId,
