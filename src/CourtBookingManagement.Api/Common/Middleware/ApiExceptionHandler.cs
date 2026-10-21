@@ -10,14 +10,21 @@ using Npgsql;
 namespace CourtBookingManagement.Api.Common.Middleware;
 
 public sealed class ApiExceptionHandler(
-    ILogger<ApiExceptionHandler> logger,
-    IHostEnvironment environment) : IExceptionHandler
+    ILogger<ApiExceptionHandler> logger) : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
         Exception exception,
         CancellationToken cancellationToken)
     {
+        if (exception is OperationCanceledException && httpContext.RequestAborted.IsCancellationRequested)
+        {
+            logger.LogInformation(
+                "Request {TraceId} was cancelled by the client.",
+                httpContext.TraceIdentifier);
+            return true;
+        }
+
         var (statusCode, errorCode, message, validationErrors) = exception switch
         {
             BranchAlreadyExistsException => (
@@ -42,10 +49,10 @@ public sealed class ApiExceptionHandler(
                 validationException.Errors
                     .Select(error => new ValidationError(error.PropertyName, error.ErrorMessage, error.ErrorCode))
                     .ToArray()),
-            FileStorageException fileStorageException => (
+            FileStorageException => (
                 StatusCodes.Status502BadGateway,
                 ErrorCodes.Unexpected,
-                fileStorageException.Message,
+                "A file storage service error occurred.",
                 (IReadOnlyCollection<ValidationError>?)null),
             ApiException apiException => (
                 apiException switch
@@ -75,7 +82,7 @@ public sealed class ApiExceptionHandler(
             _ => (
                 StatusCodes.Status500InternalServerError,
                 ErrorCodes.Unexpected,
-                environment.IsDevelopment() ? exception.Message : "An unexpected error occurred.",
+                "An unexpected error occurred.",
                 (IReadOnlyCollection<ValidationError>?)null)
         };
 

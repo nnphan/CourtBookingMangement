@@ -35,13 +35,13 @@ public interface IPlayerMatchRepository
 
     Task<Guid> CreateAsync(CreatePlayerMatchRequest request, Guid createdBy, IDbTransaction transaction, CancellationToken cancellationToken);
 
-    Task<Guid> CreateJoinRequestAsync(Guid matchId, Guid userId, IDbTransaction transaction, CancellationToken cancellationToken);
+    Task<Guid?> CreateJoinRequestAsync(Guid matchId, Guid userId, IDbTransaction transaction, CancellationToken cancellationToken);
 
     Task CreateParticipantAsync(Guid matchId, Guid userId, IDbTransaction transaction, CancellationToken cancellationToken);
 
     Task CreateParticipantAsync(Guid matchId, Guid userId, string role, IDbTransaction transaction, CancellationToken cancellationToken);
 
-    Task<bool> ApproveJoinRequestAsync(Guid requestId, Guid currentUserId, IDbTransaction transaction, CancellationToken cancellationToken);
+    Task<bool> ApproveJoinRequestAsync(Guid matchId, Guid requestId, Guid currentUserId, IDbTransaction transaction, CancellationToken cancellationToken);
 
     Task<int?> TryIncrementCurrentPlayersAsync(Guid matchId, IDbTransaction transaction, CancellationToken cancellationToken);
 

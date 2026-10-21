@@ -55,15 +55,8 @@ public sealed class PlayerMatchService(
             PageSize = request.PageSize <= 0 ? 9 : Math.Min(request.PageSize, 50)
         };
 
-        try
-        {
-            var matches = await repository.SearchAsync(normalizedRequest, cancellationToken);
-            return Result.Success(matches);
-        }
-        catch (Exception exception)
-        {
-            return Result.Failure<PagedResult<PlayerMatchResponse>>(Error.FromException(exception));
-        }
+        var matches = await repository.SearchAsync(normalizedRequest, cancellationToken);
+        return Result.Success(matches);
     }
 
     public async Task<Result<PagedResult<HostedPlayerMatchResponse>>> GetHostedMatchesAsync(
@@ -92,15 +85,8 @@ public sealed class PlayerMatchService(
             PageSize = request.PageSize <= 0 ? 10 : Math.Min(request.PageSize, 50)
         };
 
-        try
-        {
-            var matches = await repository.GetHostedMatchesAsync(currentUserId, normalizedRequest, cancellationToken);
-            return Result.Success(matches);
-        }
-        catch (Exception exception) when (exception is not OperationCanceledException)
-        {
-            return Result.Failure<PagedResult<HostedPlayerMatchResponse>>(Error.FromException(exception));
-        }
+        var matches = await repository.GetHostedMatchesAsync(currentUserId, normalizedRequest, cancellationToken);
+        return Result.Success(matches);
     }
 
     public async Task<Result<PagedResult<ParticipatingPlayerMatchResponse>>> GetParticipatingMatchesAsync(
@@ -136,15 +122,8 @@ public sealed class PlayerMatchService(
             PageSize = request.PageSize <= 0 ? 10 : Math.Min(request.PageSize, 50)
         };
 
-        try
-        {
-            var matches = await repository.GetParticipatingMatchesAsync(currentUserId, normalizedRequest, cancellationToken);
-            return Result.Success(matches);
-        }
-        catch (Exception exception) when (exception is not OperationCanceledException)
-        {
-            return Result.Failure<PagedResult<ParticipatingPlayerMatchResponse>>(Error.FromException(exception));
-        }
+        var matches = await repository.GetParticipatingMatchesAsync(currentUserId, normalizedRequest, cancellationToken);
+        return Result.Success(matches);
     }
 
     private static string? NormalizeStatus(string? value) =>
@@ -159,26 +138,19 @@ public sealed class PlayerMatchService(
             return Result.Failure<PlayerMatchDetailResponse>(InvalidMatchId);
         }
 
-        try
+        var match = await repository.GetByIdAsync(matchId, cancellationToken);
+        if (match is null)
         {
-            var match = await repository.GetByIdAsync(matchId, cancellationToken);
-            if (match is null)
-            {
-                return Result.Failure<PlayerMatchDetailResponse>(MatchNotFound);
-            }
-
-            match.RemainingSlots = Math.Max(match.MaxPlayers - match.CurrentPlayers, 0);
-            match.CanJoin = string.Equals(match.Status, "OPEN", StringComparison.OrdinalIgnoreCase)
-                && match.CurrentPlayers < match.MaxPlayers;
-            match.IsFull = match.CurrentPlayers >= match.MaxPlayers;
-            match.ParticipantCount = match.Participants.Count;
-
-            return Result.Success(match);
+            return Result.Failure<PlayerMatchDetailResponse>(MatchNotFound);
         }
-        catch (Exception exception)
-        {
-            return Result.Failure<PlayerMatchDetailResponse>(Error.FromException(exception));
-        }
+
+        match.RemainingSlots = Math.Max(match.MaxPlayers - match.CurrentPlayers, 0);
+        match.CanJoin = string.Equals(match.Status, "OPEN", StringComparison.OrdinalIgnoreCase)
+            && match.CurrentPlayers < match.MaxPlayers;
+        match.IsFull = match.CurrentPlayers >= match.MaxPlayers;
+        match.ParticipantCount = match.Participants.Count;
+
+        return Result.Success(match);
     }
 
     public async Task<Result<CreatePlayerMatchResponse>> CreateAsync(
@@ -253,23 +225,15 @@ public sealed class PlayerMatchService(
         connection.Open();
         using var transaction = connection.BeginTransaction();
 
-        try
-        {
-            var matchId = await repository.CreateAsync(request, createdBy, transaction, cancellationToken);
-            await repository.CreateParticipantAsync(matchId, createdBy, transaction, cancellationToken);
-            transaction.Commit();
+        var matchId = await repository.CreateAsync(request, createdBy, transaction, cancellationToken);
+        await repository.CreateParticipantAsync(matchId, createdBy, transaction, cancellationToken);
+        transaction.Commit();
 
-            return Result.Success(new CreatePlayerMatchResponse
-            {
-                Id = matchId,
-                Message = "Player match created successfully."
-            });
-        }
-        catch (Exception exception)
+        return Result.Success(new CreatePlayerMatchResponse
         {
-            transaction.Rollback();
-            return Result.Failure<CreatePlayerMatchResponse>(Error.FromException(exception));
-        }
+            Id = matchId,
+            Message = "Player match created successfully."
+        });
     }
 
     public async Task<Result<JoinMatchResponse>> JoinMatchAsync(
@@ -298,7 +262,10 @@ public sealed class PlayerMatchService(
             return Result.Failure<JoinMatchResponse>(new Error("PLAYER_MATCH.NOT_OPEN", "Match is not open for joining."));
         }
 
-        if (match.MatchDate < DateOnly.FromDateTime(DateTime.UtcNow))
+        var utcNow = DateTime.UtcNow;
+        var today = DateOnly.FromDateTime(utcNow);
+        if (match.MatchDate < today
+            || (match.MatchDate == today && match.StartTime <= TimeOnly.FromDateTime(utcNow)))
         {
             return Result.Failure<JoinMatchResponse>(new Error("PLAYER_MATCH.MATCH_EXPIRED", "Expired matches cannot be joined."));
         }
@@ -327,31 +294,31 @@ public sealed class PlayerMatchService(
         connection.Open();
         using var transaction = connection.BeginTransaction();
 
-        try
-        {
-            var joinRequestId = await repository.CreateJoinRequestAsync(matchId, currentUserId, transaction, cancellationToken);
-            await repository.CreateNotificationAsync(
-                matchId,
-                match.CreatedBy,
-                "A player requested to join your match.",
-                transaction,
-                cancellationToken);
-
-            transaction.Commit();
-
-            return Result.Success(new JoinMatchResponse
-            {
-                MatchId = matchId,
-                JoinRequestId = joinRequestId,
-                Status = "PENDING",
-                Message = "Join request submitted successfully."
-            });
-        }
-        catch (Exception exception)
+        var joinRequestId = await repository.CreateJoinRequestAsync(matchId, currentUserId, transaction, cancellationToken);
+        if (joinRequestId is null)
         {
             transaction.Rollback();
-            return Result.Failure<JoinMatchResponse>(Error.FromException(exception));
+            return Result.Failure<JoinMatchResponse>(new Error(
+                "PLAYER_MATCH.REQUEST_STATE_CHANGED",
+                "The match is no longer available for joining, or a request already exists."));
         }
+
+        await repository.CreateNotificationAsync(
+            matchId,
+            match.CreatedBy,
+            "A player requested to join your match.",
+            transaction,
+            cancellationToken);
+
+        transaction.Commit();
+
+        return Result.Success(new JoinMatchResponse
+        {
+            MatchId = matchId,
+            JoinRequestId = joinRequestId.Value,
+            Status = "PENDING",
+            Message = "Join request submitted successfully."
+        });
     }
 
     public async Task<Result<ApproveJoinRequestResponse>> ApproveJoinRequestAsync(
@@ -421,54 +388,48 @@ public sealed class PlayerMatchService(
         connection.Open();
         using var transaction = connection.BeginTransaction();
 
-        try
-        {
-            if (!await repository.ApproveJoinRequestAsync(requestId, currentUserId, transaction, cancellationToken))
-            {
-                transaction.Rollback();
-                return Result.Failure<ApproveJoinRequestResponse>(new Error("PLAYER_MATCH.REQUEST_NOT_PENDING", "Only pending join requests can be approved."));
-            }
-
-            var updatedPlayerCount = await repository.TryIncrementCurrentPlayersAsync(matchId, transaction, cancellationToken);
-            if (updatedPlayerCount is null)
-            {
-                transaction.Rollback();
-                return Result.Failure<ApproveJoinRequestResponse>(new Error("PLAYER_MATCH.MATCH_FULL", "Match is already full."));
-            }
-
-            await repository.CreateParticipantAsync(matchId, joinRequest.UserId, "PLAYER", transaction, cancellationToken);
-
-            if (updatedPlayerCount.Value >= match.MaxPlayers)
-            {
-                await repository.UpdateMatchStatusAsync(matchId, "FULL", transaction, cancellationToken);
-                await repository.CreateMatchFullNotificationsAsync(matchId, transaction, cancellationToken);
-            }
-
-            await repository.CreateNotificationAsync(
-                joinRequest.UserId,
-                matchId,
-                "JOIN_APPROVED",
-                "Join request approved",
-                "Your join request was approved by the match host.",
-                transaction,
-                cancellationToken);
-
-            transaction.Commit();
-
-            return Result.Success(new ApproveJoinRequestResponse
-            {
-                MatchId = matchId,
-                RequestId = requestId,
-                UserId = joinRequest.UserId,
-                Status = "APPROVED",
-                Message = "Join request approved successfully."
-            });
-        }
-        catch (Exception exception)
+        var updatedPlayerCount = await repository.TryIncrementCurrentPlayersAsync(matchId, transaction, cancellationToken);
+        if (updatedPlayerCount is null)
         {
             transaction.Rollback();
-            return Result.Failure<ApproveJoinRequestResponse>(Error.FromException(exception));
+            return Result.Failure<ApproveJoinRequestResponse>(new Error(
+                "PLAYER_MATCH.REQUEST_STATE_CHANGED",
+                "The match is full, has started, or is no longer open for approval."));
         }
+
+        if (!await repository.ApproveJoinRequestAsync(matchId, requestId, currentUserId, transaction, cancellationToken))
+        {
+            transaction.Rollback();
+            return Result.Failure<ApproveJoinRequestResponse>(new Error("PLAYER_MATCH.REQUEST_NOT_PENDING", "Only pending join requests can be approved."));
+        }
+
+        await repository.CreateParticipantAsync(matchId, joinRequest.UserId, "PLAYER", transaction, cancellationToken);
+
+        if (updatedPlayerCount.Value >= match.MaxPlayers)
+        {
+            await repository.UpdateMatchStatusAsync(matchId, "FULL", transaction, cancellationToken);
+            await repository.CreateMatchFullNotificationsAsync(matchId, transaction, cancellationToken);
+        }
+
+        await repository.CreateNotificationAsync(
+            joinRequest.UserId,
+            matchId,
+            "JOIN_APPROVED",
+            "Join request approved",
+            "Your join request was approved by the match host.",
+            transaction,
+            cancellationToken);
+
+        transaction.Commit();
+
+        return Result.Success(new ApproveJoinRequestResponse
+        {
+            MatchId = matchId,
+            RequestId = requestId,
+            UserId = joinRequest.UserId,
+            Status = "APPROVED",
+            Message = "Join request approved successfully."
+        });
     }
 
     public async Task<Result<RejectJoinRequestResponse>> RejectJoinRequestAsync(
@@ -528,42 +489,34 @@ public sealed class PlayerMatchService(
         connection.Open();
         using var transaction = connection.BeginTransaction();
 
-        try
-        {
-            var rejected = await repository.RejectJoinRequestAsync(requestId, transaction, cancellationToken);
-            if (!rejected)
-            {
-                transaction.Rollback();
-                return Result.Failure<RejectJoinRequestResponse>(new Error(
-                    "PLAYER_MATCH.REQUEST_STATE_CHANGED",
-                    "The match or join request changed. Refresh and try again."));
-            }
-
-            await repository.CreateNotificationAsync(
-                joinRequest.UserId,
-                matchId,
-                "JOIN_REJECTED",
-                "Join request rejected",
-                "Your request to join the match has been rejected.",
-                transaction,
-                cancellationToken);
-
-            transaction.Commit();
-
-            return Result.Success(new RejectJoinRequestResponse
-            {
-                MatchId = matchId,
-                RequestId = requestId,
-                UserId = joinRequest.UserId,
-                Status = "REJECTED",
-                Message = "Join request rejected successfully."
-            });
-        }
-        catch (Exception exception)
+        var rejected = await repository.RejectJoinRequestAsync(requestId, transaction, cancellationToken);
+        if (!rejected)
         {
             transaction.Rollback();
-            return Result.Failure<RejectJoinRequestResponse>(Error.FromException(exception));
+            return Result.Failure<RejectJoinRequestResponse>(new Error(
+                "PLAYER_MATCH.REQUEST_STATE_CHANGED",
+                "The match or join request changed. Refresh and try again."));
         }
+
+        await repository.CreateNotificationAsync(
+            joinRequest.UserId,
+            matchId,
+            "JOIN_REJECTED",
+            "Join request rejected",
+            "Your request to join the match has been rejected.",
+            transaction,
+            cancellationToken);
+
+        transaction.Commit();
+
+        return Result.Success(new RejectJoinRequestResponse
+        {
+            MatchId = matchId,
+            RequestId = requestId,
+            UserId = joinRequest.UserId,
+            Status = "REJECTED",
+            Message = "Join request rejected successfully."
+        });
     }
 
     private static string? NormalizeText(string? value) =>

@@ -13,6 +13,8 @@ namespace CourtBookingManagement.Infrastructure.Repositories;
 
 public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFactory) : IPlayerMatchRepository
 {
+    private const int InitialPlayerCount = 1;
+
     public async Task<PlayerMatchDetailResponse?> GetByIdAsync(Guid matchId, CancellationToken cancellationToken)
     {
         const string sql = """
@@ -152,7 +154,7 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
             SELECT
                 id AS Id,
                 match_id AS MatchId,
-                user_id AS UserId,
+                requester_id AS UserId,
                 status AS Status,
                 reviewed_at AS ReviewedAt,
                 reviewed_by AS ReviewedBy
@@ -287,9 +289,9 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
                 @SkillLevel,
                 @GenderPreference,
                 @MaxPlayers,
-                @CurrentPlayers,
+                @InitialPlayerCount,
                 @FeePerPlayer,
-                CASE WHEN @CurrentPlayers >= @MaxPlayers THEN 'FULL' ELSE 'OPEN' END,
+                'OPEN',
                 NOW(),
                 NOW()
             )
@@ -310,16 +312,32 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
             SkillLevel = request.SkillLevel,
             GenderPreference = request.GenderPreference,
             MaxPlayers = request.MaxPlayers,
-            CurrentPlayers = request.CurrentPlayers,
+            InitialPlayerCount,
             FeePerPlayer = request.FeePerPlayer
         }, transaction: transaction, cancellationToken: cancellationToken);
 
         return await transaction.Connection!.QuerySingleAsync<Guid>(command);
     }
 
-    public async Task<Guid> CreateJoinRequestAsync(Guid matchId, Guid userId, IDbTransaction transaction, CancellationToken cancellationToken)
+    public async Task<Guid?> CreateJoinRequestAsync(Guid matchId, Guid userId, IDbTransaction transaction, CancellationToken cancellationToken)
     {
         const string sql = """
+            WITH available_match AS (
+                SELECT pm.id
+                FROM matching.player_matches pm
+                WHERE pm.id = @MatchId
+                  AND pm.created_by <> @UserId
+                  AND pm.status = 'OPEN'
+                  AND pm.current_players < pm.max_players
+                  AND (
+                      pm.match_date > (NOW() AT TIME ZONE 'UTC')::date
+                      OR (
+                          pm.match_date = (NOW() AT TIME ZONE 'UTC')::date
+                          AND pm.start_time > (NOW() AT TIME ZONE 'UTC')::time
+                      )
+                  )
+                FOR UPDATE
+            )
             INSERT INTO matching.match_join_requests (
                 id,
                 match_id,
@@ -329,7 +347,7 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
                 reviewed_at,
                 reviewed_by
             )
-            VALUES (
+            SELECT
                 uuid_generate_v7(),
                 @MatchId,
                 @UserId,
@@ -337,12 +355,20 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
                 NOW(),
                 NULL,
                 NULL
+            FROM available_match
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM matching.match_participants mp
+                WHERE mp.match_id = @MatchId
+                  AND mp.user_id = @UserId
+                  AND mp.status = 'ACTIVE'
             )
+            ON CONFLICT (match_id, requester_id) DO NOTHING
             RETURNING id;
             """;
 
         var command = new CommandDefinition(sql, new { MatchId = matchId, UserId = userId }, transaction: transaction, cancellationToken: cancellationToken);
-        return await transaction.Connection!.QuerySingleAsync<Guid>(command);
+        return await transaction.Connection!.QuerySingleOrDefaultAsync<Guid?>(command);
     }
 
     public async Task CreateParticipantAsync(Guid matchId, Guid userId, IDbTransaction transaction, CancellationToken cancellationToken)
@@ -375,18 +401,26 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
         await transaction.Connection!.ExecuteAsync(command);
     }
 
-    public async Task<bool> ApproveJoinRequestAsync(Guid requestId, Guid currentUserId, IDbTransaction transaction, CancellationToken cancellationToken)
+    public async Task<bool> ApproveJoinRequestAsync(Guid matchId, Guid requestId, Guid currentUserId, IDbTransaction transaction, CancellationToken cancellationToken)
     {
         const string sql = """
-            UPDATE matching.match_join_requests
+            UPDATE matching.match_join_requests AS jr
             SET status = 'APPROVED',
                 reviewed_at = NOW(),
                 reviewed_by = @CurrentUserId
-            WHERE id = @RequestId
-              AND status = 'PENDING';
+            WHERE jr.id = @RequestId
+              AND jr.match_id = @MatchId
+              AND jr.status = 'PENDING'
+              AND EXISTS (
+                  SELECT 1
+                  FROM matching.player_matches pm
+                  WHERE pm.id = @MatchId
+                    AND pm.created_by = @CurrentUserId
+                    AND pm.status = 'OPEN'
+              );
             """;
 
-        var command = new CommandDefinition(sql, new { RequestId = requestId, CurrentUserId = currentUserId }, transaction: transaction, cancellationToken: cancellationToken);
+        var command = new CommandDefinition(sql, new { MatchId = matchId, RequestId = requestId, CurrentUserId = currentUserId }, transaction: transaction, cancellationToken: cancellationToken);
         return await transaction.Connection!.ExecuteAsync(command) == 1;
     }
 
@@ -399,6 +433,13 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
             WHERE id = @MatchId
               AND status = 'OPEN'
               AND current_players < max_players
+              AND (
+                  match_date > (NOW() AT TIME ZONE 'UTC')::date
+                  OR (
+                      match_date = (NOW() AT TIME ZONE 'UTC')::date
+                      AND start_time > (NOW() AT TIME ZONE 'UTC')::time
+                  )
+              )
             RETURNING current_players;
             """;
 
@@ -637,7 +678,7 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
                 INNER JOIN core.branches b ON b.id = pm.branch_id
                 LEFT JOIN core.courts c ON c.id = pm.court_id
                 INNER JOIN auth.users u ON u.id = pm.created_by
-                WHERE jr.user_id = @UserId
+                WHERE jr.requester_id = @UserId
                   AND pm.created_by <> @UserId
             )
             """;
@@ -700,7 +741,12 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
     private async Task<T> ScalarAsync<T>(string sql, object parameters, CancellationToken cancellationToken)
     {
         using var connection = sqlConnectionFactory.CreateConnection();
-        return await connection.ExecuteScalarAsync<T>(new CommandDefinition(sql, parameters, cancellationToken: cancellationToken));
+        var result = await connection.ExecuteScalarAsync<T>(
+            new CommandDefinition(sql, parameters, cancellationToken: cancellationToken));
+
+        return result is null
+            ? throw new InvalidOperationException("The database query did not return a scalar value.")
+            : result;
     }
 
     private static void AppendBaseQuery(StringBuilder sql, DynamicParameters parameters)
@@ -735,7 +781,13 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
                 INNER JOIN auth.users u ON u.id = pm.created_by
                 WHERE pm.status = @Status
                   AND pm.current_players < pm.max_players
-                  AND pm.match_date >= CURRENT_DATE
+                  AND (
+                      pm.match_date > (NOW() AT TIME ZONE 'UTC')::date
+                      OR (
+                          pm.match_date = (NOW() AT TIME ZONE 'UTC')::date
+                          AND pm.start_time > (NOW() AT TIME ZONE 'UTC')::time
+                      )
+                  )
             )
             """);
 
@@ -807,16 +859,16 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
         switch (sortBy?.Trim().ToLowerInvariant())
         {
             case "oldest":
-                sql.AppendLine("ORDER BY CreatedAt ASC");
+                sql.AppendLine("ORDER BY CreatedAt ASC, Id ASC");
                 break;
             case "match_date_asc":
-                sql.AppendLine("ORDER BY MatchDate ASC, StartTime ASC");
+                sql.AppendLine("ORDER BY MatchDate ASC, StartTime ASC, Id ASC");
                 break;
             case "match_date_desc":
-                sql.AppendLine("ORDER BY MatchDate DESC, StartTime DESC");
+                sql.AppendLine("ORDER BY MatchDate DESC, StartTime DESC, Id DESC");
                 break;
             default:
-                sql.AppendLine("ORDER BY CreatedAt DESC");
+                sql.AppendLine("ORDER BY CreatedAt DESC, Id DESC");
                 break;
         }
     }

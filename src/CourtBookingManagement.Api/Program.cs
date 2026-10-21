@@ -162,6 +162,7 @@ if (!string.IsNullOrWhiteSpace(databaseConnectionString))
 
 var app = builder.Build();
 
+app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
@@ -180,11 +181,7 @@ app.UseSerilogRequestLogging(options =>
     {
         diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
         diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
-        diagnosticContext.Set(
-            "CorrelationId",
-            httpContext.Request.Headers.TryGetValue("X-Correlation-ID", out var correlationId)
-                ? correlationId.ToString()
-                : httpContext.TraceIdentifier);
+        diagnosticContext.Set("CorrelationId", httpContext.TraceIdentifier);
     };
 });
 

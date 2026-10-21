@@ -10,7 +10,7 @@ public record Error(string Code, string Description)
 
     public static Error FromException(Exception exception) => new(
         "Error.Exception",
-        exception.Message);
+        "An unexpected error occurred.");
 
     public static implicit operator string(Error error) => error.Code;
 

@@ -3,6 +3,7 @@ using CourtBookingManagement.Application.Auth.Interfaces;
 using CourtBookingManagement.Application.Matching.Models.Requests;
 using CourtBookingManagement.Application.Matching.Models.Responses;
 using CourtBookingManagement.Application.Matching.Services;
+using CourtBookingManagement.Domain.Abstractions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,7 +14,7 @@ namespace CourtBookingManagement.Api.Controllers;
 public sealed class PlayerMatchesController(IPlayerMatchService service, ICurrentUserService currentUserService) : ApiControllerBase
 {
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<PlayerMatchResponse>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Get([FromQuery] PlayerMatchSearchRequest request, CancellationToken cancellationToken)
     {
         var result = await service.GetMatchesAsync(request, cancellationToken);
@@ -31,7 +32,7 @@ public sealed class PlayerMatchesController(IPlayerMatchService service, ICurren
     {
         if (currentUserService.UserId is not Guid userId)
         {
-            return Unauthorized();
+            return Error(new Error("PLAYER_MATCH.INVALID_USER", "A valid authenticated user is required."));
         }
 
         var result = await service.GetHostedMatchesAsync(request, userId, cancellationToken);
@@ -49,7 +50,7 @@ public sealed class PlayerMatchesController(IPlayerMatchService service, ICurren
     {
         if (currentUserService.UserId is not Guid userId)
         {
-            return Unauthorized();
+            return Error(new Error("PLAYER_MATCH.INVALID_USER", "A valid authenticated user is required."));
         }
 
         var result = await service.GetParticipatingMatchesAsync(request, userId, cancellationToken);
@@ -74,12 +75,14 @@ public sealed class PlayerMatchesController(IPlayerMatchService service, ICurren
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<CreatePlayerMatchResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Create([FromBody] CreatePlayerMatchRequest request, CancellationToken cancellationToken)
     {
         if (currentUserService.UserId is not Guid userId)
         {
-            return Unauthorized();
+            return Error(new Error("PLAYER_MATCH.INVALID_USER", "A valid authenticated user is required."));
         }
 
         var result = await service.CreateAsync(request, userId, cancellationToken);
@@ -92,13 +95,14 @@ public sealed class PlayerMatchesController(IPlayerMatchService service, ICurren
     [HttpPost("{id:guid}/join")]
     [ProducesResponseType(typeof(ApiResponse<JoinMatchResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> JoinMatch(Guid id, CancellationToken cancellationToken)
     {
         if (currentUserService.UserId is not Guid userId)
         {
-            return Unauthorized();
+            return Error(new Error("PLAYER_MATCH.INVALID_USER", "A valid authenticated user is required."));
         }
 
         var result = await service.JoinMatchAsync(id, userId, cancellationToken);
@@ -111,6 +115,7 @@ public sealed class PlayerMatchesController(IPlayerMatchService service, ICurren
     [HttpPost("{id:guid}/join-requests/{requestId:guid}/approve")]
     [ProducesResponseType(typeof(ApiResponse<ApproveJoinRequestResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
@@ -118,7 +123,7 @@ public sealed class PlayerMatchesController(IPlayerMatchService service, ICurren
     {
         if (currentUserService.UserId is not Guid userId)
         {
-            return Unauthorized();
+            return Error(new Error("PLAYER_MATCH.INVALID_USER", "A valid authenticated user is required."));
         }
 
         var result = await service.ApproveJoinRequestAsync(id, requestId, userId, cancellationToken);
@@ -131,6 +136,7 @@ public sealed class PlayerMatchesController(IPlayerMatchService service, ICurren
     [HttpPost("{id:guid}/join-requests/{requestId:guid}/reject")]
     [ProducesResponseType(typeof(ApiResponse<RejectJoinRequestResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
@@ -138,7 +144,7 @@ public sealed class PlayerMatchesController(IPlayerMatchService service, ICurren
     {
         if (currentUserService.UserId is not Guid userId)
         {
-            return Unauthorized();
+            return Error(new Error("PLAYER_MATCH.INVALID_USER", "A valid authenticated user is required."));
         }
 
         var result = await service.RejectJoinRequestAsync(id, requestId, userId, cancellationToken);
