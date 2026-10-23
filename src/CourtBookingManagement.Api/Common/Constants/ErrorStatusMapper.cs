@@ -11,7 +11,7 @@ public static class ErrorStatusMapper
         "Auth.UserDisabled" or "Auth.EmailNotVerified" or "Auth.Unauthorized" => StatusCodes.Status403Forbidden,
         "NOTIFICATION.FORBIDDEN" => StatusCodes.Status403Forbidden,
         "NOTIFICATION.NOT_FOUND" => StatusCodes.Status404NotFound,
-        "User.NotFound" or "Branch.NotFound" or "PLAYER_MATCH.NOT_FOUND" or
+        "User.NotFound" or "Role.NotFound" or "Branch.NotFound" or "PLAYER_MATCH.NOT_FOUND" or
         "PLAYER_MATCH.REQUEST_NOT_FOUND" or "PLAYER_MATCH.BOOKING_NOT_FOUND" or
         "PLAYER_MATCH.BRANCH_NOT_FOUND" or "PLAYER_MATCH.COURT_NOT_FOUND" or
         "PLAYER_MATCH.REQUEST_MISMATCH" => StatusCodes.Status404NotFound,

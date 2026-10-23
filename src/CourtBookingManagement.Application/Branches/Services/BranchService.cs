@@ -138,7 +138,7 @@ public sealed class BranchService(
         }
 
         if (isDeleted.Value)
-        {
+        { 
             return Result.Failure(BranchAlreadyDeleted);
         }
 

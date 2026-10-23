@@ -33,6 +33,10 @@ public sealed class UserRoleService(
 
             return Result.Success(await repository.GetUserRolesAsync(userId, cancellationToken));
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
         catch (Exception exception)
         {
             return Result.Failure<IReadOnlyList<UserRoleResponse>>(Error.FromException(exception));
@@ -56,18 +60,19 @@ public sealed class UserRoleService(
                 new Error("USER_ROLE.INVALID_ASSIGNER", "The current user is invalid."));
         }
 
-        if (request?.RoleIds is not { Count: > 0 })
-        {
-            return Result.Failure<UserRoleAssignmentResponse>(
-                new Error("USER_ROLE.ROLE_IDS_REQUIRED", "RoleIds is required."));
-        }
+        var hasRoleIds = request?.RoleIds is { Count: > 0 };
 
-        var requestedRoleIds = request.RoleIds.Distinct().ToList();
-        var invalidRoles = new Error("USER_ROLE.INVALID_ROLES", "One or more roles are invalid.");
+        
+
+        List<Guid> requestedRoleIds;
+       
+        requestedRoleIds = request!.RoleIds.Distinct().ToList();
+        
 
         if (requestedRoleIds.Contains(Guid.Empty))
         {
-            return Result.Failure<UserRoleAssignmentResponse>(invalidRoles);
+            return Result.Failure<UserRoleAssignmentResponse>(
+                new Error("USER_ROLE.INVALID_ROLES", "One or more role ids are invalid."));
         }
 
         try
@@ -80,7 +85,8 @@ public sealed class UserRoleService(
             var activeRoles = await repository.GetActiveRolesAsync(requestedRoleIds, cancellationToken);
             if (activeRoles.Count != requestedRoleIds.Count)
             {
-                return Result.Failure<UserRoleAssignmentResponse>(invalidRoles);
+                return Result.Failure<UserRoleAssignmentResponse>(
+                    new Error("Role.NotFound", "One or more roles were not found or are inactive."));
             }
 
             var assignedRoleIds = (await repository.GetAssignedRoleIdsAsync(userId, cancellationToken)).ToHashSet();
@@ -95,6 +101,10 @@ public sealed class UserRoleService(
             return assignment is null
                 ? Result.Failure<UserRoleAssignmentResponse>(UserNotFound)
                 : Result.Success(assignment);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception exception)
         {

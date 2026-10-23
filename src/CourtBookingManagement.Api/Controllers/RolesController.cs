@@ -12,7 +12,7 @@ namespace CourtBookingManagement.Api.Controllers;
 public sealed class RolesController(IRoleService service) : ApiControllerBase
 {
     [HttpGet]
-    [Permission("role.view")]
+    //[Permission("role.view")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetRoles(

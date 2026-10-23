@@ -103,7 +103,7 @@ public sealed class BranchesController(
     }
 
     [HttpDelete("{id:guid}")]
-    [Permission("branch.delete")]
+    //[Permission("branch.delete")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]

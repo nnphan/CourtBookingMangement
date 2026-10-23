@@ -18,6 +18,8 @@ public sealed class UserRolesController(
     [Permission("role.assign")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<UserRoleResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserRoles(
         Guid id,
@@ -30,10 +32,11 @@ public sealed class UserRolesController(
     }
 
     [HttpPost("{id:guid}/roles")]
-    [Permission("role.assign")]
+    //[Permission("role.assign")]
     [ProducesResponseType(typeof(ApiResponse<UserRoleAssignmentResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> AssignRoles(
         Guid id,

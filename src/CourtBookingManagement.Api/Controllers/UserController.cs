@@ -23,7 +23,7 @@ public sealed class UserController(IUserService userService) : ApiControllerBase
     }
 
     [HttpGet]
-    [Permission("user.view")]
+    //[Permission("user.view")]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         var result = await userService.GetAllUsersAsync(cancellationToken);
