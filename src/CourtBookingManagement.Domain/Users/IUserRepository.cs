@@ -11,7 +11,10 @@ public interface IUserRepository
     Task<IReadOnlyList<User>> GetAllAsync(
         CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<UserListItem>> GetListWithRolesAsync(
+    Task<UserListPage> GetListWithRolesAsync(
+        string? keyword,
+        int pageNumber,
+        int pageSize,
         CancellationToken cancellationToken = default);
 
     Task<bool> ExistsByEmailAsync(

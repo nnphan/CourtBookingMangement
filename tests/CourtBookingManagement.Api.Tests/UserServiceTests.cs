@@ -1,4 +1,5 @@
 using CourtBookingManagement.Application.Abstractions.Clock;
+using CourtBookingManagement.Application.Matching.Models;
 using CourtBookingManagement.Application.Users.DTOs;
 using CourtBookingManagement.Application.Users.Services;
 using CourtBookingManagement.Domain.Abstractions;
@@ -33,10 +34,15 @@ public sealed class UserServiceTests
         };
         var service = CreateService(repository);
 
-        var result = await service.GetListAsync(CancellationToken.None);
+        var result = await service.GetListAsync(
+            new UserListRequestDto(),
+            CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        var user = Assert.Single(result.Value);
+        Assert.Equal(1, result.Value.Page);
+        Assert.Equal(12, result.Value.PageSize);
+        Assert.Equal(1, result.Value.TotalCount);
+        var user = Assert.Single(result.Value.Items);
         Assert.Equal(userId, user.Id);
         Assert.Equal("Jamie Player", user.FullName);
         Assert.Equal("jamie@example.com", user.Email);
@@ -60,10 +66,43 @@ public sealed class UserServiceTests
     [Fact]
     public async Task GetListAsync_returns_an_empty_list_when_no_users_exist()
     {
-        var result = await CreateService(new FakeUserRepository()).GetListAsync(CancellationToken.None);
+        var result = await CreateService(new FakeUserRepository()).GetListAsync(
+            new UserListRequestDto(),
+            CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        Assert.Empty(result.Value);
+        Assert.Empty(result.Value.Items);
+    }
+
+    [Fact]
+    public async Task GetListAsync_normalizes_keyword_and_passes_pagination_to_the_repository()
+    {
+        var repository = new FakeUserRepository();
+        var request = new UserListRequestDto
+        {
+            Keyword = "  jamie  ",
+            PageNumber = 3,
+            PageSize = 20
+        };
+
+        var result = await CreateService(repository).GetListAsync(request, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("jamie", repository.ReceivedKeyword);
+        Assert.Equal(3, repository.ReceivedPageNumber);
+        Assert.Equal(20, repository.ReceivedPageSize);
+    }
+
+    [Fact]
+    public async Task GetListAsync_treats_blank_keyword_as_no_filter()
+    {
+        var repository = new FakeUserRepository();
+
+        await CreateService(repository).GetListAsync(
+            new UserListRequestDto { Keyword = "   " },
+            CancellationToken.None);
+
+        Assert.Null(repository.ReceivedKeyword);
     }
 
     [Fact]
@@ -74,7 +113,7 @@ public sealed class UserServiceTests
         var repository = new FakeUserRepository();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            CreateService(repository).GetListAsync(cancellation.Token));
+            CreateService(repository).GetListAsync(new UserListRequestDto(), cancellation.Token));
 
         Assert.Equal(cancellation.Token, repository.ReceivedCancellationToken);
     }
@@ -92,17 +131,30 @@ public sealed class UserServiceTests
 
         public CancellationToken ReceivedCancellationToken { get; private set; }
 
+        public string? ReceivedKeyword { get; private set; }
+
+        public int ReceivedPageNumber { get; private set; }
+
+        public int ReceivedPageSize { get; private set; }
+
         public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
         public Task<IReadOnlyList<User>> GetAllAsync(CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
-        public Task<IReadOnlyList<UserListItem>> GetListWithRolesAsync(CancellationToken cancellationToken = default)
+        public Task<UserListPage> GetListWithRolesAsync(
+            string? keyword,
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken = default)
         {
+            ReceivedKeyword = keyword;
+            ReceivedPageNumber = pageNumber;
+            ReceivedPageSize = pageSize;
             ReceivedCancellationToken = cancellationToken;
             cancellationToken.ThrowIfCancellationRequested();
-            return Task.FromResult(UserList);
+            return Task.FromResult(new UserListPage(UserList, UserList.Count));
         }
 
         public Task<bool> ExistsByEmailAsync(

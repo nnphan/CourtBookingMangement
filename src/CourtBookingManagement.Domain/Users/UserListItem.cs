@@ -8,6 +8,10 @@ public sealed record UserListItem(
     bool IsActive,
     IReadOnlyList<UserListRole> Roles);
 
+public sealed record UserListPage(
+    IReadOnlyList<UserListItem> Items,
+    long TotalCount);
+
 public sealed record UserListRole(
     Guid Id,
     string Code,

@@ -52,10 +52,41 @@ public sealed class UserRepository : IUserRepository
         return entities.Select(entity => entity.ToDomain()).ToList();
     }
 
-    public async Task<IReadOnlyList<UserListItem>> GetListWithRolesAsync(
+    public async Task<UserListPage> GetListWithRolesAsync(
+        string? keyword,
+        int pageNumber,
+        int pageSize,
         CancellationToken cancellationToken = default)
     {
-        const string sql = """
+        const string userFilter = """
+            u.deleted_at IS NULL
+            AND (
+                @Keyword IS NULL
+                OR u.full_name ILIKE '%' || @Keyword || '%'
+                OR u.email ILIKE '%' || @Keyword || '%'
+                OR u.phone_number ILIKE '%' || @Keyword || '%'
+            )
+            """;
+
+        var sql = $"""
+            SELECT COUNT(*)::bigint
+            FROM auth.users u
+            WHERE {userFilter};
+
+            WITH paged_users AS
+            (
+                SELECT
+                    u.id,
+                    u.full_name,
+                    u.email,
+                    u.phone_number,
+                    u.is_active
+                FROM auth.users u
+                WHERE {userFilter}
+                ORDER BY u.full_name NULLS LAST, u.id
+                LIMIT @PageSize
+                OFFSET @Offset
+            )
             SELECT
                 u.id AS Id,
                 u.full_name AS FullName,
@@ -65,12 +96,11 @@ public sealed class UserRepository : IUserRepository
                 r.id AS RoleId,
                 r.code AS RoleCode,
                 r.name AS RoleName
-            FROM auth.users u
+            FROM paged_users u
             LEFT JOIN auth.user_roles ur ON ur.user_id = u.id
             LEFT JOIN auth.roles r
                 ON r.id = ur.role_id
                AND r.deleted_at IS NULL
-            WHERE u.deleted_at IS NULL
             ORDER BY
                 u.full_name NULLS LAST,
                 u.id,
@@ -78,9 +108,19 @@ public sealed class UserRepository : IUserRepository
                 r.id;
             """;
 
+        var offset = ((long)pageNumber - 1) * pageSize;
         using var connection = _sqlConnectionFactory.CreateConnection();
-        var rows = await connection.QueryAsync<UserListRow>(
-            new CommandDefinition(sql, cancellationToken: cancellationToken));
+        using var results = await connection.QueryMultipleAsync(new CommandDefinition(
+            sql,
+            new
+            {
+                Keyword = keyword,
+                PageSize = pageSize,
+                Offset = offset
+            },
+            cancellationToken: cancellationToken));
+        var totalCount = await results.ReadSingleAsync<long>();
+        var rows = await results.ReadAsync<UserListRow>();
 
         var users = new List<UserListAccumulator>();
         var usersById = new Dictionary<Guid, UserListAccumulator>();
@@ -111,7 +151,7 @@ public sealed class UserRepository : IUserRepository
             }
         }
 
-        return users
+        var items = users
             .Select(user => new UserListItem(
                 user.Id,
                 user.FullName,
@@ -120,6 +160,8 @@ public sealed class UserRepository : IUserRepository
                 user.IsActive,
                 user.Roles))
             .ToArray();
+
+        return new UserListPage(items, totalCount);
     }
 
     public Task<bool> ExistsByEmailAsync(

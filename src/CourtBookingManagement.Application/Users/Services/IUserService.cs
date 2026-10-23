@@ -1,4 +1,5 @@
 using CourtBookingManagement.Application.Users.DTOs;
+using CourtBookingManagement.Application.Matching.Models;
 using CourtBookingManagement.Domain.Abstractions;
 
 namespace CourtBookingManagement.Application.Users.Services;
@@ -26,6 +27,7 @@ public interface IUserService
     Task<Result<IReadOnlyList<UserResponseDto>>> GetAllUsersAsync(
         CancellationToken cancellationToken = default);
 
-    Task<Result<IReadOnlyList<UserListItemResponseDto>>> GetListAsync(
+    Task<Result<PagedResult<UserListItemResponseDto>>> GetListAsync(
+        UserListRequestDto request,
         CancellationToken cancellationToken = default);
 }

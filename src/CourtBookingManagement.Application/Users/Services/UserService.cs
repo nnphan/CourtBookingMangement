@@ -1,4 +1,5 @@
 using CourtBookingManagement.Application.Abstractions.Clock;
+using CourtBookingManagement.Application.Matching.Models;
 using CourtBookingManagement.Application.Users.DTOs;
 using CourtBookingManagement.Domain.Abstractions;
 using CourtBookingManagement.Domain.Users;
@@ -147,11 +148,22 @@ public sealed class UserService : IUserService
         return users.Select(ToResponse).ToList();
     }
 
-    public async Task<Result<IReadOnlyList<UserListItemResponseDto>>> GetListAsync(
+    public async Task<Result<PagedResult<UserListItemResponseDto>>> GetListAsync(
+        UserListRequestDto request,
         CancellationToken cancellationToken = default)
     {
-        var users = await _userRepository.GetListWithRolesAsync(cancellationToken);
-        return users.Select(user => new UserListItemResponseDto
+        ArgumentNullException.ThrowIfNull(request);
+        request.Keyword = string.IsNullOrWhiteSpace(request.Keyword)
+            ? null
+            : request.Keyword.Trim();
+
+        var users = await _userRepository.GetListWithRolesAsync(
+            request.Keyword,
+            request.PageNumber,
+            request.PageSize,
+            cancellationToken);
+
+        var items = users.Items.Select(user => new UserListItemResponseDto
         {
             Id = user.Id,
             FullName = user.FullName,
@@ -167,6 +179,12 @@ public sealed class UserService : IUserService
                 })
                 .ToArray()
         }).ToArray();
+
+        return PagedResult<UserListItemResponseDto>.Create(
+            items,
+            request.PageNumber,
+            request.PageSize,
+            users.TotalCount);
     }
 
     private static UserResponseDto ToResponse(User user) => new()

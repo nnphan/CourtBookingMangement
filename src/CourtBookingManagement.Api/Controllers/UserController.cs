@@ -1,5 +1,6 @@
 using CourtBookingManagement.Application.Users.DTOs;
 using CourtBookingManagement.Application.Users.Services;
+using CourtBookingManagement.Application.Matching.Models;
 using CourtBookingManagement.Api.Common.Responses;
 using CourtBookingManagement.Infrastructure.Auth;
 using Microsoft.AspNetCore.Mvc;
@@ -33,12 +34,28 @@ public sealed class UserController(IUserService userService) : ApiControllerBase
     [HttpGet("getlist")]
     //[Permission("user.view")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<UserListItemResponseDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetList(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetList(
+        [FromQuery] UserListRequestDto request,
+        CancellationToken cancellationToken)
     {
-        var result = await userService.GetListAsync(cancellationToken);
-        return FromResult(result, "Users retrieved successfully.");
+        var result = await userService.GetListAsync(request, cancellationToken);
+        if (result.IsFailure)
+        {
+            return Error(result.Error);
+        }
+
+        var metadata = new PagedResultMetadata(
+            request.PageNumber,
+            request.PageSize,
+            result.Value.TotalCount,
+            result.Value.TotalPages,
+            request.PageNumber > 1,
+            request.PageNumber < result.Value.TotalPages);
+
+        return Success(result.Value.Items, "Success", metadata);
     }
 
     [HttpGet("{id:guid}")]
