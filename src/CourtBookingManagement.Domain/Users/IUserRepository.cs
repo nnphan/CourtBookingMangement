@@ -11,6 +11,9 @@ public interface IUserRepository
     Task<IReadOnlyList<User>> GetAllAsync(
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<UserListItem>> GetListWithRolesAsync(
+        CancellationToken cancellationToken = default);
+
     Task<bool> ExistsByEmailAsync(
         string email,
         Guid? excludingId = null,

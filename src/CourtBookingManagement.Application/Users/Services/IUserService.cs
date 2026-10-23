@@ -25,4 +25,7 @@ public interface IUserService
 
     Task<Result<IReadOnlyList<UserResponseDto>>> GetAllUsersAsync(
         CancellationToken cancellationToken = default);
+
+    Task<Result<IReadOnlyList<UserListItemResponseDto>>> GetListAsync(
+        CancellationToken cancellationToken = default);
 }

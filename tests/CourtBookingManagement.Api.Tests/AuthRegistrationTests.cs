@@ -442,6 +442,7 @@ public sealed class AuthRegistrationTests
 
         public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<IReadOnlyList<User>> GetAllAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<IReadOnlyList<UserListItem>> GetListWithRolesAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddAsync(User user, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task UpdateAsync(User user, CancellationToken cancellationToken = default)
         {

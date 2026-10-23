@@ -30,6 +30,17 @@ public sealed class UserController(IUserService userService) : ApiControllerBase
         return FromResult(result);
     }
 
+    [HttpGet("getlist")]
+    //[Permission("user.view")]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<UserListItemResponseDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetList(CancellationToken cancellationToken)
+    {
+        var result = await userService.GetListAsync(cancellationToken);
+        return FromResult(result, "Users retrieved successfully.");
+    }
+
     [HttpGet("{id:guid}")]
     //[Permission("user.view")]
     public async Task<IActionResult> GetById(

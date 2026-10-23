@@ -147,6 +147,28 @@ public sealed class UserService : IUserService
         return users.Select(ToResponse).ToList();
     }
 
+    public async Task<Result<IReadOnlyList<UserListItemResponseDto>>> GetListAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var users = await _userRepository.GetListWithRolesAsync(cancellationToken);
+        return users.Select(user => new UserListItemResponseDto
+        {
+            Id = user.Id,
+            FullName = user.FullName,
+            Email = user.Email,
+            PhoneNumber = user.PhoneNumber,
+            IsActive = user.IsActive,
+            Roles = user.Roles
+                .Select(role => new UserListRoleResponseDto
+                {
+                    Id = role.Id,
+                    Code = role.Code,
+                    Name = role.Name
+                })
+                .ToArray()
+        }).ToArray();
+    }
+
     private static UserResponseDto ToResponse(User user) => new()
     {
         Id = user.Id,
