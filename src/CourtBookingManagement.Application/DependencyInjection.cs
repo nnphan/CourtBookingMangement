@@ -50,6 +50,7 @@ public static class DependencyInjection
         services.AddScoped<ICourtService, CourtService>();
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IAmenityService, AmenityService>();
+        services.AddScoped<CourtBookingManagement.Application.Owners.Services.IOwnerService, CourtBookingManagement.Application.Owners.Services.OwnerService>();
         services.AddScoped<CourtBookingManagement.Application.Permissions.Services.IPermissionService, PermissionService>();
         services.AddValidatorsFromAssemblyContaining<CreateUserRequestValidator>();
         return services;

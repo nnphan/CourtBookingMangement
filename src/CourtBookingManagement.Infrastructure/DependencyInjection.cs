@@ -115,6 +115,7 @@ public static class DependencyInjection
         services.AddScoped<IUserRoleRepository, UserRoleRepository>();
         services.AddScoped<ICourtRepository, CourtRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
+        services.AddScoped<CourtBookingManagement.Application.Owners.Repositories.IOwnerRepository, OwnerRepository>();
         services.AddScoped<IMembershipLevelRepository, MembershipLevelRepository>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IPermissionService, PermissionService>();

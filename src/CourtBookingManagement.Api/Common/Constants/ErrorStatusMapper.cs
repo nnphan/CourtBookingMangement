@@ -25,6 +25,8 @@ public static class ErrorStatusMapper
         "PLAYER_MATCH.BOOKING_INVALID_STATUS" => StatusCodes.Status409Conflict,
         "PLAYER_MATCH.INVALID_REQUEST_STATUS" or "Error.Validation" => StatusCodes.Status400BadRequest,
         "Court.NotFound" or "Court.BranchNotFound" => StatusCodes.Status404NotFound,
+        "Owner.NotFound" or "Owner.UserNotFound" => StatusCodes.Status404NotFound,
+        "Owner.AlreadyExists" or "Owner.TaxIdAlreadyExists" or "Owner.HasActiveBranches" => StatusCodes.Status409Conflict,
         "Customer.NotFound" => StatusCodes.Status404NotFound,
         "Customer.ProfileAlreadyExists" => StatusCodes.Status409Conflict,
         "Auth.CustomerRoleNotConfigured" or "Auth.DefaultMembershipNotConfigured" => StatusCodes.Status500InternalServerError,
