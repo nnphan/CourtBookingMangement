@@ -1,5 +1,6 @@
 namespace CourtBookingManagement.Application.Roles.Models.Responses;
 
+/// <summary>Role data, including its assigned permission catalog entries.</summary>
 public sealed class RoleResponse
 {
     public Guid Id { get; set; }
@@ -17,4 +18,9 @@ public sealed class RoleResponse
     public int PermissionCount { get; set; }
 
     public DateTime CreatedAt { get; set; }
+
+    public DateTime UpdatedAt { get; set; }
+
+    public IReadOnlyList<PermissionSummaryResponse> Permissions { get; set; } =
+        Array.Empty<PermissionSummaryResponse>();
 }

@@ -458,8 +458,32 @@ public sealed class AuthRegistrationTests
     private sealed class FakeRoleRepository : IRoleRepository
     {
         public Guid? RoleId { get; set; } = AuthRegistrationTests.RoleId;
+
         public Task<Guid?> GetRoleIdByCodeAsync(string roleCode, CancellationToken cancellationToken) => Task.FromResult(RoleId);
+
         public Task<PagedResult<RoleResponse>> SearchAsync(RoleSearchRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<RoleResponse?> GetByIdWithPermissionsAsync(Guid id, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<bool> ExistsByCodeAsync(string code, Guid? excludeId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<RoleWriteResult> CreateAsync(
+            CreateRoleRequest request,
+            Guid? actorId,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<RoleWriteResult> UpdateAsync(
+            Guid id,
+            UpdateRoleRequest request,
+            Guid? actorId,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<RoleDeleteStatus> DeleteAsync(Guid id, Guid? actorId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 
     private sealed class FakeUserRoleRepository : IUserRoleRepository

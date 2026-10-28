@@ -4,7 +4,7 @@ public sealed class RoleSearchRequest
 {
     public string? Keyword { get; set; }
 
-    public bool? IsActive { get; set; }
+    public bool? IsActive { get; set; } = true;
 
     public string SortBy { get; set; } = "latest";
 

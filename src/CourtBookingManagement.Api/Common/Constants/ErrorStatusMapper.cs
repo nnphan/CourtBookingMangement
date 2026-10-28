@@ -11,13 +11,15 @@ public static class ErrorStatusMapper
         "Auth.UserDisabled" or "Auth.EmailNotVerified" or "Auth.Unauthorized" => StatusCodes.Status403Forbidden,
         "NOTIFICATION.FORBIDDEN" => StatusCodes.Status403Forbidden,
         "NOTIFICATION.NOT_FOUND" => StatusCodes.Status404NotFound,
-        "User.NotFound" or "Role.NotFound" or "Branch.NotFound" or "PLAYER_MATCH.NOT_FOUND" or
+        "User.NotFound" or "Role.NotFound" or "Permission.NotFound" or "Branch.NotFound" or "PLAYER_MATCH.NOT_FOUND" or
         "PLAYER_MATCH.REQUEST_NOT_FOUND" or "PLAYER_MATCH.BOOKING_NOT_FOUND" or
         "PLAYER_MATCH.BRANCH_NOT_FOUND" or "PLAYER_MATCH.COURT_NOT_FOUND" or
         "PLAYER_MATCH.REQUEST_MISMATCH" => StatusCodes.Status404NotFound,
         "PLAYER_MATCH.INVALID_USER" => StatusCodes.Status401Unauthorized,
         "PLAYER_MATCH.NOT_HOST" => StatusCodes.Status403Forbidden,
         "User.EmailAlreadyExists" or "AUTH_EMAIL_ALREADY_EXISTS" or "AUTH_PHONE_ALREADY_EXISTS" or
+        "Permission.CodeAlreadyExists" or "Permission.InUse" or
+        "Role.CodeAlreadyExists" or "Role.InUse" or
         "PLAYER_MATCH.ALREADY_JOINED" or "PLAYER_MATCH.REQUEST_EXISTS" or "PLAYER_MATCH.DUPLICATE" or
         "PLAYER_MATCH.COURT_CONFLICT" or "PLAYER_MATCH.MATCH_FULL" or "PLAYER_MATCH.NOT_OPEN" or
         "PLAYER_MATCH.MATCH_EXPIRED" or "PLAYER_MATCH.REQUEST_STATE_CHANGED" or
