@@ -293,9 +293,53 @@ public sealed class CourtStatusRepository(ApplicationDbContext db, ISqlConnectio
         return new CourtStatusResponse(first.BranchId, first.BranchName!, date, first.OpenTime, first.CloseTime, courts, scheduleItems);
     }
 
-    public async Task<BookingDetailResponse?> GetBookingAsync(Guid id, CancellationToken ct) =>
-        await db.BookingDetails.AsNoTracking().Where(x => x.BookingId == id && x.Booking.IsActive)
-            .Select(x => new BookingDetailResponse(x.BookingId, x.Booking.BookingCode, x.Court.Name ?? x.Court.CourtNumber.ToString(), x.Booking.Customer.FullName, x.Booking.Customer.PhoneNumber, x.BookingDate, x.StartTime, x.EndTime, x.Booking.BookingType, x.Booking.PaymentMethod, x.Booking.Status, "UNPAID", x.Booking.TotalAmount, 0, x.Booking.TotalAmount, x.Booking.Notes)).SingleOrDefaultAsync(ct);
+    public async Task<BookingDetailResponse?> GetBookingAsync(Guid id, CancellationToken ct)
+    {
+        var booking = await db.BookingDetails.AsNoTracking()
+            .Where(x => x.BookingId == id && x.Booking.IsActive && x.Booking.DeletedAt == null)
+            .OrderBy(x => x.BookingDate)
+            .ThenBy(x => x.StartTime)
+            .Select(x => new BookingDetailResponse(
+                x.BookingId,
+                x.Booking.BookingCode,
+                x.Court.Name ?? x.Court.CourtNumber.ToString(),
+                x.Booking.Customer.FullName,
+                x.Booking.Customer.PhoneNumber,
+                x.BookingDate,
+                x.StartTime,
+                x.EndTime,
+                x.Booking.BookingType,
+                x.Booking.PaymentMethod,
+                x.Booking.Status,
+                "UNPAID",
+                x.Booking.TotalAmount,
+                0,
+                x.Booking.TotalAmount,
+                x.Booking.Notes ?? string.Empty))
+            .FirstOrDefaultAsync(ct);
+
+        if (booking is null)
+        {
+            return null;
+        }
+
+        var details = await db.BookingDetails.AsNoTracking()
+            .Where(detail => detail.BookingId == id)
+            .OrderBy(detail => detail.BookingDate)
+            .ThenBy(detail => detail.StartTime)
+            .Select(detail => new BookingReservationSummary(
+                detail.Id,
+                detail.CourtId,
+                detail.Court.Name ?? detail.Court.CourtNumber.ToString(),
+                detail.BookingDate,
+                detail.StartTime,
+                detail.EndTime,
+                detail.Status,
+                detail.PriceCharged))
+            .ToListAsync(ct);
+
+        return booking with { CourtCount = details.Select(detail => detail.CourtId).Distinct().Count(), Details = details };
+    }
 
     public Task<Guid?> GetBookingBranchIdAsync(Guid id, CancellationToken ct) =>
         db.Bookings.AsNoTracking().Where(x => x.Id == id && x.IsActive).Select(x => (Guid?)x.BranchId).SingleOrDefaultAsync(ct);

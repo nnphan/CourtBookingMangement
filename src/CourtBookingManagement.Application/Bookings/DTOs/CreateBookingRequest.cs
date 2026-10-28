@@ -1,16 +1,18 @@
 namespace CourtBookingManagement.Application.Bookings.DTOs;
 
-public sealed class CreateBookingRequest
+public class CreateBookingRequest
 {
-    public Guid BranchId { get; set; }
-    public Guid CourtId { get; set; }
-    public Guid? CustomerId { get; set; }
-    public string CustomerName { get; set; } = null!;
-    public string PhoneNumber { get; set; } = null!;
-    public DateOnly BookingDate { get; set; }
-    public string StartTime { get; set; }
-    public string EndTime { get; set; }
-    public string BookingType { get; set; } = null!;
-    public string PaymentMethod { get; set; } = null!;
-    public string? Note { get; set; }
+    public Guid BranchId { get; init; }
+    public string BookingType { get; init; } = string.Empty;
+    public string PaymentMethod { get; init; } = string.Empty;
+    public string? Notes { get; init; }
+    public IReadOnlyCollection<CreateBookingDetailRequest>? Details { get; init; } = Array.Empty<CreateBookingDetailRequest>();
+}
+
+public sealed class CreateBookingDetailRequest
+{
+    public Guid CourtId { get; init; }
+    public DateOnly BookingDate { get; init; }
+    public TimeOnly StartTime { get; init; }
+    public TimeOnly EndTime { get; init; }
 }

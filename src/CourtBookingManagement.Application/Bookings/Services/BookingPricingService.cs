@@ -1,3 +1,4 @@
+using CourtBookingManagement.Application.Bookings.DTOs;
 using CourtBookingManagement.Application.Bookings.Interfaces;
 
 namespace CourtBookingManagement.Application.Bookings.Services;
@@ -11,12 +12,32 @@ public sealed class BookingPricingService(IBookingRepository repository) : IBook
         TimeOnly endTime,
         CancellationToken cancellationToken)
     {
+        var activePricings = await repository.GetActivePricingsAsync(branchId, cancellationToken);
+        return CalculatePrice(activePricings, bookingDate, startTime, endTime);
+    }
+
+    public async Task<IReadOnlyList<decimal>> CalculatePricesAsync(
+        Guid branchId,
+        IReadOnlyList<BookingPricingRequestDetail> details,
+        CancellationToken cancellationToken)
+    {
+        var activePricings = await repository.GetActivePricingsAsync(branchId, cancellationToken);
+        return details
+            .Select(detail => CalculatePrice(activePricings, detail.BookingDate, detail.StartTime, detail.EndTime))
+            .ToArray();
+    }
+
+    private static decimal CalculatePrice(
+        IReadOnlyList<BranchPricingDto> activePricings,
+        DateOnly bookingDate,
+        TimeOnly startTime,
+        TimeOnly endTime)
+    {
         if (startTime >= endTime)
         {
             throw new BookingPricingException("Booking end time must be later than start time.");
         }
 
-        var activePricings = await repository.GetActivePricingsAsync(branchId, cancellationToken);
         if (activePricings.Count == 0)
         {
             throw new BookingPricingException("Branch pricing configuration not found.");

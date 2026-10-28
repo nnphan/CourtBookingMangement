@@ -3,6 +3,57 @@
 @matchId = 019a2e4b-0000-7000-8000-000000000001
 @accessToken = replace-with-jwt
 
+### Create one authenticated booking with multiple courts
+POST {{CourtBookingManagement.Api_HostAddress}}/api/bookings
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "branchId": "e376181a-c1ea-4232-b29a-de1a5d222b90",
+  "bookingType": "FIXED",
+  "paymentMethod": "CASH",
+  "notes": "",
+  "details": [
+    {
+      "courtId": "019a2e4b-0000-7000-8000-000000000001",
+      "bookingDate": "2026-10-30",
+      "startTime": "18:00",
+      "endTime": "20:00"
+    },
+    {
+      "courtId": "019a2e4b-0000-7000-8000-000000000002",
+      "bookingDate": "2026-10-30",
+      "startTime": "18:00",
+      "endTime": "20:00"
+    }
+  ]
+}
+
+###
+
+### Create for an existing customer as authorized staff (requires booking.create)
+POST {{CourtBookingManagement.Api_HostAddress}}/api/bookings/staff
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "branchId": "e376181a-c1ea-4232-b29a-de1a5d222b90",
+  "bookingType": "FIXED",
+  "paymentMethod": "CASH",
+  "notes": "",
+  "customerId": "019a2e4b-0000-7000-8000-000000000003",
+  "details": [
+    {
+      "courtId": "019a2e4b-0000-7000-8000-000000000001",
+      "bookingDate": "2026-10-30",
+      "startTime": "18:00",
+      "endTime": "20:00"
+    }
+  ]
+}
+
+###
+
 ### Get pending join requests (host only)
 GET {{CourtBookingManagement.Api_HostAddress}}/api/player-matches/{{matchId}}/join-requests?status=PENDING
 Authorization: Bearer {{accessToken}}

@@ -26,6 +26,12 @@ public static class ErrorStatusMapper
         "PLAYER_MATCH.REQUEST_NOT_PENDING" or "PLAYER_MATCH.HOST_ALREADY_PARTICIPANT" or
         "PLAYER_MATCH.BOOKING_INVALID_STATUS" => StatusCodes.Status409Conflict,
         "PLAYER_MATCH.INVALID_REQUEST_STATUS" or "Error.Validation" => StatusCodes.Status400BadRequest,
+        "BOOKING_BRANCH_NOT_FOUND" or "BOOKING_COURT_NOT_FOUND" => StatusCodes.Status404NotFound,
+        "BOOKING_BRANCH_INACTIVE" or "BOOKING_CONFLICT" => StatusCodes.Status409Conflict,
+        "BOOKING_COURT_INACTIVE" or "BOOKING_COURT_WRONG_BRANCH" or
+        "BOOKING_INVALID_TIME_RANGE" or "BOOKING_OUTSIDE_OPERATING_HOURS" or
+        "BOOKING_DUPLICATE_DETAIL" or "BOOKING_REQUEST_DETAILS_OVERLAP" or
+        "BOOKING_DETAILS_LIMIT_EXCEEDED" or "BOOKING_PRICING_NOT_FOUND" => StatusCodes.Status400BadRequest,
         "Court.NotFound" or "Court.BranchNotFound" => StatusCodes.Status404NotFound,
         "Owner.NotFound" or "Owner.UserNotFound" => StatusCodes.Status404NotFound,
         "Owner.AlreadyExists" or "Owner.TaxIdAlreadyExists" or "Owner.HasActiveBranches" => StatusCodes.Status409Conflict,

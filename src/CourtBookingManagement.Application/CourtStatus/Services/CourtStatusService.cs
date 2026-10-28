@@ -52,6 +52,12 @@ public sealed class CourtStatusService(
         if (!validation.IsValid) return CourtStatusErrors.Invalid(string.Join("; ", validation.Errors.Select(x => x.ErrorMessage)));
         var current = await repository.GetBookingAsync(id, ct);
         if (current is null) return CourtStatusErrors.NotFound("Booking", id);
+        if (current.Details.Count > 1)
+        {
+            return Result.Failure<BookingDetailResponse>(new Error(
+                "BOOKING_CONFLICT",
+                "Bookings with multiple court reservations cannot be updated as a single reservation."));
+        }
         var branchId = await repository.GetBookingBranchIdAsync(id, ct);
         if (branchId is null || !await repository.CourtExistsAsync(branchId.Value, request.CourtId, ct)) return CourtStatusErrors.NotFound("Court", request.CourtId);
         if (await repository.HasOverlappingBookingAsync(request.CourtId, request.BookingDate, request.StartTime, request.EndTime, id, ct)) return CourtStatusErrors.Conflict("The court is not available for the requested time.");

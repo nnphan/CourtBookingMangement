@@ -1,3 +1,4 @@
+using CourtBookingManagement.Api.Common.Constants;
 using CourtBookingManagement.Api.Common.Responses;
 using CourtBookingManagement.Application.Bookings.DTOs;
 using CourtBookingManagement.Application.Bookings.Interfaces;
@@ -18,12 +19,35 @@ public sealed class BookingsController(ICourtStatusService courtStatusService, I
     public async Task<IActionResult> Get(Guid id, CancellationToken ct) => FromResult(await courtStatusService.GetBookingAsync(id, ct));
 
     [HttpPost]
-    //[Permission("booking.create")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<BookingResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Create([FromBody] BookingCreateRequest request, CancellationToken ct)
     {
         var result = await bookingService.CreateAsync(request, ct);
         return result.IsSuccess
-            ? Created(result.Value, nameof(Get), new { id = result.Value.BookingId }, "Booking created successfully.")
+            ? Created(result.Value, nameof(Get), new { id = result.Value.Id }, "Booking created successfully.")
+            : Error(result.Error);
+    }
+
+    [HttpPost("staff")]
+    [Permission(Permissions.BookingCreate)]
+    [ProducesResponseType(typeof(ApiResponse<BookingResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> CreateForStaff(
+        [FromBody] CreateStaffBookingRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await bookingService.CreateForStaffAsync(request, cancellationToken);
+        return result.IsSuccess
+            ? Created(result.Value, nameof(Get), new { id = result.Value.Id }, "Booking created successfully.")
             : Error(result.Error);
     }
 

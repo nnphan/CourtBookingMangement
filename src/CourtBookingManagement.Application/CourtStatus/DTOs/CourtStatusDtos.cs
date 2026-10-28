@@ -92,7 +92,21 @@ public sealed record BookingDetailResponse(
     Guid BookingId, string BookingCode, string CourtName, string CustomerName, string PhoneNumber,
     DateOnly BookingDate, TimeOnly StartTime, TimeOnly EndTime, string BookingType,
     string PaymentMethod, string BookingStatus, string PaymentStatus, decimal TotalAmount, decimal PaidAmount,
-    decimal RemainingAmount, string Notes);
+    decimal RemainingAmount, string Notes)
+{
+    public int CourtCount { get; init; } = 1;
+    public IReadOnlyList<BookingReservationSummary> Details { get; init; } = Array.Empty<BookingReservationSummary>();
+}
+
+public sealed record BookingReservationSummary(
+    Guid Id,
+    Guid CourtId,
+    string CourtName,
+    DateOnly BookingDate,
+    TimeOnly StartTime,
+    TimeOnly EndTime,
+    string Status,
+    decimal PriceCharged);
 
 public sealed record CreateBookingRequest(
     Guid BranchId, Guid CourtId, Guid CustomerId, DateOnly BookingDate, TimeOnly StartTime,
