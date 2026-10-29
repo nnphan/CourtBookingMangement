@@ -126,27 +126,43 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
             );
             """, new { CourtId = courtId, BookingDate = bookingDate, StartTime = startTime, EndTime = endTime }, cancellationToken);
 
-    public async Task<BookingDetailResponse?> CreateBookingAsync(CreateBookingRequest request, decimal calculatedPrice, CancellationToken cancellationToken)
+    public async Task<CreateBookingResponse?> CreateBookingAsync(CreateBookingRequest request, IReadOnlyList<decimal> detailPrices, Guid? knownCustomerId, CancellationToken cancellationToken)
     {
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
         using var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
 
-        await connection.ExecuteAsync(new CommandDefinition(
-            "SELECT pg_advisory_xact_lock(hashtextextended(@LockKey, 0));",
-            new { LockKey = $"{request.CourtId}:{request.BookingDate:yyyy-MM-dd}" },
-            transaction,
-            cancellationToken: cancellationToken));
+        // Lock in a stable order so concurrent multi-court requests cannot deadlock.
+        var lockKeys = request.Details
+            .Select(detail => $"{detail.CourtId}:{detail.BookingDate:yyyy-MM-dd}")
+            .Distinct()
+            .OrderBy(key => key, StringComparer.Ordinal);
+        foreach (var lockKey in lockKeys)
+        {
+            await connection.ExecuteAsync(new CommandDefinition(
+                "SELECT pg_advisory_xact_lock(hashtextextended(@LockKey, 0));",
+                new { LockKey = lockKey },
+                transaction,
+                cancellationToken: cancellationToken));
+        }
 
         var branchExists = await connection.ExecuteScalarAsync<bool>(new CommandDefinition(
             "SELECT EXISTS (SELECT 1 FROM core.branches WHERE id = @BranchId AND is_active AND deleted_at IS NULL);",
             new { request.BranchId }, transaction, cancellationToken: cancellationToken));
-        var lockedCourtId = await connection.ExecuteScalarAsync<Guid?>(new CommandDefinition(
-            "SELECT id FROM core.courts WHERE id = @CourtId AND branch_id = @BranchId AND is_active AND deleted_at IS NULL FOR UPDATE;",
-            new { request.CourtId, request.BranchId }, transaction, cancellationToken: cancellationToken));
-        if (!branchExists || lockedCourtId is null)
+        if (!branchExists)
         {
             return null;
+        }
+
+        foreach (var courtId in request.Details.Select(detail => detail.CourtId).Distinct().OrderBy(id => id))
+        {
+            var lockedCourtId = await connection.ExecuteScalarAsync<Guid?>(new CommandDefinition(
+                "SELECT id FROM core.courts WHERE id = @CourtId AND branch_id = @BranchId AND is_active AND deleted_at IS NULL FOR UPDATE;",
+                new { CourtId = courtId, request.BranchId }, transaction, cancellationToken: cancellationToken));
+            if (lockedCourtId is null)
+            {
+                return null;
+            }
         }
 
         //var overlaps = await HasBookingOverlapAsync(connection, transaction, request, cancellationToken);
@@ -155,14 +171,16 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
         //    return null;
         //}
 
-        var customerId = await ResolveCustomerAsync(connection, transaction, request, cancellationToken);
+        var customerId = knownCustomerId
+            ?? await ResolveCustomerAsync(connection, transaction, request, cancellationToken);
         if (customerId is null)
         {
             return null;
         }
 
         var bookingId = Guid.NewGuid();
-        var bookingType = BookingTypes.All.Single(value => string.Equals(value, request.BookingType, StringComparison.OrdinalIgnoreCase));
+        var bookingType = BookingTypes.AllowedForBookings.Single(value => string.Equals(value, request.BookingType, StringComparison.OrdinalIgnoreCase));
+        var totalAmount = detailPrices.Sum();
         const string insertBookingSql = """
             INSERT INTO booking.bookings
                 (id, booking_code, customer_id, branch_id, status, booking_type, payment_method,
@@ -172,7 +190,7 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
                  CONCAT('BK', TO_CHAR(clock_timestamp(), 'YYMMDDHH24MISSMS'),
                      UPPER(SUBSTRING(REPLACE(gen_random_uuid()::text, '-', '') FROM 1 FOR 5))),
                  @CustomerId, @BranchId, 'confirmed', @BookingType, @PaymentMethod,
-                 @CalculatedPrice, 0, @CalculatedPrice, @Note, TRUE, NOW(), NOW());
+                 @TotalAmount, 0, @TotalAmount, @Notes, TRUE, NOW(), NOW());
             """;
         await connection.ExecuteAsync(new CommandDefinition(insertBookingSql, new
         {
@@ -181,8 +199,8 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
             request.BranchId,
             BookingType = bookingType,
             request.PaymentMethod,
-            request.Note,
-            CalculatedPrice = calculatedPrice
+            request.Notes,
+            TotalAmount = totalAmount
         }, transaction, cancellationToken: cancellationToken));
 
         const string insertDetailSql = """
@@ -208,21 +226,25 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
                 @EndTime,
                 NULL,
                 'reserved',
-                @CalculatedPrice
+                @Price
             );
             """;
-        await connection.ExecuteAsync(new CommandDefinition(insertDetailSql, new
+        for (var i = 0; i < request.Details.Count; i++)
         {
-            DetailId = Guid.NewGuid(),
-            BookingId = bookingId,
-            request.CourtId,
-            request.BookingDate,
-            StartTime = TimeOnly.Parse(request.StartTime),
-            EndTime = TimeOnly.Parse(request.EndTime),
-            CalculatedPrice = calculatedPrice
-        }, transaction, cancellationToken: cancellationToken));
+            var detail = request.Details[i];
+            await connection.ExecuteAsync(new CommandDefinition(insertDetailSql, new
+            {
+                DetailId = Guid.NewGuid(),
+                BookingId = bookingId,
+                detail.CourtId,
+                detail.BookingDate,
+                StartTime = TimeOnly.Parse(detail.StartTime),
+                EndTime = TimeOnly.Parse(detail.EndTime),
+                Price = detailPrices[i]
+            }, transaction, cancellationToken: cancellationToken));
+        }
 
-        var response = await GetBookingDetailAsync(connection, transaction, bookingId, cancellationToken);
+        var response = await GetCreatedBookingAsync(connection, transaction, bookingId, cancellationToken);
         if (response is null)
         {
             return null;
@@ -284,7 +306,7 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
         }, transaction, cancellationToken: cancellationToken));
     }
 
-    private static async Task<bool> HasBookingOverlapAsync(IDbConnection connection, IDbTransaction transaction, CreateBookingRequest request, CancellationToken cancellationToken) =>
+    private static async Task<bool> HasBookingOverlapAsync(IDbConnection connection, IDbTransaction transaction, CreateBookingDetailRequest detail, CancellationToken cancellationToken) =>
         await connection.ExecuteScalarAsync<bool>(new CommandDefinition("""
             SELECT EXISTS (
                 SELECT 1
@@ -298,7 +320,46 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
                   AND @StartTime < bd.end_time ::time
                   AND @EndTime > bd.start_time ::time
             );
-            """, new { request.CourtId, request.BookingDate, StartTime = TimeOnly.Parse(request.StartTime), EndTime = TimeOnly.Parse(request.EndTime)  }, transaction, cancellationToken: cancellationToken));
+            """, new { detail.CourtId, detail.BookingDate, StartTime = TimeOnly.Parse(detail.StartTime), EndTime = TimeOnly.Parse(detail.EndTime) }, transaction, cancellationToken: cancellationToken));
+
+    private static async Task<CreateBookingResponse?> GetCreatedBookingAsync(IDbConnection connection, IDbTransaction transaction, Guid bookingId, CancellationToken cancellationToken)
+    {
+        var booking = await connection.QuerySingleOrDefaultAsync<CreateBookingResponse>(new CommandDefinition("""
+            SELECT b.id AS BookingId,
+                   b.booking_code AS BookingCode,
+                   b.branch_id AS BranchId,
+                   cu.id AS CustomerId,
+                   cu.full_name AS CustomerName,
+                   cu.phone_number AS PhoneNumber,
+                   UPPER(b.booking_type) AS BookingType,
+                   UPPER(b.status) AS BookingStatus,
+                   b.payment_method AS PaymentMethod,
+                   b.total_amount AS TotalAmount,
+                   b.notes AS Notes
+            FROM booking.bookings b
+            JOIN customer.customers cu ON cu.id = b.customer_id
+            WHERE b.id = @BookingId AND b.is_active AND b.deleted_at IS NULL;
+            """, new { BookingId = bookingId }, transaction, cancellationToken: cancellationToken));
+        if (booking is null)
+        {
+            return null;
+        }
+
+        var details = await connection.QueryAsync<CreateBookingDetailResponse>(new CommandDefinition("""
+            SELECT bd.court_id AS CourtId,
+                   COALESCE(NULLIF(c.name, ''), c.court_number::text) AS CourtName,
+                   bd.booking_date AS BookingDate,
+                   bd.start_time AS StartTime,
+                   bd.end_time AS EndTime,
+                   bd.price_charged AS Price
+            FROM booking.booking_details bd
+            JOIN core.courts c ON c.id = bd.court_id
+            WHERE bd.booking_id = @BookingId
+            ORDER BY bd.booking_date, bd.start_time, CourtName;
+            """, new { BookingId = bookingId }, transaction, cancellationToken: cancellationToken));
+        booking.Details = details.AsList();
+        return booking;
+    }
 
     private static async Task<BookingDetailResponse?> GetBookingDetailAsync(IDbConnection connection, IDbTransaction? transaction, Guid bookingId, CancellationToken cancellationToken) =>
         await connection.QuerySingleOrDefaultAsync<BookingDetailResponse>(new CommandDefinition("""

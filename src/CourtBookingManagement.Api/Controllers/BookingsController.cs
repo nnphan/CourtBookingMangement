@@ -18,7 +18,11 @@ public sealed class BookingsController(ICourtStatusService courtStatusService, I
     public async Task<IActionResult> Get(Guid id, CancellationToken ct) => FromResult(await courtStatusService.GetBookingAsync(id, ct));
 
     [HttpPost]
-    //[Permission("booking.create")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<CreateBookingResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Create([FromBody] BookingCreateRequest request, CancellationToken ct)
     {
         var result = await bookingService.CreateAsync(request, ct);

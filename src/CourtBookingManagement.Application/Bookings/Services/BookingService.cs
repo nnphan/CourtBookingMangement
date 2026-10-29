@@ -79,55 +79,86 @@ public sealed class BookingService(
         });
     }
 
-    public async Task<Result<BookingDetailResponse>> CreateAsync(CreateBookingRequest request, CancellationToken cancellationToken)
+    public async Task<Result<CreateBookingResponse>> CreateAsync(CreateBookingRequest request, CancellationToken cancellationToken)
     {
         var validation = await validator.ValidateAsync(request, cancellationToken);
         if (!validation.IsValid)
         {
-            return Result.Failure<BookingDetailResponse>(new Error(
+            return Result.Failure<CreateBookingResponse>(new Error(
                 "CourtStatus.Invalid",
                 string.Join("; ", validation.Errors.Select(error => error.ErrorMessage))));
         }
 
+        // A logged-in user books under their own customer profile; guests are matched/created by phone number.
+        Guid? knownCustomerId = null;
+        if (currentUserService.UserId is Guid userId && userId != Guid.Empty)
+        {
+            knownCustomerId = await repository.GetCustomerIdByUserIdAsync(userId, cancellationToken);
+        }
+
+        if (knownCustomerId is null
+            && (string.IsNullOrWhiteSpace(request.CustomerName) || string.IsNullOrWhiteSpace(request.PhoneNumber)))
+        {
+            return Result.Failure<CreateBookingResponse>(new Error(
+                "CourtStatus.Invalid",
+                "Customer name and phone number are required for guest bookings."));
+        }
+
         if (!await repository.ExistsBranchAsync(request.BranchId, cancellationToken))
         {
-            return Result.Failure<BookingDetailResponse>(new Error("CourtStatus.NotFound", "Branch not found."));
+            return Result.Failure<CreateBookingResponse>(new Error("CourtStatus.NotFound", "Branch not found."));
         }
 
-        if (!await repository.ExistsCourtAsync(request.CourtId, cancellationToken)
-            || !await repository.CourtBelongsToBranchAsync(request.CourtId, request.BranchId, cancellationToken))
+        var slots = request.Details
+            .Select(detail => (detail.CourtId, detail.BookingDate, Start: TimeOnly.Parse(detail.StartTime), End: TimeOnly.Parse(detail.EndTime)))
+            .ToArray();
+
+        for (var i = 0; i < slots.Length; i++)
         {
-            return Result.Failure<BookingDetailResponse>(new Error("CourtStatus.NotFound", "Court not found in the specified branch."));
+            for (var j = i + 1; j < slots.Length; j++)
+            {
+                if (slots[i].CourtId == slots[j].CourtId
+                    && slots[i].BookingDate == slots[j].BookingDate
+                    && slots[i].Start < slots[j].End
+                    && slots[i].End > slots[j].Start)
+                {
+                    return Result.Failure<CreateBookingResponse>(new Error("CourtStatus.Invalid", "Booking details contain overlapping time slots for the same court."));
+                }
+            }
         }
 
-        if (await repository.HasBookingOverlapAsync(
-                request.CourtId,
-                request.BookingDate,
-                TimeOnly.Parse(request.StartTime),
-                TimeOnly.Parse(request.EndTime),
-                cancellationToken))
+        var detailPrices = new List<decimal>(slots.Length);
+        foreach (var slot in slots)
         {
-            return Result.Failure<BookingDetailResponse>(new Error("CourtStatus.Conflict", "The court is not available for the requested time."));
+            if (!await repository.ExistsCourtAsync(slot.CourtId, cancellationToken)
+                || !await repository.CourtBelongsToBranchAsync(slot.CourtId, request.BranchId, cancellationToken))
+            {
+                return Result.Failure<CreateBookingResponse>(new Error("CourtStatus.NotFound", "Court not found in the specified branch."));
+            }
+
+            if (await repository.HasBookingOverlapAsync(slot.CourtId, slot.BookingDate, slot.Start, slot.End, cancellationToken))
+            {
+                return Result.Failure<CreateBookingResponse>(new Error("CourtStatus.Conflict", "The court is not available for the requested time."));
+            }
+
+            try
+            {
+                detailPrices.Add(await bookingPricingService.CalculatePriceAsync(
+                    request.BranchId,
+                    slot.BookingDate,
+                    slot.Start,
+                    slot.End,
+                    cancellationToken));
+            }
+            catch (BookingPricingException exception)
+            {
+                return Result.Failure<CreateBookingResponse>(new Error("Booking.PricingConfiguration", exception.Message));
+            }
         }
 
-        decimal calculatedPrice;
-        try
-        {
-            calculatedPrice = await bookingPricingService.CalculatePriceAsync(
-                request.BranchId,
-                request.BookingDate,
-                TimeOnly.Parse(request.StartTime),
-                TimeOnly.Parse(request.EndTime),
-                cancellationToken);
-        }
-        catch (BookingPricingException exception)
-        {
-            return Result.Failure<BookingDetailResponse>(new Error("Booking.PricingConfiguration", exception.Message));
-        }
-
-        var booking = await repository.CreateBookingAsync(request, calculatedPrice, cancellationToken);
+        var booking = await repository.CreateBookingAsync(request, detailPrices, knownCustomerId, cancellationToken);
         return booking is null
-            ? Result.Failure<BookingDetailResponse>(new Error("CourtStatus.Conflict", "The court is not available for the requested time."))
+            ? Result.Failure<CreateBookingResponse>(new Error("CourtStatus.Conflict", "The court is not available for the requested time."))
             : Result.Success(booking);
     }
 }

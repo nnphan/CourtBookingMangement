@@ -17,8 +17,14 @@ public sealed class BookingEnumSchemaFilter : ISchemaFilter
         switch (context.Type.Name)
         {
             case nameof(CreateCourtBookingRequest):
-            case nameof(CreateBookingRequest):
             case nameof(UpdateBookingRequest):
+                ApplyValues(schema, "BookingType", BookingTypes.All, "Fixed");
+                break;
+            case nameof(CreateBookingRequest) when context.Type == typeof(CourtBookingManagement.Application.Bookings.DTOs.CreateBookingRequest):
+                ApplyValues(schema, "BookingType", BookingTypes.AllowedForBookings, "MULTI_COURT");
+                ApplyValues(schema, "PaymentMethod", PaymentMethods.All, "Cash");
+                break;
+            case nameof(CreateBookingRequest):
                 ApplyValues(schema, "BookingType", BookingTypes.All, "Fixed");
                 break;
         }
