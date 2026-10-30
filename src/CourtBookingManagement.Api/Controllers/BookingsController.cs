@@ -7,6 +7,7 @@ using CourtBookingManagement.Infrastructure.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using BookingCreateRequest = CourtBookingManagement.Application.Bookings.DTOs.CreateBookingRequest;
+using BookingDetailResponseDto = CourtBookingManagement.Application.Bookings.DTOs.BookingDetailResponse;
 
 namespace CourtBookingManagement.Api.Controllers;
 
@@ -15,7 +16,10 @@ namespace CourtBookingManagement.Api.Controllers;
 public sealed class BookingsController(ICourtStatusService courtStatusService, IBookingService bookingService) : ApiControllerBase
 {
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> Get(Guid id, CancellationToken ct) => FromResult(await courtStatusService.GetBookingAsync(id, ct));
+    [ProducesResponseType(typeof(ApiResponse<BookingDetailResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Get(Guid id, CancellationToken ct) =>
+        FromResult(await bookingService.GetByIdAsync(id, ct), "Booking retrieved successfully.");
 
     [HttpPost]
     [AllowAnonymous]

@@ -257,7 +257,53 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
     public async Task<BookingDetailResponse?> GetBookingDetailAsync(Guid bookingId, CancellationToken cancellationToken)
     {
         using var connection = connectionFactory.CreateConnection();
-        return await GetBookingDetailAsync(connection, null, bookingId, cancellationToken);
+        using var reader = await connection.QueryMultipleAsync(new CommandDefinition("""
+            SELECT b.id AS BookingId,
+                   b.booking_code AS BookingCode,
+                   b.branch_id AS BranchId,
+                   br.name AS BranchName,
+                   cu.id AS CustomerId,
+                   COALESCE(cu.full_name, '') AS CustomerName,
+                   COALESCE(cu.phone_number, '') AS PhoneNumber,
+                   UPPER(b.booking_type) AS BookingType,
+                   UPPER(b.status) AS BookingStatus,
+                   UPPER(b.payment_method) AS PaymentMethod,
+                   CASE WHEN b.paid_amount >= b.total_amount THEN 'PAID' ELSE 'UNPAID' END AS PaymentStatus,
+                   b.total_amount AS TotalAmount,
+                   b.paid_amount AS PaidAmount,
+                   b.notes AS Notes
+            FROM booking.bookings b
+            INNER JOIN core.branches br ON br.id = b.branch_id
+            LEFT JOIN customer.customers cu ON cu.id = b.customer_id
+            WHERE b.id = @BookingId
+              AND b.is_active = TRUE
+              AND b.deleted_at IS NULL;
+
+            SELECT bd.id AS BookingDetailId,
+                   bd.court_id AS CourtId,
+                   COALESCE(NULLIF(c.name, ''), c.court_number::text) AS CourtName,
+                   bd.booking_date AS BookingDate,
+                   bd.start_time AS StartTime,
+                   bd.end_time AS EndTime,
+                   bd.price_charged AS Price
+            FROM booking.booking_details bd
+            INNER JOIN core.courts c ON c.id = bd.court_id
+            WHERE bd.booking_id = @BookingId
+            ORDER BY bd.booking_date ASC,
+                     bd.start_time ASC,
+                     CourtName ASC,
+                     bd.id ASC;
+            """, new { BookingId = bookingId }, cancellationToken: cancellationToken));
+
+        var booking = await reader.ReadSingleOrDefaultAsync<BookingDetailResponse>();
+        var details = (await reader.ReadAsync<BookingCourtItemResponse>()).AsList();
+        if (booking is null)
+        {
+            return null;
+        }
+
+        booking.Details = details;
+        return booking;
     }
 
     private async Task<Guid?> ResolveCustomerAsync(IDbConnection connection, IDbTransaction transaction, CreateBookingRequest request, CancellationToken cancellationToken)
@@ -360,28 +406,6 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
         booking.Details = details.AsList();
         return booking;
     }
-
-    private static async Task<BookingDetailResponse?> GetBookingDetailAsync(IDbConnection connection, IDbTransaction? transaction, Guid bookingId, CancellationToken cancellationToken) =>
-        await connection.QuerySingleOrDefaultAsync<BookingDetailResponse>(new CommandDefinition("""
-            SELECT b.id AS BookingId,
-                   b.branch_id AS BranchId,
-                   bd.court_id AS CourtId,
-                   COALESCE(NULLIF(c.name, ''), c.court_number::text) AS CourtName,
-                   cu.id AS CustomerId,
-                   cu.full_name AS CustomerName,
-                   cu.phone_number AS PhoneNumber,
-                   bd.booking_date AS BookingDate,
-                   bd.start_time AS StartTime,
-                   bd.end_time AS EndTime,
-                   UPPER(b.booking_type) AS BookingType,
-                   UPPER(b.status) AS BookingStatus,
-                   b.payment_method AS PaymentMethod
-            FROM booking.bookings b
-            JOIN booking.booking_details bd ON bd.booking_id = b.id
-            JOIN core.courts c ON c.id = bd.court_id
-            JOIN customer.customers cu ON cu.id = b.customer_id
-            WHERE b.id = @BookingId AND b.is_active AND b.deleted_at IS NULL;
-            """, new { BookingId = bookingId }, transaction, cancellationToken: cancellationToken));
 
     private async Task<T> ScalarAsync<T>(string sql, object parameters, CancellationToken cancellationToken)
     {

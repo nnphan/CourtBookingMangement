@@ -14,6 +14,16 @@ public sealed class BookingService(
     IValidator<CalculateBookingPriceRequest> calculatePriceValidator,
     ICurrentUserService currentUserService) : IBookingService
 {
+    public async Task<Result<BookingDetailResponse>> GetByIdAsync(
+        Guid bookingId,
+        CancellationToken cancellationToken)
+    {
+        var booking = await repository.GetBookingDetailAsync(bookingId, cancellationToken);
+        return booking is null
+            ? Result.Failure<BookingDetailResponse>(new Error("Booking.NotFound", "Booking not found."))
+            : Result.Success(booking);
+    }
+
     public async Task<Result<IReadOnlyList<MyBookingResponse>>> GetMyBookingsAsync( 
         CancellationToken cancellationToken)
     {
@@ -146,7 +156,7 @@ public sealed class BookingService(
                 detailPrices.Add(await bookingPricingService.CalculatePriceAsync(
                     request.BranchId,
                     slot.BookingDate,
-                    slot.Start,
+                    slot.Start, 
                     slot.End,
                     cancellationToken));
             }
