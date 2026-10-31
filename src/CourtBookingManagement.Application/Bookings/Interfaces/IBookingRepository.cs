@@ -12,6 +12,21 @@ public interface IBookingRepository
     Task<bool> HasBookingOverlapAsync(Guid courtId, DateOnly bookingDate, TimeOnly startTime, TimeOnly endTime, CancellationToken cancellationToken);
     Task<CreateBookingResponse?> CreateBookingAsync(CreateBookingRequest request, IReadOnlyList<decimal> detailPrices, Guid? knownCustomerId, CancellationToken cancellationToken);
     Task<BookingDetailResponse?> GetBookingDetailAsync(Guid bookingId, CancellationToken cancellationToken);
+    Task<BookingStatusProjection?> GetBookingStatusAsync(Guid bookingId, CancellationToken cancellationToken);
+    Task<UpdateBookingStatusResponse?> UpdateBookingStatusAsync(
+        Guid bookingId,
+        string currentStatus,
+        string newStatus,
+        Guid? updatedBy,
+        CancellationToken cancellationToken);
     Task<Guid?> GetCustomerIdByUserIdAsync(Guid userId, CancellationToken cancellationToken);
     Task<IReadOnlyList<MyBookingResponse>> GetMyBookingsAsync(Guid customerId, CancellationToken cancellationToken);
+}
+
+public sealed class BookingStatusProjection
+{
+    public Guid BookingId { get; init; }
+    public string BookingCode { get; init; } = string.Empty;
+    public string Status { get; init; } = string.Empty;
+    public DateTimeOffset UpdatedAt { get; init; }
 }

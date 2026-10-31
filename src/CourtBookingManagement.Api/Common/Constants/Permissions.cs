@@ -6,5 +6,6 @@ public static class Permissions
     public const string BranchCreate = "branch.create";
     public const string BranchView = "branch.view";
     public const string BranchUpdate = "branch.update";
+    public const string BookingStatusUpdate = "booking.status.update";
     public const string FileUpload = "file.upload";
 }

@@ -1,4 +1,5 @@
 using CourtBookingManagement.Api.Common.Responses;
+using CourtBookingManagement.Api.Common.Constants;
 using CourtBookingManagement.Application.Bookings.DTOs;
 using CourtBookingManagement.Application.Bookings.Interfaces;
 using CourtBookingManagement.Application.CourtStatus.DTOs;
@@ -20,6 +21,21 @@ public sealed class BookingsController(ICourtStatusService courtStatusService, I
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Get(Guid id, CancellationToken ct) =>
         FromResult(await bookingService.GetByIdAsync(id, ct), "Booking retrieved successfully.");
+
+    [HttpPatch("{id:guid}")]
+    //[Permission(Permissions.BookingStatusUpdate)]
+    [ProducesResponseType(typeof(ApiResponse<UpdateBookingStatusResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> UpdateStatus(
+        Guid id,
+        [FromBody] UpdateBookingStatusRequest request,
+        CancellationToken ct) =>
+        FromResult(
+            await bookingService.UpdateStatusAsync(id, request, ct),
+            "Booking status updated successfully.");
 
     [HttpPost]
     [AllowAnonymous]

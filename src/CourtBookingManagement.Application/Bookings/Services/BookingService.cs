@@ -3,7 +3,9 @@ using CourtBookingManagement.Application.Bookings.Interfaces;
 using CourtBookingManagement.Application.Auth.Interfaces;
 using CourtBookingManagement.Application.Common.Enums;
 using CourtBookingManagement.Domain.Abstractions;
+using CourtBookingManagement.Domain.Bookings;
 using FluentValidation;
+using Microsoft.Extensions.Logging;
 
 namespace CourtBookingManagement.Application.Bookings.Services;
 
@@ -12,7 +14,8 @@ public sealed class BookingService(
     IBookingPricingService bookingPricingService,
     IValidator<CreateBookingRequest> validator,
     IValidator<CalculateBookingPriceRequest> calculatePriceValidator,
-    ICurrentUserService currentUserService) : IBookingService
+    ICurrentUserService currentUserService,
+    ILogger<BookingService> logger) : IBookingService
 {
     public async Task<Result<BookingDetailResponse>> GetByIdAsync(
         Guid bookingId,
@@ -22,6 +25,80 @@ public sealed class BookingService(
         return booking is null
             ? Result.Failure<BookingDetailResponse>(new Error("Booking.NotFound", "Booking not found."))
             : Result.Success(booking);
+    }
+
+    public async Task<Result<UpdateBookingStatusResponse>> UpdateStatusAsync(
+        Guid bookingId,
+        UpdateBookingStatusRequest request,
+        CancellationToken cancellationToken)
+    {
+        var requestedStatus = BookingStatuses.Normalize(request.Status);
+        if (!BookingStatuses.IsSupported(requestedStatus))
+        {
+            return Result.Failure<UpdateBookingStatusResponse>(
+                new Error("Error.Validation", "The requested booking status is invalid."));
+        }
+
+        var current = await repository.GetBookingStatusAsync(bookingId, cancellationToken);
+        if (current is null)
+        {
+            return Result.Failure<UpdateBookingStatusResponse>(
+                new Error("Booking.NotFound", "Booking not found."));
+        }
+
+        var currentStatus = BookingStatuses.Normalize(current.Status);
+        if (currentStatus == requestedStatus)
+        {
+            return Result.Success(new UpdateBookingStatusResponse
+            {
+                BookingId = current.BookingId,
+                BookingCode = current.BookingCode,
+                Status = BookingStatuses.ToApiValue(currentStatus),
+                UpdatedAt = current.UpdatedAt
+            });
+        }
+
+        if (!BookingStatusTransitions.CanTransition(currentStatus, requestedStatus))
+        {
+            return Result.Failure<UpdateBookingStatusResponse>(
+                new Error("Booking.StatusConflict", $"Booking status cannot transition from {BookingStatuses.ToApiValue(currentStatus)} to {BookingStatuses.ToApiValue(requestedStatus)}."));
+        }
+
+        var updatedBy = currentUserService.IsAuthenticated ? currentUserService.UserId : null;
+        var updated = await repository.UpdateBookingStatusAsync(
+            bookingId,
+            currentStatus,
+            requestedStatus,
+            updatedBy,
+            cancellationToken);
+
+        if (updated is null)
+        {
+            logger.LogWarning(
+                "Booking status update lost an optimistic concurrency race. BookingId: {BookingId}, CurrentStatus: {CurrentStatus}, RequestedStatus: {RequestedStatus}, UpdatedBy: {UpdatedBy}",
+                bookingId,
+                currentStatus,
+                requestedStatus,
+                updatedBy);
+            return Result.Failure<UpdateBookingStatusResponse>(
+                new Error("Booking.StatusConflict", "The booking status was changed by another request. Refresh the booking and try again."));
+        }
+
+        logger.LogInformation(
+            "Booking status updated. BookingId: {BookingId}, BookingCode: {BookingCode}, PreviousStatus: {PreviousStatus}, NewStatus: {NewStatus}, UpdatedBy: {UpdatedBy}",
+            updated.BookingId,
+            updated.BookingCode,
+            currentStatus,
+            updated.Status,
+            updatedBy);
+
+        return Result.Success(new UpdateBookingStatusResponse
+            {
+                BookingId = updated.BookingId,
+                BookingCode = updated.BookingCode,
+                Status = BookingStatuses.ToApiValue(updated.Status),
+                UpdatedAt = updated.UpdatedAt
+            });
     }
 
     public async Task<Result<IReadOnlyList<MyBookingResponse>>> GetMyBookingsAsync( 

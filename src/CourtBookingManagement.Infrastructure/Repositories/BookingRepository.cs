@@ -3,6 +3,7 @@ using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.Bookings.DTOs;
 using CourtBookingManagement.Application.Bookings.Interfaces;
 using CourtBookingManagement.Application.Common.Enums;
+using CourtBookingManagement.Domain.Bookings;
 using Dapper;
 
 namespace CourtBookingManagement.Infrastructure.Repositories;
@@ -304,6 +305,53 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
 
         booking.Details = details;
         return booking;
+    }
+
+    public async Task<BookingStatusProjection?> GetBookingStatusAsync(Guid bookingId, CancellationToken cancellationToken)
+    {
+        using var connection = connectionFactory.CreateConnection();
+        return await connection.QuerySingleOrDefaultAsync<BookingStatusProjection>(new CommandDefinition("""
+            SELECT
+                id AS BookingId,
+                booking_code AS BookingCode,
+                LOWER(status) AS Status,
+                updated_at AS UpdatedAt
+            FROM booking.bookings
+            WHERE id = @BookingId
+              AND is_active = TRUE
+              AND deleted_at IS NULL;
+            """, new { BookingId = bookingId }, cancellationToken: cancellationToken));
+    }
+
+    public async Task<UpdateBookingStatusResponse?> UpdateBookingStatusAsync(
+        Guid bookingId,
+        string currentStatus,
+        string newStatus,
+        Guid? updatedBy,
+        CancellationToken cancellationToken)
+    {
+        using var connection = connectionFactory.CreateConnection();
+        return await connection.QuerySingleOrDefaultAsync<UpdateBookingStatusResponse>(new CommandDefinition("""
+            UPDATE booking.bookings
+            SET status = @NewStatus,
+                updated_at = NOW(),
+                updated_by = @UpdatedBy
+            WHERE id = @BookingId
+              AND LOWER(status) = @CurrentStatus
+              AND is_active = TRUE
+              AND deleted_at IS NULL
+            RETURNING
+                id AS BookingId,
+                booking_code AS BookingCode,
+                UPPER(status) AS Status,
+                updated_at AS UpdatedAt;
+            """, new
+        {
+            BookingId = bookingId,
+            CurrentStatus = currentStatus,
+            NewStatus = newStatus,
+            UpdatedBy = updatedBy
+        }, cancellationToken: cancellationToken));
     }
 
     private async Task<Guid?> ResolveCustomerAsync(IDbConnection connection, IDbTransaction transaction, CreateBookingRequest request, CancellationToken cancellationToken)
