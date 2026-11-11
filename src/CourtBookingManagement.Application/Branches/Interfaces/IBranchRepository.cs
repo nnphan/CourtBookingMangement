@@ -5,6 +5,10 @@ namespace CourtBookingManagement.Application.Branches.Interfaces;
 
 public interface IBranchRepository
 {
+    Task<IReadOnlyList<BranchLookupResponse>> GetBranchesForUserAsync(
+        Guid userId,
+        CancellationToken cancellationToken);
+
     Task<Guid?> GetOwnerIdForUserAsync(Guid userId, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<BranchLookupResponse>> GetBranchesByOwnerAsync(

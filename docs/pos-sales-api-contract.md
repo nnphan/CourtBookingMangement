@@ -28,7 +28,9 @@ Sales items and invoice items preserve product snapshots. Invoice header snapsho
 
 ## API contract status
 
-Catalog, inventory, and branch-scoped sales endpoints are implemented in the API. Frontend POS and management pages are outside this backend phase.
+Catalog, inventory, and branch-scoped sales endpoints are implemented in the API. The frontend provides branch-scoped POS checkout, product/category setup, inventory and receipt management, order history, reports, and invoice preview/download from the `/pos-sales` route.
+
+The existing `GET /api/branches/my-branches` lookup now returns active branches owned by the user or assigned through an active `BRANCH_ADMIN`/`STAFF` branch role; global administrators can select any active branch. This lets the shared branch selector serve the branch-scoped commerce pages without exposing unrelated branches to branch users.
 
 ### Product categories
 

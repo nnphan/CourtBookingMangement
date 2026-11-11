@@ -30,13 +30,7 @@ public sealed class BranchService(
             throw new ArgumentException("A valid user id is required.", nameof(userId));
         }
 
-        var ownerId = await branchRepository.GetOwnerIdForUserAsync(userId, cancellationToken);
-        if (ownerId is null)
-        {
-            return Array.Empty<BranchLookupResponse>();
-        }
-
-        return await branchRepository.GetBranchesByOwnerAsync(ownerId.Value, cancellationToken);
+        return await branchRepository.GetBranchesForUserAsync(userId, cancellationToken);
     }
 
     public Task<BranchAdminSearchResult> SearchAsync(

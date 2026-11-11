@@ -16,6 +16,59 @@ public sealed class BranchRepository(
     ApplicationDbContext dbContext,
     ISqlConnectionFactory sqlConnectionFactory) : IBranchRepository
 {
+    public async Task<IReadOnlyList<BranchLookupResponse>> GetBranchesForUserAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        const string sql = """
+            SELECT DISTINCT b.id AS Id,
+                   b.owner_id AS OwnerId,
+                   b.name AS Name
+            FROM core.branches b
+            WHERE b.is_active
+              AND b.deleted_at IS NULL
+              AND (
+                  EXISTS (
+                      SELECT 1
+                      FROM core.owners o
+                      WHERE o.id = b.owner_id
+                        AND o.user_id = @UserId
+                        AND o.is_active
+                        AND o.deleted_at IS NULL
+                  )
+                  OR EXISTS (
+                      SELECT 1
+                      FROM auth.branch_user_roles bur
+                      JOIN auth.roles r ON r.id = bur.role_id
+                      WHERE bur.branch_id = b.id
+                        AND bur.user_id = @UserId
+                        AND bur.is_active
+                        AND r.code IN ('BRANCH_ADMIN', 'STAFF')
+                        AND r.is_active
+                        AND r.deleted_at IS NULL
+                  )
+                  OR EXISTS (
+                      SELECT 1
+                      FROM auth.user_roles ur
+                      JOIN auth.roles r ON r.id = ur.role_id
+                      WHERE ur.user_id = @UserId
+                        AND r.code IN ('ADMIN', 'SUPER_ADMIN')
+                        AND r.is_active
+                        AND r.deleted_at IS NULL
+                  )
+              )
+            ORDER BY b.name ASC;
+            """;
+
+        using var connection = sqlConnectionFactory.CreateConnection();
+        var branches = await connection.QueryAsync<BranchLookupResponse>(new CommandDefinition(
+            sql,
+            new { UserId = userId },
+            cancellationToken: cancellationToken));
+
+        return branches.AsList();
+    }
+
     public async Task<IReadOnlyList<BranchLookupResponse>> GetBranchesByOwnerAsync(
         Guid ownerId,
         CancellationToken cancellationToken)
