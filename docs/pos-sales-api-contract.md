@@ -28,7 +28,7 @@ Sales items and invoice items preserve product snapshots. Invoice header snapsho
 
 ## API contract status
 
-Catalog and inventory endpoints are implemented in the API. Sales and frontend endpoints remain for their later phases.
+Catalog, inventory, and branch-scoped sales endpoints are implemented in the API. Frontend POS and management pages are outside this backend phase.
 
 ### Product categories
 
@@ -127,6 +127,31 @@ Goods receipt routes use the same branch-scoped inventory base:
 Draft bodies contain optional `supplierName`, `supplierReference`, `notes`, and `items` (`productId`, positive `quantity`, non-negative `unitCost`). Item quantities allow at most three decimal places and unit costs at most two. The service calculates line and receipt totals; clients do not submit totals. Only active inventory-tracked products configured for the branch may be received. Posting locks the draft and inventory rows in stable product-ID order, applies each stock increase, writes a `GOODS_RECEIPT` movement, and changes the receipt to `POSTED` in one database transaction. Drafts can be edited or cancelled; posted receipts cannot be edited or cancelled, preserving the stock audit trail.
 
 Inventory error codes include `Inventory.ReceiptNotFound`, `Inventory.ReceiptNotDraft`, `Inventory.ProductNotConfigured`, `Inventory.InsufficientStock`, `Inventory.QuantityLimitExceeded`, `Inventory.InvalidRequest`, `Inventory.InvalidPagination`, and `Inventory.InvalidFilter`. All inventory and receipt queries and mutations include the route's `branchId` in repository predicates, and each service operation checks branch-level permission before accessing data.
+
+### POS sales, reports, and invoices
+
+Base route: `/api/branches/{branchId}/sales`
+
+| Method | Route | Permission | Result |
+|---|---|---|---|
+| GET | `/orders` | `sales.view` | Paged branch order list; accepts `search`, `status`, `from`, `to`, `page`, and `pageSize` |
+| POST | `/orders` | `sales.create` | Complete checkout and return the order with `201 Created` and a location for the order |
+| GET | `/orders/{orderId}` | `sales.view` | Order detail with immutable item snapshots |
+| POST | `/orders/{orderId}/cancel` | `sales.cancel` + `sales.refund` | Cancel a completed order, return tracked stock, and record a manual full refund |
+| GET | `/report` | `sales.report.view` | Gross/refund/net totals, daily totals, and the top 10 checkout products for an inclusive date range |
+| GET | `/invoices/{invoiceId}` | `sales.invoice.view` | Immutable invoice header and item snapshot |
+| GET | `/invoices/{invoiceId}/preview` | `sales.invoice.view` | Server-generated PDF with `Content-Type: application/pdf` and inline `Content-Disposition` |
+| GET | `/invoices/{invoiceId}/download` | `sales.invoice.print` | Server-generated PDF with attachment `Content-Disposition` for download/printing |
+
+Checkout accepts `customerId` and `bookingId` as optional UUIDs, `paymentMethodCode` (`CASH`, `MOMO`, or `BANK_TRANSFER`), optional `notes`, and `items` containing only `productId` and positive `quantity`. A booking reference must belong to the same branch and, when a customer is also supplied, match that customer. Prices and totals are read/calculated server-side from the branch product configuration. The cashier records the selected payment method as paid; no external payment-provider capture is performed by this MVP.
+
+Checkout locks configured product and tracked inventory rows in product-ID order, checks available stock, then writes the order, item snapshots, payment, invoice snapshots, stock decrements, and `SALE` movements in one transaction. Any insufficient-stock or write failure rolls the transaction back. A cancellation is allowed only for a completed order, requires both cancellation and refund permissions, is serialized by locking the order row, restores tracked quantities, writes `SALE_RETURN` movements, and records a full processed refund for positive-value orders in one transaction. Zero-value orders have no payment/refund row. Repeated cancellation is rejected.
+
+Reports accept inclusive ISO `from` and `to` dates with a maximum span of 366 days. Date boundaries and daily grouping use UTC. `GrossSales` includes checkouts created in the range, including orders later cancelled; processed refunds are grouped by their processing date and `NetSales` is gross sales minus those refunds. `CompletedOrderCount` counts orders currently in `COMPLETED` state. Top products represent checkout volume before returns. This keeps sale and refund dates independently reportable.
+
+Invoice snapshots capture branch, customer, cashier, payment, amount, and item details at checkout. Preview, download, and reprint render PDFs from those saved snapshots; they do not read mutable product or branch labels. PDF responses are not wrapped in the JSON API envelope. The preview response uses `inline; filename="invoice-{invoiceId}.pdf"` and download uses an attachment filename. PDFs use the bundled Noto Sans font (SIL Open Font License) for Vietnamese text and format VND amounts.
+
+Sales error codes include `Sales.OrderNotFound`, `Sales.InvoiceNotFound`, `Sales.OrderNotCompletable`, `Sales.ProductNotAvailable`, `Sales.InsufficientStock`, `Sales.QuantityLimitExceeded`, `Sales.RelatedEntityNotFound`, `Sales.InvalidRequest`, `Sales.InvalidPagination`, and `Sales.InvalidFilter`. Not-found errors map to `404`, state/product/stock conflicts to `409`, invalid filters or pagination to `400`, and branch authorization failures to `403`. All order, invoice, and report queries are constrained to the route's `branchId`; services also check the corresponding branch permission.
 
 ## Migration execution
 
