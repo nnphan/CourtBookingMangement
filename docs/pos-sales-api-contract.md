@@ -28,7 +28,7 @@ Sales items and invoice items preserve product snapshots. Invoice header snapsho
 
 ## API contract status
 
-Catalog endpoints are implemented in the API. Inventory, Sales, and frontend endpoints remain for their later phases.
+Catalog and inventory endpoints are implemented in the API. Sales and frontend endpoints remain for their later phases.
 
 ### Product categories
 
@@ -96,6 +96,37 @@ Successful requests use the existing response envelope:
 ```
 
 Errors use the existing `ApiErrorResponse`. Catalog error codes include `Catalog.CategoryNotFound`, `Catalog.ProductNotFound`, `Catalog.BranchNotFound`, `Catalog.CategoryCodeExists`, `Catalog.ProductSkuExists`, `Catalog.ProductBarcodeExists`, `Catalog.ProductInactive`, `Catalog.CategoryInactive`, `Catalog.InvalidPagination`, and `Catalog.InvalidSort`. Not-found errors map to `404`, duplicate/inactive conflicts to `409`, invalid filters to `400`, and branch authorization failures to `403`.
+
+### Branch inventory and stock movements
+
+Base route: `/api/branches/{branchId}/inventory`
+
+| Method | Route | Permission | Result |
+|---|---|---|---|
+| GET | `/` | `inventory.view` | Paged branch inventory balances; accepts `search`, `lowStockOnly`, `page`, and `pageSize` |
+| GET | `/movements` | `inventory.view` | Paged stock movement ledger; accepts `productId`, `movementType`, `from`, `to`, `page`, and `pageSize` |
+| POST | `/adjustments` | `inventory.adjust` | Atomic manual stock increase/decrease with movement audit |
+| PUT | `/{productId}/reorder-level` | `inventory.adjust` | Set the branch-specific low-stock threshold |
+
+Inventory balance responses include on-hand, reserved, available, and reorder-level quantities. Inventory results are limited to active, configured, inventory-tracked products in the authorized branch. Adjustment bodies accept `productId`, positive `quantity`, `movementType` (`ADJUSTMENT_IN`, `ADJUSTMENT_OUT`, or `DAMAGE`), and required `notes`. Outbound adjustments and damage reduce stock and fail without mutation if they would make stock negative. Every successful adjustment records the signed quantity and before/after balances in `inventory.stock_movements`.
+The reorder-level body contains a non-negative `reorderLevel` quantity with up to three decimal places; changing the threshold does not alter on-hand stock or write a stock movement.
+
+### Goods receipts
+
+Goods receipt routes use the same branch-scoped inventory base:
+
+| Method | Route | Permission | Result |
+|---|---|---|---|
+| GET | `/goods-receipts` | `inventory.view` | Paged receipts; optional `status` and `search` filters |
+| GET | `/goods-receipts/{receiptId}` | `inventory.view` | Receipt detail including lines |
+| POST | `/goods-receipts` | `inventory.receive` | Create a `DRAFT` receipt |
+| PUT | `/goods-receipts/{receiptId}` | `inventory.receive` | Replace draft header fields and lines |
+| POST | `/goods-receipts/{receiptId}/post` | `inventory.post_receipt` | Atomically post receipt, increase stock, and record movements |
+| POST | `/goods-receipts/{receiptId}/cancel` | `inventory.receive` | Cancel a draft without changing stock |
+
+Draft bodies contain optional `supplierName`, `supplierReference`, `notes`, and `items` (`productId`, positive `quantity`, non-negative `unitCost`). Item quantities allow at most three decimal places and unit costs at most two. The service calculates line and receipt totals; clients do not submit totals. Only active inventory-tracked products configured for the branch may be received. Posting locks the draft and inventory rows in stable product-ID order, applies each stock increase, writes a `GOODS_RECEIPT` movement, and changes the receipt to `POSTED` in one database transaction. Drafts can be edited or cancelled; posted receipts cannot be edited or cancelled, preserving the stock audit trail.
+
+Inventory error codes include `Inventory.ReceiptNotFound`, `Inventory.ReceiptNotDraft`, `Inventory.ProductNotConfigured`, `Inventory.InsufficientStock`, `Inventory.QuantityLimitExceeded`, `Inventory.InvalidRequest`, `Inventory.InvalidPagination`, and `Inventory.InvalidFilter`. All inventory and receipt queries and mutations include the route's `branchId` in repository predicates, and each service operation checks branch-level permission before accessing data.
 
 ## Migration execution
 

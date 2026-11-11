@@ -44,6 +44,12 @@ public static class ErrorStatusMapper
         "Catalog.ProductInactive" or "Catalog.CategoryInactive" => StatusCodes.Status409Conflict,
         "Catalog.InvalidRequest" or "Catalog.InvalidPagination" or "Catalog.InvalidSort" =>
             StatusCodes.Status400BadRequest,
+        "Inventory.ReceiptNotFound" => StatusCodes.Status404NotFound,
+        "Inventory.ReceiptNotDraft" or "Inventory.ProductNotConfigured" or "Inventory.InsufficientStock" or
+        "Inventory.QuantityLimitExceeded" =>
+            StatusCodes.Status409Conflict,
+        "Inventory.InvalidRequest" or "Inventory.InvalidPagination" or "Inventory.InvalidFilter" =>
+            StatusCodes.Status400BadRequest,
         "Error.Exception" => StatusCodes.Status500InternalServerError,
         _ => StatusCodes.Status400BadRequest
     };
