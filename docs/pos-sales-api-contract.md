@@ -158,3 +158,23 @@ Sales error codes include `Sales.OrderNotFound`, `Sales.InvoiceNotFound`, `Sales
 ## Migration execution
 
 The repository currently uses forward-only, handwritten SQL files wrapped in transactions and has no migration runner or down-migration convention. Apply migrations using the repository's existing database deployment process; do not execute this schema automatically at application startup.
+
+## Frontend management routes
+
+The authenticated frontend exposes branch-scoped management routes under `/pos-management`:
+
+| Route | Purpose | Permission |
+|---|---|---|
+| `/pos-management/dashboard` | Date-filtered branch sales report | `sales.report.view` |
+| `/pos-management/categories` | Create, update, and deactivate product categories | `product.view`; mutations require `product.create`, `product.update`, or `product.deactivate` |
+| `/pos-management/products` | Create, update, and deactivate shared catalog products | `product.view`; mutations require `product.create`, `product.update`, or `product.deactivate` |
+| `/pos-management/branch-products` | Configure branch selling price, cost, availability, and display order | `product.view`, `product.update` |
+| `/pos-management/inventory` | View stock; authorized administrators can adjust stock and reorder thresholds | `inventory.view`; stock changes require `inventory.adjust` |
+| `/pos-management/movements` | Filter and inspect stock movements | `inventory.view` |
+| `/pos-management/receipts` | Browse branch goods receipts | `inventory.view`; draft creation/edit/cancellation requires `inventory.receive` |
+| `/pos-management/receipts/new` and `/pos-management/receipts/{receiptId}/edit` | Create or edit a draft receipt | `inventory.receive` |
+| `/pos-management/receipts/{receiptId}` | Inspect receipt details; draft actions require `inventory.receive` or `inventory.post_receipt` | `inventory.view` |
+| `/pos-management/orders` and `/pos-management/orders/{orderId}` | Search and inspect branch sales; cancellation requires both cancel and refund permissions | `sales.view` |
+| `/pos-management/invoices/{invoiceId}` | View immutable invoice snapshot and preview/download/print its PDF | `sales.invoice.view`; PDF actions require `sales.invoice.print` |
+
+The frontend hides actions according to the authenticated user's role set, while the API remains authoritative for every operation and branch boundary. The selected branch is persisted in `localStorage` under `pos-sales.branchId` and is sent explicitly on every branch-scoped API request.
