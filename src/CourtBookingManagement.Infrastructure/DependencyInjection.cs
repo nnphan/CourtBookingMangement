@@ -6,6 +6,7 @@ using CourtBookingManagement.Application.Admin.Branches.Interfaces;
 using CourtBookingManagement.Application.Branches.Interfaces;
 using CourtBookingManagement.Application.Amenities.Repositories;
 using CourtBookingManagement.Application.Courts.Repositories;
+using CourtBookingManagement.Application.Catalog.Repositories;
 using CourtBookingManagement.Application.Customers.Repositories;
 using CourtBookingManagement.Application.CourtStatus.Interfaces;
 using CourtBookingManagement.Application.CourtBookings.Interfaces;
@@ -114,11 +115,13 @@ public static class DependencyInjection
         services.AddScoped<IPermissionRepository, PermissionRepository>();
         services.AddScoped<IUserRoleRepository, UserRoleRepository>();
         services.AddScoped<ICourtRepository, CourtRepository>();
+        services.AddScoped<ICatalogRepository, CatalogRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<CourtBookingManagement.Application.Owners.Repositories.IOwnerRepository, OwnerRepository>();
         services.AddScoped<IMembershipLevelRepository, MembershipLevelRepository>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IPermissionService, PermissionService>();
+        services.AddScoped<IBranchAuthorizationService, BranchAuthorizationService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<PermissionAuthorizationHandler>();
         services.AddSingleton<ISqlConnectionFactory>(serviceProvider =>

@@ -2,6 +2,7 @@ using CourtBookingManagement.Api.Common.Constants;
 using CourtBookingManagement.Api.Common.Exceptions;
 using CourtBookingManagement.Api.Common.Responses;
 using CourtBookingManagement.Application.Branches.Services;
+using CourtBookingManagement.Application.Auth.Exceptions;
 using CourtBookingManagement.Infrastructure.FileStorage;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +41,11 @@ public sealed class ApiExceptionHandler(
             BranchOwnerNotFoundException => (
                 StatusCodes.Status403Forbidden,
                 ErrorCodes.Forbidden,
+                exception.Message,
+                (IReadOnlyCollection<ValidationError>?)null),
+            BranchAccessDeniedException => (
+                StatusCodes.Status403Forbidden,
+                ErrorCodes.BranchAccessDenied,
                 exception.Message,
                 (IReadOnlyCollection<ValidationError>?)null),
             FluentValidation.ValidationException validationException => (

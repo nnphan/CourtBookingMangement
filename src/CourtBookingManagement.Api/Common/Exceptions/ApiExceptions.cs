@@ -28,5 +28,7 @@ public sealed class BusinessException(string message, string errorCode)
 public sealed class UnauthorizedException(string message = "Authentication is required.")
     : ApiException(message, Constants.ErrorCodes.Unauthorized);
 
-public sealed class ForbiddenException(string message = "You do not have permission to perform this operation.")
-    : ApiException(message, Constants.ErrorCodes.Forbidden);
+public sealed class ForbiddenException(
+    string message = "You do not have permission to perform this operation.",
+    string errorCode = Constants.ErrorCodes.Forbidden)
+    : ApiException(message, errorCode);

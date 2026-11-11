@@ -23,4 +23,5 @@ public static class ErrorCodes
     public const string PaymentAlreadyProcessed = "PAYMENT_002";
     public const string RecommendationUnavailable = "MATCHING_001";
     public const string NotificationDeliveryFailed = "NOTIFICATION_001";
+    public const string BranchAccessDenied = "BRANCH_ACCESS_DENIED";
 }

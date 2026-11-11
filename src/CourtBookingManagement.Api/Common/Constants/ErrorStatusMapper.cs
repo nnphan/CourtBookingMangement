@@ -38,6 +38,12 @@ public static class ErrorStatusMapper
         "CourtBooking.Conflict" => StatusCodes.Status409Conflict,
         "CourtBooking.Blocked" => StatusCodes.Status400BadRequest,
         "CourtBooking.Invalid" => StatusCodes.Status400BadRequest,
+        "Catalog.CategoryNotFound" or "Catalog.ProductNotFound" or "Catalog.BranchNotFound" =>
+            StatusCodes.Status404NotFound,
+        "Catalog.CategoryCodeExists" or "Catalog.ProductSkuExists" or "Catalog.ProductBarcodeExists" or
+        "Catalog.ProductInactive" or "Catalog.CategoryInactive" => StatusCodes.Status409Conflict,
+        "Catalog.InvalidRequest" or "Catalog.InvalidPagination" or "Catalog.InvalidSort" =>
+            StatusCodes.Status400BadRequest,
         "Error.Exception" => StatusCodes.Status500InternalServerError,
         _ => StatusCodes.Status400BadRequest
     };
