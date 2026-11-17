@@ -15,6 +15,9 @@ public sealed class BookingDetailResponse
     public string PaymentStatus { get; set; } = null!;
     public decimal TotalAmount { get; set; }
     public decimal PaidAmount { get; set; }
+    public DateTimeOffset? ExpiresAt { get; set; }
+    public DateTimeOffset ServerTime { get; set; }
+    public int RemainingSeconds { get; set; }
     public string? Notes { get; set; }
     public IReadOnlyList<BookingCourtItemResponse> Details { get; set; } = Array.Empty<BookingCourtItemResponse>();
 }
@@ -28,4 +31,5 @@ public sealed class BookingCourtItemResponse
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
     public decimal Price { get; set; }
+    public string Status { get; set; } = null!;
 }

@@ -10,6 +10,7 @@ using CourtBookingManagement.Application.Catalog.Repositories;
 using CourtBookingManagement.Application.Inventory.Repositories;
 using CourtBookingManagement.Application.Sales.Repositories;
 using CourtBookingManagement.Application.Sales.Services;
+using CourtBookingManagement.Application.Bookings.Services;
 using CourtBookingManagement.Application.Customers.Repositories;
 using CourtBookingManagement.Application.CourtStatus.Interfaces;
 using CourtBookingManagement.Application.CourtBookings.Interfaces;
@@ -19,22 +20,30 @@ using CourtBookingManagement.Application.Roles.Repositories;
 using CourtBookingManagement.Application.Permissions.Repositories;
 using CourtBookingManagement.Application.UserRoles.Repositories;
 using CourtBookingManagement.Application.Options;
+using CourtBookingManagement.Application.Payments.Interfaces;
+using CourtBookingManagement.Application.Payments.Services;
 using CourtBookingManagement.Domain.Abstractions;
 using CourtBookingManagement.Domain.Users;
 using CourtBookingManagement.Infrastructure.Auth;
+using CourtBookingManagement.Infrastructure.BackgroundServices;
 using CourtBookingManagement.Infrastructure.Clock;
 using CourtBookingManagement.Infrastructure.Data;
 using CourtBookingManagement.Infrastructure.FileStorage;
 using CourtBookingManagement.Infrastructure.Persistence;
 using CourtBookingManagement.Infrastructure.Persistence.DapperHandlers;
+using CourtBookingManagement.Infrastructure.Redis;
 using CourtBookingManagement.Infrastructure.Repositories;
 using CourtBookingManagement.Infrastructure.Sales;
+using CourtBookingManagement.Infrastructure.Momo;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Npgsql;
+using RedLockNet.SERedis;
+using RedLockNet.SERedis.Configuration;
+using StackExchange.Redis;
 
 namespace CourtBookingManagement.Infrastructure;
 
@@ -60,6 +69,21 @@ public static class DependencyInjection
 
         services.AddOptions<JwtOptions>()
             .Bind(configuration.GetSection(JwtOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<BookingHoldOptions>()
+            .Bind(configuration.GetSection(BookingHoldOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<MomoOptions>()
+            .Bind(configuration.GetSection(MomoOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<RedisOptions>()
+            .Bind(configuration.GetSection(RedisOptions.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
@@ -111,6 +135,42 @@ public static class DependencyInjection
         services.AddScoped<IAmenityListRepository>(provider => provider.GetRequiredService<AmenityRepository>());
         services.AddScoped<ICourtStatusRepository, CourtStatusRepository>();
         services.AddScoped<IBookingRepository, BookingRepository>();
+        services.AddScoped<IBookingExpirationRepository, BookingExpirationRepository>();
+        services.AddScoped<BookingExpirationService>();
+        services.AddHostedService<BookingHoldExpirationWorker>();
+        services.AddHttpClient<IMomoClient, MomoClient>((serviceProvider, client) =>
+        {
+            var momoOptions = serviceProvider.GetRequiredService<IOptions<MomoOptions>>().Value;
+            client.Timeout = TimeSpan.FromSeconds(momoOptions.RequestTimeoutSeconds);
+        });
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
+        services.AddScoped<IPaymentService, PaymentService>();
+        services.AddScoped<IMomoIpnService, MomoIpnService>();
+        services.AddScoped<IMomoSignatureService, MomoSignatureService>();
+        services.AddSingleton<IConnectionMultiplexer>(serviceProvider =>
+        {
+            var redisOptions = serviceProvider.GetRequiredService<IOptions<RedisOptions>>().Value;
+            var redisConfiguration = ConfigurationOptions.Parse(redisOptions.Configuration);
+            redisConfiguration.AbortOnConnectFail = false;
+            return ConnectionMultiplexer.Connect(redisConfiguration);
+        });
+        services.AddSingleton(serviceProvider =>
+        {
+            var redisOptions = serviceProvider.GetRequiredService<IOptions<RedisOptions>>().Value;
+            var redisConfiguration = ConfigurationOptions.Parse(redisOptions.Configuration);
+            redisConfiguration.AbortOnConnectFail = false;
+            var endpoints = redisConfiguration.EndPoints
+                .Select(endpoint => new RedLockEndPoint
+                {
+                    EndPoint = endpoint,
+                    Password = redisConfiguration.Password,
+                    Ssl = redisConfiguration.Ssl
+                })
+                .ToArray();
+            return RedLockFactory.Create(endpoints);
+        });
+        services.AddSingleton<IBookingSlotLockService, RedlockBookingSlotLockService>();
+        services.AddSingleton<IBookingHoldCache, RedisBookingHoldCache>();
         services.AddScoped<ICourtBookingRepository, CourtBookingRepository>();
         services.AddScoped<IPlayerMatchRepository, PlayerMatchRepository>();
         services.AddScoped<IMyMatchRepository, MyMatchRepository>();

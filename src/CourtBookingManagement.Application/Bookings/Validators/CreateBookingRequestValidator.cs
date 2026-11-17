@@ -2,12 +2,15 @@ using CourtBookingManagement.Application.Bookings.DTOs;
 using CourtBookingManagement.Application.Common.Enums;
 using CourtBookingManagement.Application.Options;
 using FluentValidation;
+using Microsoft.Extensions.Options;
 
 namespace CourtBookingManagement.Application.Bookings.Validators;
 
 public sealed class CreateBookingRequestValidator : AbstractValidator<CreateBookingRequest>
 {
-    public CreateBookingRequestValidator(BookingOptions options)
+    public CreateBookingRequestValidator(
+        BookingOptions options,
+        IOptions<BookingHoldOptions> holdOptions)
     {
         RuleFor(request => request.BranchId).NotEmpty();
         When(request => !string.IsNullOrWhiteSpace(request.CustomerName) || !string.IsNullOrWhiteSpace(request.PhoneNumber), () =>
@@ -27,6 +30,9 @@ public sealed class CreateBookingRequestValidator : AbstractValidator<CreateBook
         RuleFor(request => request.Details)
             .NotEmpty()
             .WithMessage("At least one booking detail is required.");
+        RuleFor(request => request.Details)
+            .Must(details => details.Count <= holdOptions.Value.MaximumDetails)
+            .WithMessage($"A booking cannot contain more than {holdOptions.Value.MaximumDetails} court slots.");
         RuleForEach(request => request.Details)
             .SetValidator(new CreateBookingDetailRequestValidator(options));
     }

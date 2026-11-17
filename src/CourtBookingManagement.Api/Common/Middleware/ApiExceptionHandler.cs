@@ -3,6 +3,7 @@ using CourtBookingManagement.Api.Common.Exceptions;
 using CourtBookingManagement.Api.Common.Responses;
 using CourtBookingManagement.Application.Branches.Services;
 using CourtBookingManagement.Application.Auth.Exceptions;
+using CourtBookingManagement.Application.Bookings.Exceptions;
 using CourtBookingManagement.Infrastructure.FileStorage;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
@@ -59,6 +60,11 @@ public sealed class ApiExceptionHandler(
                 StatusCodes.Status502BadGateway,
                 ErrorCodes.Unexpected,
                 "A file storage service error occurred.",
+                (IReadOnlyCollection<ValidationError>?)null),
+            BookingLockServiceUnavailableException => (
+                StatusCodes.Status503ServiceUnavailable,
+                "Booking.LockServiceUnavailable",
+                "The booking lock service is temporarily unavailable.",
                 (IReadOnlyCollection<ValidationError>?)null),
             ApiException apiException => (
                 apiException switch

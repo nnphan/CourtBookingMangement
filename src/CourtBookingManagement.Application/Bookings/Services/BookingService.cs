@@ -1,11 +1,18 @@
+using System.Security.Cryptography;
+using System.Text.Json;
 using CourtBookingManagement.Application.Bookings.DTOs;
+using CourtBookingManagement.Application.Bookings.Models;
 using CourtBookingManagement.Application.Bookings.Interfaces;
 using CourtBookingManagement.Application.Auth.Interfaces;
 using CourtBookingManagement.Application.Common.Enums;
+using CourtBookingManagement.Application.Bookings.Exceptions;
 using CourtBookingManagement.Domain.Abstractions;
 using CourtBookingManagement.Domain.Bookings;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using CourtBookingManagement.Application.Options;
+using CourtBookingManagement.Application.Bookings.Security;
 
 namespace CourtBookingManagement.Application.Bookings.Services;
 
@@ -15,6 +22,9 @@ public sealed class BookingService(
     IValidator<CreateBookingRequest> validator,
     IValidator<CalculateBookingPriceRequest> calculatePriceValidator,
     ICurrentUserService currentUserService,
+    IBookingSlotLockService slotLockService,
+    IBookingHoldCache holdCache,
+    IOptions<BookingHoldOptions> holdOptions,
     ILogger<BookingService> logger) : IBookingService
 {
     public async Task<Result<BookingDetailResponse>> GetByIdAsync(
@@ -25,6 +35,71 @@ public sealed class BookingService(
         return booking is null
             ? Result.Failure<BookingDetailResponse>(new Error("Booking.NotFound", "Booking not found."))
             : Result.Success(booking);
+    }
+
+    public async Task<Result<BookingDetailResponse>> GetHoldAsync(
+        Guid bookingId,
+        string? holdToken,
+        CancellationToken cancellationToken)
+    {
+        var customerId = await GetCurrentCustomerIdAsync(cancellationToken);
+        var holdTokenHash = BookingHoldToken.Hash(holdToken);
+        if (customerId is null && holdTokenHash is null)
+        {
+            return Result.Failure<BookingDetailResponse>(
+                new Error("Booking.NotFound", "Booking hold not found."));
+        }
+
+        var booking = await repository.GetBookingHoldAsync(
+            bookingId,
+            customerId,
+            holdTokenHash,
+            cancellationToken);
+        return booking is null
+            ? Result.Failure<BookingDetailResponse>(
+                new Error("Booking.NotFound", "Booking hold not found."))
+            : Result.Success(booking);
+    }
+
+    public async Task<Result<CancelBookingHoldResponse>> CancelHoldAsync(
+        Guid bookingId,
+        string? holdToken,
+        CancellationToken cancellationToken)
+    {
+        var customerId = await GetCurrentCustomerIdAsync(cancellationToken);
+        var holdTokenHash = BookingHoldToken.Hash(holdToken);
+        if (customerId is null && holdTokenHash is null)
+        {
+            return Result.Failure<CancelBookingHoldResponse>(
+                new Error("Booking.NotFound", "Booking hold not found."));
+        }
+
+        var cancelled = await repository.CancelBookingHoldAsync(
+            bookingId,
+            customerId,
+            holdTokenHash,
+            cancellationToken);
+        if (cancelled is null)
+        {
+            return Result.Failure<CancelBookingHoldResponse>(
+                new Error("Booking.StatusConflict", "The booking hold is no longer active or cannot be accessed."));
+        }
+
+        try
+        {
+            await holdCache.RemoveAsync(bookingId, cancelled.Resources, cancellationToken);
+        }
+        catch (BookingHoldCacheUnavailableException exception)
+        {
+            logger.LogWarning(
+                exception,
+                "Cancelled booking {BookingId} is committed in PostgreSQL but its Redis hold keys could not be removed.",
+                bookingId);
+        }
+
+        return Result.Success(new CancelBookingHoldResponse(
+            bookingId,
+            BookingStatuses.ToApiValue(BookingStatuses.Cancelled)));
     }
 
     public async Task<Result<UpdateBookingStatusResponse>> UpdateStatusAsync(
@@ -166,7 +241,10 @@ public sealed class BookingService(
         });
     }
 
-    public async Task<Result<CreateBookingResponse>> CreateAsync(CreateBookingRequest request, CancellationToken cancellationToken)
+    public async Task<Result<CreateBookingResponse>> CreateAsync(
+        CreateBookingRequest request,
+        Guid? idempotencyKey,
+        CancellationToken cancellationToken)
     {
         var validation = await validator.ValidateAsync(request, cancellationToken);
         if (!validation.IsValid)
@@ -214,38 +292,195 @@ public sealed class BookingService(
             }
         }
 
-        var detailPrices = new List<decimal>(slots.Length);
-        foreach (var slot in slots)
+        foreach (var courtId in slots.Select(slot => slot.CourtId).Distinct())
         {
-            if (!await repository.ExistsCourtAsync(slot.CourtId, cancellationToken)
-                || !await repository.CourtBelongsToBranchAsync(slot.CourtId, request.BranchId, cancellationToken))
+            if (!await repository.ExistsCourtAsync(courtId, cancellationToken)
+                || !await repository.CourtBelongsToBranchAsync(courtId, request.BranchId, cancellationToken))
             {
                 return Result.Failure<CreateBookingResponse>(new Error("CourtStatus.NotFound", "Court not found in the specified branch."));
             }
+        }
 
-            if (await repository.HasBookingOverlapAsync(slot.CourtId, slot.BookingDate, slot.Start, slot.End, cancellationToken))
+        var resources = slots
+            .Select(slot => new BookingSlotResource(slot.CourtId, slot.BookingDate, slot.Start, slot.End))
+            .ToArray();
+        var idempotencyRequestHash = idempotencyKey is null
+            ? null
+            : SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new
             {
-                return Result.Failure<CreateBookingResponse>(new Error("CourtStatus.Conflict", "The court is not available for the requested time."));
+                Request = request,
+                CustomerId = knownCustomerId
+            }));
+        var holdDurationSeconds = string.Equals(
+            request.PaymentMethod,
+            PaymentMethod.Momo.ToString(),
+            StringComparison.OrdinalIgnoreCase)
+            ? holdOptions.Value.DurationSeconds
+            : (int?)null;
+        var (holdToken, holdTokenHash) = holdDurationSeconds is null
+            ? (null, null)
+            : BookingHoldToken.Create();
+
+        if (idempotencyKey is Guid idempotencyKeyValue && idempotencyRequestHash is not null)
+        {
+            var existing = await repository.GetIdempotentBookingAsync(
+                idempotencyKeyValue,
+                idempotencyRequestHash,
+                holdTokenHash,
+                cancellationToken);
+            if (existing?.KeyReused == true)
+            {
+                return Result.Failure<CreateBookingResponse>(new Error(
+                    "Booking.IdempotencyKeyReused",
+                    "The idempotency key was already used with a different request."));
             }
 
-            try
+            if (existing?.Booking is CreateBookingResponse existingBooking)
             {
-                detailPrices.Add(await bookingPricingService.CalculatePriceAsync(
-                    request.BranchId,
-                    slot.BookingDate,
-                    slot.Start, 
-                    slot.End,
-                    cancellationToken));
-            }
-            catch (BookingPricingException exception)
-            {
-                return Result.Failure<CreateBookingResponse>(new Error("Booking.PricingConfiguration", exception.Message));
+                existingBooking.HoldToken = existingBooking.ExpiresAt > existingBooking.ServerTime
+                    ? holdToken
+                    : null;
+                return Result.Success(existingBooking);
             }
         }
 
-        var booking = await repository.CreateBookingAsync(request, detailPrices, knownCustomerId, cancellationToken);
-        return booking is null
-            ? Result.Failure<CreateBookingResponse>(new Error("CourtStatus.Conflict", "The court is not available for the requested time."))
-            : Result.Success(booking);
+        IBookingSlotLockHandle? lockHandle;
+        try
+        {
+            lockHandle = await slotLockService.AcquireAsync(resources, cancellationToken);
+        }
+        catch (BookingLockServiceUnavailableException)
+        {
+            return Result.Failure<CreateBookingResponse>(new Error(
+                "Booking.LockServiceUnavailable",
+                "The booking lock service is temporarily unavailable."));
+        }
+
+        if (lockHandle is null)
+        {
+            if (idempotencyKey is Guid retryKey && idempotencyRequestHash is not null)
+            {
+                var existing = await repository.GetIdempotentBookingAsync(
+                    retryKey,
+                    idempotencyRequestHash,
+                    holdTokenHash,
+                    cancellationToken);
+                if (existing?.KeyReused == true)
+                {
+                    return Result.Failure<CreateBookingResponse>(new Error(
+                        "Booking.IdempotencyKeyReused",
+                        "The idempotency key was already used with a different request."));
+                }
+
+                if (existing?.Booking is CreateBookingResponse existingBooking)
+                {
+                    existingBooking.HoldToken = existingBooking.ExpiresAt > existingBooking.ServerTime
+                        ? holdToken
+                        : null;
+                    return Result.Success(existingBooking);
+                }
+            }
+
+            return Result.Failure<CreateBookingResponse>(new Error(
+                "Booking.SlotLocked",
+                "The requested court slot is being reserved by another customer."));
+        }
+
+        await using (lockHandle)
+        {
+            var detailPrices = new List<decimal>(slots.Length);
+            foreach (var slot in slots)
+            {
+                if (await repository.HasBookingOverlapAsync(slot.CourtId, slot.BookingDate, slot.Start, slot.End, cancellationToken))
+                {
+                    return Result.Failure<CreateBookingResponse>(new Error(
+                        "Booking.SlotLocked",
+                        "The court is not available for the requested time."));
+                }
+
+                try
+                {
+                    detailPrices.Add(await bookingPricingService.CalculatePriceAsync(
+                        request.BranchId,
+                        slot.BookingDate,
+                        slot.Start,
+                        slot.End,
+                        cancellationToken));
+                }
+                catch (BookingPricingException exception)
+                {
+                    return Result.Failure<CreateBookingResponse>(
+                        new Error("Booking.PricingConfiguration", exception.Message));
+                }
+            }
+
+            CreateBookingResponse? booking;
+            try
+            {
+                booking = await repository.CreateBookingAsync(
+                    request,
+                    detailPrices,
+                    knownCustomerId, 
+                    holdDurationSeconds,
+                    holdTokenHash,
+                    idempotencyKey,
+                    idempotencyRequestHash,
+                    cancellationToken);
+            }
+            catch (BookingIdempotencyKeyReusedException)
+            {
+                return Result.Failure<CreateBookingResponse>(new Error(
+                    "Booking.IdempotencyKeyReused",
+                    "The idempotency key was already used with a different request."));
+            }
+            if (booking is null)
+            {
+                return Result.Failure<CreateBookingResponse>(new Error(
+                    "Booking.SlotLocked",
+                    "The court is not available for the requested time."));
+            }
+
+            if (booking.ExpiresAt is DateTimeOffset expiresAt)
+            {
+                booking.HoldToken = holdToken;
+                var timeToLive = expiresAt - booking.ServerTime;
+                if (timeToLive > TimeSpan.Zero)
+                {
+                    try
+                    {
+                        await holdCache.SetAsync(
+                            new BookingHoldCacheEntry(
+                                booking.BookingId,
+                                booking.BookingCode,
+                                booking.Status,
+                                expiresAt,
+                                resources.Select(resource => resource.CourtId).Distinct().ToArray()),
+                            resources,
+                            timeToLive,
+                            cancellationToken);
+                    }
+                    catch (BookingHoldCacheUnavailableException exception)
+                    {
+                        logger.LogWarning(
+                            exception,
+                            "Database booking hold {BookingId} is valid but its Redis cache entry could not be written.",
+                            booking.BookingId);
+                    }
+                }
+            }
+
+            return Result.Success(booking);
+        }
     }
+
+    private async Task<Guid?> GetCurrentCustomerIdAsync(CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid userId || userId == Guid.Empty)
+        {
+            return null;
+        }
+
+        return await repository.GetCustomerIdByUserIdAsync(userId, cancellationToken);
+    }
+
 }

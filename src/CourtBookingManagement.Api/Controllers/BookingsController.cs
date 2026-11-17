@@ -23,7 +23,7 @@ public sealed class BookingsController(ICourtStatusService courtStatusService, I
         FromResult(await bookingService.GetByIdAsync(id, ct), "Booking retrieved successfully.");
 
     [HttpPatch("{id:guid}")]
-    //[Permission(Permissions.BookingStatusUpdate)]
+     [Permission(Permissions.BookingStatusUpdate)]
     [ProducesResponseType(typeof(ApiResponse<UpdateBookingStatusResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -43,9 +43,12 @@ public sealed class BookingsController(ICourtStatusService courtStatusService, I
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Create([FromBody] BookingCreateRequest request, CancellationToken ct)
+    public async Task<IActionResult> Create(
+        [FromBody] BookingCreateRequest request,
+        [FromHeader(Name = "Idempotency-Key")] Guid? idempotencyKey,
+        CancellationToken ct)
     {
-        var result = await bookingService.CreateAsync(request, ct);
+        var result = await bookingService.CreateAsync(request, idempotencyKey, ct);
         return result.IsSuccess
             ? Created(result.Value, nameof(Get), new { id = result.Value.BookingId }, "Booking created successfully.")
             : Error(result.Error);

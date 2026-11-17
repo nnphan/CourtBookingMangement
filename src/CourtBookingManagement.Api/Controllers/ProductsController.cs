@@ -28,7 +28,7 @@ public sealed class ProductsController(
             : Error(result.Error);
     }
 
-    [HttpGet("{id:guid}", Name = nameof(GetById))]
+    [HttpGet("{id:guid}", Name = "GetProductById")]
     [Permission("product.view")]
     [ProducesResponseType(typeof(ApiResponse<ProductResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]

@@ -48,6 +48,12 @@ public partial class Booking
     [Precision(12, 2)]
     public decimal TotalAmount { get; set; }
 
+    [Column("expires_at")]
+    public DateTime? ExpiresAt { get; set; }
+
+    [Column("confirmed_at")]
+    public DateTime? ConfirmedAt { get; set; }
+
     [Column("recurrence_rule")]
     public string? RecurrenceRule { get; set; }
 

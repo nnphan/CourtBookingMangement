@@ -11,7 +11,8 @@ public static class ErrorStatusMapper
         "Auth.UserDisabled" or "Auth.EmailNotVerified" or "Auth.Unauthorized" => StatusCodes.Status403Forbidden,
         "NOTIFICATION.FORBIDDEN" => StatusCodes.Status403Forbidden,
         "NOTIFICATION.NOT_FOUND" => StatusCodes.Status404NotFound,
-        "User.NotFound" or "Role.NotFound" or "Permission.NotFound" or "Branch.NotFound" or "Booking.NotFound" or "PLAYER_MATCH.NOT_FOUND" or
+        "User.NotFound" or "Role.NotFound" or "Permission.NotFound" or "Branch.NotFound" or "Booking.NotFound" or
+        "Payment.NotFound" or "PLAYER_MATCH.NOT_FOUND" or
         "PLAYER_MATCH.REQUEST_NOT_FOUND" or "PLAYER_MATCH.BOOKING_NOT_FOUND" or
         "PLAYER_MATCH.BRANCH_NOT_FOUND" or "PLAYER_MATCH.COURT_NOT_FOUND" or
         "PLAYER_MATCH.REQUEST_MISMATCH" => StatusCodes.Status404NotFound,
@@ -22,11 +23,19 @@ public static class ErrorStatusMapper
         "Role.CodeAlreadyExists" or "Role.InUse" or
         "PLAYER_MATCH.ALREADY_JOINED" or "PLAYER_MATCH.REQUEST_EXISTS" or "PLAYER_MATCH.DUPLICATE" or
         "PLAYER_MATCH.COURT_CONFLICT" or "PLAYER_MATCH.MATCH_FULL" or "PLAYER_MATCH.NOT_OPEN" or
-        "Booking.StatusConflict" or
+        "Booking.StatusConflict" or "Booking.IdempotencyKeyReused" or "Payment.StatusConflict" or
+        "Booking.SlotLocked" =>
+            StatusCodes.Status409Conflict,
         "PLAYER_MATCH.MATCH_EXPIRED" or "PLAYER_MATCH.REQUEST_STATE_CHANGED" or
         "PLAYER_MATCH.REQUEST_NOT_PENDING" or "PLAYER_MATCH.HOST_ALREADY_PARTICIPANT" or
         "PLAYER_MATCH.BOOKING_INVALID_STATUS" => StatusCodes.Status409Conflict,
         "PLAYER_MATCH.INVALID_REQUEST_STATUS" or "Error.Validation" => StatusCodes.Status400BadRequest,
+        "Booking.LockServiceUnavailable" => StatusCodes.Status503ServiceUnavailable,
+        "Payment.MomoNotConfigured" or "Payment.ProviderUnavailable" =>
+            StatusCodes.Status503ServiceUnavailable,
+        "Payment.ProviderFailed" or "Payment.ProviderResponseInvalid" =>
+            StatusCodes.Status502BadGateway,
+        "Payment.InvalidAmount" => StatusCodes.Status400BadRequest,
         "Court.NotFound" or "Court.BranchNotFound" => StatusCodes.Status404NotFound,
         "Owner.NotFound" or "Owner.UserNotFound" => StatusCodes.Status404NotFound,
         "Owner.AlreadyExists" or "Owner.TaxIdAlreadyExists" or "Owner.HasActiveBranches" => StatusCodes.Status409Conflict,

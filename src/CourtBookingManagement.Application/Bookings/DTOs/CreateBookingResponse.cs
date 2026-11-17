@@ -10,18 +10,25 @@ public sealed class CreateBookingResponse
     public string PhoneNumber { get; set; } = null!;
     public string BookingType { get; set; } = null!;
     public string BookingStatus { get; set; } = null!;
+    public string Status { get; set; } = null!;
     public string PaymentMethod { get; set; } = null!;
     public decimal TotalAmount { get; set; }
     public string? Notes { get; set; }
+    public DateTimeOffset? ExpiresAt { get; set; }
+    public DateTimeOffset ServerTime { get; set; }
+    public int RemainingSeconds { get; set; }
+    public string? HoldToken { get; set; }
     public List<CreateBookingDetailResponse> Details { get; set; } = [];
 }
 
 public sealed class CreateBookingDetailResponse
 {
+    public Guid BookingDetailId { get; set; }
     public Guid CourtId { get; set; }
     public string CourtName { get; set; } = null!;
     public DateOnly BookingDate { get; set; }
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
     public decimal Price { get; set; }
+    public string Status { get; set; } = null!;
 }

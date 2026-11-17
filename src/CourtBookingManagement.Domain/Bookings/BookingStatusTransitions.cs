@@ -10,6 +10,12 @@ public static class BookingStatusTransitions
                 BookingStatuses.Confirmed,
                 BookingStatuses.Cancelled
             },
+            [BookingStatuses.PendingPayment] = new HashSet<string>(StringComparer.Ordinal)
+            {
+                BookingStatuses.Expired,
+                BookingStatuses.Cancelled,
+                BookingStatuses.PaymentReview
+            },
             [BookingStatuses.Confirmed] = new HashSet<string>(StringComparer.Ordinal)
             {
                 BookingStatuses.CheckedIn,
@@ -23,6 +29,14 @@ public static class BookingStatusTransitions
             },
             [BookingStatuses.Completed] = new HashSet<string>(StringComparer.Ordinal),
             [BookingStatuses.Cancelled] = new HashSet<string>(StringComparer.Ordinal),
+            [BookingStatuses.Expired] = new HashSet<string>(StringComparer.Ordinal),
+            [BookingStatuses.PaymentReview] = new HashSet<string>(StringComparer.Ordinal)
+            {
+                BookingStatuses.Confirmed,
+                BookingStatuses.Expired,
+                BookingStatuses.Cancelled,
+                BookingStatuses.Refunded
+            },
             [BookingStatuses.Refunded] = new HashSet<string>(StringComparer.Ordinal)
         };
 

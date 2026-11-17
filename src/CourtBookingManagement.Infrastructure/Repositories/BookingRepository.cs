@@ -1,10 +1,14 @@
 using System.Data;
+using System.Security.Cryptography;
 using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.Bookings.DTOs;
+using CourtBookingManagement.Application.Bookings.Exceptions;
 using CourtBookingManagement.Application.Bookings.Interfaces;
+using CourtBookingManagement.Application.Bookings.Models;
 using CourtBookingManagement.Application.Common.Enums;
 using CourtBookingManagement.Domain.Bookings;
 using Dapper;
+using Npgsql;
 
 namespace CourtBookingManagement.Infrastructure.Repositories;
 
@@ -78,7 +82,8 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
             WHERE b.customer_id = @CustomerId
               AND b.is_active = TRUE
               AND b.deleted_at IS NULL
-              AND UPPER(b.status) IN ('PENDING', 'CONFIRMED')
+              AND UPPER(b.status) IN ('PENDING', 'PENDING_PAYMENT', 'CONFIRMED')
+              AND (LOWER(b.status) <> 'pending_payment' OR b.expires_at > NOW())
             ORDER BY bd.booking_date DESC, bd.start_time DESC;
             """, new { CustomerId = customerId }, cancellationToken: cancellationToken));
 
@@ -121,17 +126,72 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
                   AND bd.booking_date = @BookingDate
                   AND b.deleted_at IS NULL
                   AND b.is_active
-                  AND LOWER(b.status) <> 'cancelled'
+                  AND UPPER(bd.status) IN ('HELD', 'CONFIRMED')
+                  AND (LOWER(b.status) <> 'pending_payment' OR b.expires_at > NOW())
                   AND @StartTime < bd.end_time ::time
                   AND @EndTime > bd.start_time ::time
             );
             """, new { CourtId = courtId, BookingDate = bookingDate, StartTime = startTime, EndTime = endTime }, cancellationToken);
 
-    public async Task<CreateBookingResponse?> CreateBookingAsync(CreateBookingRequest request, IReadOnlyList<decimal> detailPrices, Guid? knownCustomerId, CancellationToken cancellationToken)
+    public async Task<CreateBookingResponse?> CreateBookingAsync(
+        CreateBookingRequest request,
+        IReadOnlyList<decimal> detailPrices,
+        Guid? knownCustomerId,
+        int? holdDurationSeconds,
+        byte[]? holdTokenHash,
+        Guid? idempotencyKey,
+        byte[]? idempotencyRequestHash,
+        CancellationToken cancellationToken)
     {
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
         using var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
+
+        if (idempotencyKey is Guid key)
+        {
+            if (idempotencyRequestHash is null)
+            {
+                throw new InvalidOperationException("An idempotency request hash is required.");
+            }
+
+            await connection.ExecuteAsync(new CommandDefinition(
+                "SELECT pg_advisory_xact_lock(hashtextextended(@LockKey, 0));",
+                new { LockKey = $"booking-idempotency:{key:D}" },
+                transaction,
+                cancellationToken: cancellationToken));
+
+            var existing = await connection.QuerySingleOrDefaultAsync<IdempotencyProjection>(new CommandDefinition("""
+                SELECT id AS BookingId,
+                       idempotency_request_hash AS RequestHash
+                FROM booking.bookings
+                WHERE idempotency_key = @IdempotencyKey
+                FOR UPDATE;
+                """, new { IdempotencyKey = key }, transaction, cancellationToken: cancellationToken));
+            if (existing is not null)
+            {
+                if (!CryptographicOperations.FixedTimeEquals(existing.RequestHash, idempotencyRequestHash))
+                {
+                    transaction.Rollback();
+                    throw new BookingIdempotencyKeyReusedException();
+                }
+
+                await ReplaceActiveHoldTokenHashAsync(
+                    connection,
+                    transaction,
+                    existing.BookingId,
+                    holdTokenHash,
+                    cancellationToken);
+                var existingResponse = await GetCreatedBookingAsync(
+                    connection,
+                    transaction,
+                    existing.BookingId,
+                    cancellationToken);
+                transaction.Commit();
+                SetRemainingSeconds(existingResponse);
+                return existingResponse;
+            }
+
+        }
 
         // Lock in a stable order so concurrent multi-court requests cannot deadlock.
         var lockKeys = request.Details
@@ -147,10 +207,10 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
                 cancellationToken: cancellationToken));
         }
 
-        var branchExists = await connection.ExecuteScalarAsync<bool>(new CommandDefinition(
-            "SELECT EXISTS (SELECT 1 FROM core.branches WHERE id = @BranchId AND is_active AND deleted_at IS NULL);",
+        var branchTimeZone = await connection.ExecuteScalarAsync<string?>(new CommandDefinition(
+            "SELECT COALESCE(time_zone, 'Asia/Ho_Chi_Minh') FROM core.branches WHERE id = @BranchId AND is_active AND deleted_at IS NULL FOR SHARE;",
             new { request.BranchId }, transaction, cancellationToken: cancellationToken));
-        if (!branchExists)
+        if (branchTimeZone is null)
         {
             return null;
         }
@@ -166,12 +226,6 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
             }
         }
 
-        //var overlaps = await HasBookingOverlapAsync(connection, transaction, request, cancellationToken);
-        //if (overlaps)
-        //{
-        //    return null;
-        //}
-
         var customerId = knownCustomerId
             ?? await ResolveCustomerAsync(connection, transaction, request, cancellationToken);
         if (customerId is null)
@@ -182,26 +236,41 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
         var bookingId = Guid.NewGuid();
         var bookingType = BookingTypes.AllowedForBookings.Single(value => string.Equals(value, request.BookingType, StringComparison.OrdinalIgnoreCase));
         var totalAmount = detailPrices.Sum();
+        var bookingStatus = holdDurationSeconds is null
+            ? BookingStatuses.Confirmed
+            : BookingStatuses.PendingPayment;
         const string insertBookingSql = """
             INSERT INTO booking.bookings
                 (id, booking_code, customer_id, branch_id, status, booking_type, payment_method,
-                 subtotal_amount, paid_amount, total_amount, notes, is_active, created_at, updated_at)
+                 subtotal_amount, paid_amount, total_amount, expires_at, confirmed_at, notes,
+                 hold_token_hash, idempotency_key, idempotency_request_hash,
+                 is_active, created_at, updated_at)
             VALUES
                 (@BookingId,
                  CONCAT('BK', TO_CHAR(clock_timestamp(), 'YYMMDDHH24MISSMS'),
                      UPPER(SUBSTRING(REPLACE(gen_random_uuid()::text, '-', '') FROM 1 FOR 5))),
-                 @CustomerId, @BranchId, 'confirmed', @BookingType, @PaymentMethod,
-                 @TotalAmount, 0, @TotalAmount, @Notes, TRUE, NOW(), NOW());
+                 @CustomerId, @BranchId, @BookingStatus, @BookingType, @PaymentMethod,
+                 @TotalAmount, 0, @TotalAmount,
+                 CASE WHEN @HoldDurationSeconds IS NULL THEN NULL
+                      ELSE clock_timestamp() + make_interval(secs => @HoldDurationSeconds) END,
+                 CASE WHEN @HoldDurationSeconds IS NULL THEN clock_timestamp() ELSE NULL END,
+                 @Notes, @HoldTokenHash, @IdempotencyKey, @IdempotencyRequestHash,
+                 TRUE, NOW(), NOW());
             """;
         await connection.ExecuteAsync(new CommandDefinition(insertBookingSql, new
         {
             BookingId = bookingId,
             CustomerId = customerId.Value,
             request.BranchId,
+            BookingStatus = bookingStatus,
             BookingType = bookingType,
             request.PaymentMethod,
             request.Notes,
-            TotalAmount = totalAmount
+            TotalAmount = totalAmount,
+            HoldDurationSeconds = holdDurationSeconds,
+            HoldTokenHash = holdTokenHash,
+            IdempotencyKey = idempotencyKey,
+            IdempotencyRequestHash = idempotencyRequestHash
         }, transaction, cancellationToken: cancellationToken));
 
         const string insertDetailSql = """
@@ -225,24 +294,40 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
                 @BookingDate,
                 @StartTime,
                 @EndTime,
-                NULL,
-                'reserved',
+                tstzrange(
+                    (@BookingDate + @StartTime) AT TIME ZONE @TimeZone,
+                    (@BookingDate + @EndTime) AT TIME ZONE @TimeZone,
+                    '[)'
+                ),
+                @DetailStatus,
                 @Price
             );
             """;
-        for (var i = 0; i < request.Details.Count; i++)
+        try
         {
-            var detail = request.Details[i];
-            await connection.ExecuteAsync(new CommandDefinition(insertDetailSql, new
+            for (var i = 0; i < request.Details.Count; i++)
             {
-                DetailId = Guid.NewGuid(),
-                BookingId = bookingId,
-                detail.CourtId,
-                detail.BookingDate,
-                StartTime = TimeOnly.Parse(detail.StartTime),
-                EndTime = TimeOnly.Parse(detail.EndTime),
-                Price = detailPrices[i]
-            }, transaction, cancellationToken: cancellationToken));
+                var detail = request.Details[i];
+                await connection.ExecuteAsync(new CommandDefinition(insertDetailSql, new
+                {
+                    DetailId = Guid.NewGuid(),
+                    BookingId = bookingId,
+                    detail.CourtId,
+                    detail.BookingDate,
+                    StartTime = TimeOnly.Parse(detail.StartTime),
+                    EndTime = TimeOnly.Parse(detail.EndTime),
+                    TimeZone = branchTimeZone,
+                    DetailStatus = holdDurationSeconds is null
+                        ? BookingDetailStatuses.Confirmed
+                        : BookingDetailStatuses.Held,
+                    Price = detailPrices[i]
+                }, transaction, cancellationToken: cancellationToken));
+            }
+        }
+        catch (PostgresException exception) when (exception.SqlState == PostgresErrorCodes.ExclusionViolation)
+        {
+            transaction.Rollback();
+            return null;
         }
 
         var response = await GetCreatedBookingAsync(connection, transaction, bookingId, cancellationToken);
@@ -252,7 +337,234 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
         }
 
         transaction.Commit();
+        SetRemainingSeconds(response);
+
         return response;
+    }
+
+    public async Task<IdempotentBookingLookup?> GetIdempotentBookingAsync(
+        Guid idempotencyKey,
+        byte[] requestHash,
+        byte[]? replacementHoldTokenHash,
+        CancellationToken cancellationToken)
+    {
+        using var connection = connectionFactory.CreateConnection();
+        connection.Open();
+        using var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        await connection.ExecuteAsync(new CommandDefinition(
+            "SELECT pg_advisory_xact_lock(hashtextextended(@LockKey, 0));",
+            new { LockKey = $"booking-idempotency:{idempotencyKey:D}" },
+            transaction,
+            cancellationToken: cancellationToken));
+
+        var existing = await connection.QuerySingleOrDefaultAsync<IdempotencyProjection>(new CommandDefinition("""
+            SELECT id AS BookingId,
+                   idempotency_request_hash AS RequestHash
+            FROM booking.bookings
+            WHERE idempotency_key = @IdempotencyKey
+            FOR UPDATE;
+            """, new { IdempotencyKey = idempotencyKey }, transaction, cancellationToken: cancellationToken));
+        if (existing is null)
+        {
+            transaction.Commit();
+            return null;
+        }
+
+        if (!CryptographicOperations.FixedTimeEquals(existing.RequestHash, requestHash))
+        {
+            transaction.Commit();
+            return new IdempotentBookingLookup(true, null);
+        }
+
+        await ReplaceActiveHoldTokenHashAsync(
+            connection,
+            transaction,
+            existing.BookingId,
+            replacementHoldTokenHash,
+            cancellationToken);
+        var response = await GetCreatedBookingAsync(
+            connection,
+            transaction,
+            existing.BookingId,
+            cancellationToken);
+        transaction.Commit();
+        SetRemainingSeconds(response);
+        return new IdempotentBookingLookup(false, response);
+    }
+
+    public async Task<BookingDetailResponse?> GetBookingHoldAsync(
+        Guid bookingId,
+        Guid? customerId,
+        byte[]? holdTokenHash,
+        CancellationToken cancellationToken)
+    {
+        using var connection = connectionFactory.CreateConnection();
+        using var reader = await connection.QueryMultipleAsync(new CommandDefinition("""
+            SELECT b.id AS BookingId,
+                   b.booking_code AS BookingCode,
+                   b.branch_id AS BranchId,
+                   br.name AS BranchName,
+                   cu.id AS CustomerId,
+                   COALESCE(cu.full_name, '') AS CustomerName,
+                   COALESCE(cu.phone_number, '') AS PhoneNumber,
+                   UPPER(b.booking_type) AS BookingType,
+                   UPPER(b.status) AS BookingStatus,
+                   UPPER(b.payment_method) AS PaymentMethod,
+                   CASE WHEN b.paid_amount >= b.total_amount THEN 'PAID' ELSE 'UNPAID' END AS PaymentStatus,
+                   b.total_amount AS TotalAmount,
+                   b.paid_amount AS PaidAmount,
+                   b.expires_at AS ExpiresAt,
+                   clock_timestamp() AS ServerTime,
+                   b.notes AS Notes
+            FROM booking.bookings b
+            INNER JOIN core.branches br ON br.id = b.branch_id
+            LEFT JOIN customer.customers cu ON cu.id = b.customer_id
+            WHERE b.id = @BookingId
+              AND b.is_active = TRUE
+              AND b.deleted_at IS NULL
+              AND (b.customer_id = @CustomerId OR
+                   (@HoldTokenHash IS NOT NULL AND b.hold_token_hash = @HoldTokenHash));
+
+            SELECT bd.id AS BookingDetailId,
+                   bd.court_id AS CourtId,
+                   COALESCE(NULLIF(c.name, ''), c.court_number::text) AS CourtName,
+                   bd.booking_date AS BookingDate,
+                   bd.start_time AS StartTime,
+                   bd.end_time AS EndTime,
+                   bd.price_charged AS Price,
+                   UPPER(bd.status) AS Status
+            FROM booking.booking_details bd
+            INNER JOIN core.courts c ON c.id = bd.court_id
+            WHERE bd.booking_id = @BookingId
+            ORDER BY bd.booking_date, bd.start_time, CourtName, bd.id;
+            """, new { BookingId = bookingId, CustomerId = customerId, HoldTokenHash = holdTokenHash }, cancellationToken: cancellationToken));
+
+        var booking = await reader.ReadSingleOrDefaultAsync<BookingDetailResponse>();
+        var details = (await reader.ReadAsync<BookingCourtItemResponse>()).AsList();
+        if (booking is null)
+        {
+            return null;
+        }
+
+        booking.Details = details;
+        if (booking.ExpiresAt is DateTimeOffset expiresAt)
+        {
+            booking.RemainingSeconds = Math.Max(0, (int)Math.Ceiling((expiresAt - booking.ServerTime).TotalSeconds));
+        }
+
+        return booking;
+    }
+
+    private static Task ReplaceActiveHoldTokenHashAsync(
+        IDbConnection connection,
+        IDbTransaction transaction,
+        Guid bookingId,
+        byte[]? replacementHash,
+        CancellationToken cancellationToken)
+    {
+        if (replacementHash is null)
+        {
+            return Task.CompletedTask;
+        }
+
+        return connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE booking.bookings
+            SET hold_token_hash = @ReplacementHash,
+                updated_at = clock_timestamp()
+            WHERE id = @BookingId
+              AND LOWER(status) = 'pending_payment'
+              AND expires_at > clock_timestamp();
+            """, new { BookingId = bookingId, ReplacementHash = replacementHash },
+            transaction, cancellationToken: cancellationToken));
+    }
+
+    private static void SetRemainingSeconds(CreateBookingResponse? response)
+    {
+        if (response?.ExpiresAt is DateTimeOffset expiresAt)
+        {
+            response.RemainingSeconds = Math.Max(
+                0,
+                (int)Math.Ceiling((expiresAt - response.ServerTime).TotalSeconds));
+        }
+    }
+
+    public async Task<ExpiredBookingHold?> CancelBookingHoldAsync(
+        Guid bookingId,
+        Guid? customerId,
+        byte[]? holdTokenHash,
+        CancellationToken cancellationToken)
+    {
+        using var connection = connectionFactory.CreateConnection();
+        connection.Open();
+        using var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
+
+        var lockedBookingId = await connection.ExecuteScalarAsync<Guid?>(new CommandDefinition("""
+            SELECT id
+            FROM booking.bookings
+            WHERE id = @BookingId
+              AND LOWER(status) = 'pending_payment'
+              AND expires_at > NOW()
+              AND is_active = TRUE
+              AND deleted_at IS NULL
+              AND (customer_id = @CustomerId OR
+                   (@HoldTokenHash IS NOT NULL AND hold_token_hash = @HoldTokenHash))
+            FOR UPDATE;
+            """, new { BookingId = bookingId, CustomerId = customerId, HoldTokenHash = holdTokenHash },
+            transaction, cancellationToken: cancellationToken));
+        if (lockedBookingId is null)
+        {
+            transaction.Commit();
+            return null;
+        }
+
+        var slots = await connection.QueryAsync<BookingHoldSlot>(new CommandDefinition("""
+            SELECT court_id AS CourtId,
+                   booking_date AS BookingDate,
+                   start_time AS StartTime,
+                   end_time AS EndTime
+            FROM booking.booking_details
+            WHERE booking_id = @BookingId
+              AND LOWER(status) = 'held';
+            """, new { BookingId = bookingId }, transaction, cancellationToken: cancellationToken));
+
+        await connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE booking.bookings
+            SET status = 'cancelled',
+                expires_at = NULL,
+                updated_at = NOW()
+            WHERE id = @BookingId
+              AND LOWER(status) = 'pending_payment'
+              AND expires_at > NOW();
+
+            UPDATE booking.booking_details
+            SET status = 'cancelled'
+            WHERE booking_id = @BookingId
+              AND LOWER(status) = 'held';
+
+            UPDATE payment.payment_transactions
+            SET status = 'EXPIRED',
+                expired_at = COALESCE(expired_at, NOW()),
+                updated_at = NOW()
+            WHERE booking_id = @BookingId
+              AND status IN ('PENDING', 'PROCESSING');
+            """, new { BookingId = bookingId }, transaction, cancellationToken: cancellationToken));
+        transaction.Commit();
+
+        return new ExpiredBookingHold(
+            bookingId,
+            slots.Select(slot => new BookingSlotResource(
+                slot.CourtId,
+                slot.BookingDate,
+                slot.StartTime,
+                slot.EndTime)).ToArray());
+    }
+
+    private sealed class BookingHoldSlot
+    {
+        public Guid CourtId { get; init; }
+        public DateOnly BookingDate { get; init; }
+        public TimeOnly StartTime { get; init; }
+        public TimeOnly EndTime { get; init; }
     }
 
     public async Task<BookingDetailResponse?> GetBookingDetailAsync(Guid bookingId, CancellationToken cancellationToken)
@@ -427,9 +739,12 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
                    cu.phone_number AS PhoneNumber,
                    UPPER(b.booking_type) AS BookingType,
                    UPPER(b.status) AS BookingStatus,
+                   UPPER(b.status) AS Status,
                    b.payment_method AS PaymentMethod,
                    b.total_amount AS TotalAmount,
-                   b.notes AS Notes
+                   b.notes AS Notes,
+                   b.expires_at AS ExpiresAt,
+                   clock_timestamp() AS ServerTime
             FROM booking.bookings b
             JOIN customer.customers cu ON cu.id = b.customer_id
             WHERE b.id = @BookingId AND b.is_active AND b.deleted_at IS NULL;
@@ -440,12 +755,14 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
         }
 
         var details = await connection.QueryAsync<CreateBookingDetailResponse>(new CommandDefinition("""
-            SELECT bd.court_id AS CourtId,
+            SELECT bd.id AS BookingDetailId,
+                   bd.court_id AS CourtId,
                    COALESCE(NULLIF(c.name, ''), c.court_number::text) AS CourtName,
                    bd.booking_date AS BookingDate,
                    bd.start_time AS StartTime,
                    bd.end_time AS EndTime,
-                   bd.price_charged AS Price
+                   bd.price_charged AS Price,
+                   UPPER(bd.status) AS Status
             FROM booking.booking_details bd
             JOIN core.courts c ON c.id = bd.court_id
             WHERE bd.booking_id = @BookingId
@@ -459,5 +776,11 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
     {
         using var connection = connectionFactory.CreateConnection();
         return await connection.ExecuteScalarAsync<T>(new CommandDefinition(sql, parameters, cancellationToken: cancellationToken));
+    }
+
+    private sealed class IdempotencyProjection
+    {
+        public Guid BookingId { get; init; }
+        public byte[] RequestHash { get; init; } = [];
     }
 }
