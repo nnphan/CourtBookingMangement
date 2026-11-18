@@ -25,7 +25,7 @@ public sealed class CreateBookingRequestValidator : AbstractValidator<CreateBook
             .WithMessage("Booking type must be Fixed, Flexible, or multi_court.");
         RuleFor(request => request.PaymentMethod)
             .Must(value => value is not null && PaymentMethods.All.Contains(value))
-            .WithMessage("Payment method must be Cash, Momo, or BankTransfer.");
+            .WithMessage("Payment method must be Cash, Momo, BankTransfer, or SePay.");
         RuleFor(request => request.Notes).MaximumLength(1000);
         RuleFor(request => request.Details)
             .NotEmpty()

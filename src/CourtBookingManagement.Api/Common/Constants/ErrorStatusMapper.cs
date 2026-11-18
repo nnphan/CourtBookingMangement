@@ -7,7 +7,8 @@ public static class ErrorStatusMapper
     public static int ToStatusCode(string errorCode) => errorCode switch
     {
         "Auth.InvalidCredentials" or "Auth.RefreshTokenInvalid" or
-        "Auth.RefreshTokenRevoked" or "Auth.RefreshTokenExpired" => StatusCodes.Status401Unauthorized,
+        "Auth.RefreshTokenRevoked" or "Auth.RefreshTokenExpired" or
+        "SePay.WebhookUnauthorized" => StatusCodes.Status401Unauthorized,
         "Auth.UserDisabled" or "Auth.EmailNotVerified" or "Auth.Unauthorized" => StatusCodes.Status403Forbidden,
         "NOTIFICATION.FORBIDDEN" => StatusCodes.Status403Forbidden,
         "NOTIFICATION.NOT_FOUND" => StatusCodes.Status404NotFound,
@@ -23,15 +24,16 @@ public static class ErrorStatusMapper
         "Role.CodeAlreadyExists" or "Role.InUse" or
         "PLAYER_MATCH.ALREADY_JOINED" or "PLAYER_MATCH.REQUEST_EXISTS" or "PLAYER_MATCH.DUPLICATE" or
         "PLAYER_MATCH.COURT_CONFLICT" or "PLAYER_MATCH.MATCH_FULL" or "PLAYER_MATCH.NOT_OPEN" or
-        "Booking.StatusConflict" or "Booking.IdempotencyKeyReused" or "Payment.StatusConflict" or
+        "Booking.StatusConflict" or "Booking.HoldExpired" or "Booking.IdempotencyKeyReused" or "Payment.StatusConflict" or
         "Booking.SlotLocked" =>
             StatusCodes.Status409Conflict,
         "PLAYER_MATCH.MATCH_EXPIRED" or "PLAYER_MATCH.REQUEST_STATE_CHANGED" or
         "PLAYER_MATCH.REQUEST_NOT_PENDING" or "PLAYER_MATCH.HOST_ALREADY_PARTICIPANT" or
         "PLAYER_MATCH.BOOKING_INVALID_STATUS" => StatusCodes.Status409Conflict,
-        "PLAYER_MATCH.INVALID_REQUEST_STATUS" or "Error.Validation" => StatusCodes.Status400BadRequest,
+        "PLAYER_MATCH.INVALID_REQUEST_STATUS" or "Error.Validation" or
+        "SePay.WebhookInvalidPayload" => StatusCodes.Status400BadRequest,
         "Booking.LockServiceUnavailable" => StatusCodes.Status503ServiceUnavailable,
-        "Payment.MomoNotConfigured" or "Payment.ProviderUnavailable" =>
+        "Payment.MomoNotConfigured" or "Payment.SePayNotConfigured" or "Payment.ProviderUnavailable" =>
             StatusCodes.Status503ServiceUnavailable,
         "Payment.ProviderFailed" or "Payment.ProviderResponseInvalid" =>
             StatusCodes.Status502BadGateway,

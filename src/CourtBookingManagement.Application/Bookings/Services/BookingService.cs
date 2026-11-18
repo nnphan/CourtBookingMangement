@@ -311,10 +311,15 @@ public sealed class BookingService(
                 Request = request,
                 CustomerId = knownCustomerId
             }));
-        var holdDurationSeconds = string.Equals(
+        var requiresOnlinePayment = string.Equals(
             request.PaymentMethod,
             PaymentMethod.Momo.ToString(),
             StringComparison.OrdinalIgnoreCase)
+            || string.Equals(
+                request.PaymentMethod,
+                PaymentMethod.Sepay.ToString(),
+                StringComparison.OrdinalIgnoreCase);
+        var holdDurationSeconds = requiresOnlinePayment
             ? holdOptions.Value.DurationSeconds
             : (int?)null;
         var (holdToken, holdTokenHash) = holdDurationSeconds is null

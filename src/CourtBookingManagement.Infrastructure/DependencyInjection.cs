@@ -82,6 +82,14 @@ public static class DependencyInjection
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services.AddOptions<SePayOptions>()
+            .Bind(configuration.GetSection(SePayOptions.SectionName))
+            .ValidateDataAnnotations()
+            .Validate(
+                options => !options.HasAnyPaymentConfiguration || options.IsValidConfiguration(),
+                "SePay configuration is incomplete or invalid.")
+            .ValidateOnStart();
+
         services.AddOptions<RedisOptions>()
             .Bind(configuration.GetSection(RedisOptions.SectionName))
             .ValidateDataAnnotations()
@@ -145,6 +153,11 @@ public static class DependencyInjection
         });
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IPaymentService, PaymentService>();
+        services.AddScoped<ISePayPaymentService, SePayPaymentService>();
+        services.AddScoped<ISePayWebhookService, SePayWebhookService>();
+        services.AddSingleton<ISePayPaymentCodeGenerator, SePayPaymentCodeGenerator>();
+        services.AddSingleton<ISePayQrUrlBuilder, SePayQrUrlBuilder>();
+        services.AddSingleton<ISePayWebhookAuthenticator, SePayWebhookAuthenticator>();
         services.AddScoped<IMomoIpnService, MomoIpnService>();
         services.AddScoped<IMomoSignatureService, MomoSignatureService>();
         services.AddSingleton<IConnectionMultiplexer>(serviceProvider =>

@@ -5,11 +5,13 @@ public static class PaymentMethods
     public const string Cash = "CASH";
     public const string Momo = "MOMO";
     public const string BankTransfer = "BANK_TRANSFER";
+    public const string SePay = "SEPAY";
 
     public static readonly string[] All =
     [
         Cash,
         Momo,
-        BankTransfer
+        BankTransfer,
+        SePay
     ];
 }

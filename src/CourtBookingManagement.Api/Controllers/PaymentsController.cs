@@ -9,8 +9,22 @@ namespace CourtBookingManagement.Api.Controllers;
 [ApiController]
 [Route("api/payments")]
 [AllowAnonymous]
-public sealed class PaymentsController(IPaymentService paymentService) : ApiControllerBase
+public sealed class PaymentsController(
+    IPaymentService paymentService,
+    ISePayPaymentService sePayPaymentService) : ApiControllerBase
 {
+    [HttpPost("sepay")]
+    [ProducesResponseType(typeof(ApiResponse<CreateSePayPaymentResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> CreateSePayPayment(
+        [FromBody] CreateSePayPaymentRequest request,
+        [FromHeader(Name = "X-Booking-Hold-Token")] string? holdToken,
+        CancellationToken cancellationToken) =>
+        FromResult(
+            await sePayPaymentService.CreatePaymentAsync(request, holdToken, cancellationToken),
+            "SePay payment initialized successfully.");
+
     [HttpPost("momo")]
     [ProducesResponseType(typeof(ApiResponse<CreateMomoPaymentResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]

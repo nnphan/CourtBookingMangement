@@ -21,6 +21,7 @@ public sealed class PaymentService(
     IMomoSignatureService signatureService,
     IMomoIpnService ipnService,
     IOptions<MomoOptions> momoOptions,
+    IOptions<SePayOptions> sePayOptions,
     ILogger<PaymentService> logger) : IPaymentService
 {
     public async Task<Result<CreateMomoPaymentResponse>> CreateMomoPaymentAsync(
@@ -168,13 +169,7 @@ public sealed class PaymentService(
         return payment is null
             ? Result.Failure<GetPaymentStatusResponse>(
                 new Error("Payment.NotFound", "Payment not found."))
-            : Result.Success(new GetPaymentStatusResponse(
-                payment.PaymentId,
-                payment.BookingId,
-                payment.Status,
-                payment.Amount,
-                payment.PayUrl,
-                payment.PaidAt));
+            : Result.Success(ToStatusResponse(payment));
     }
 
     public async Task<Result<GetPaymentStatusResponse>> GetBookingPaymentStatusAsync(
@@ -191,13 +186,7 @@ public sealed class PaymentService(
         return payment is null
             ? Result.Failure<GetPaymentStatusResponse>(
                 new Error("Payment.NotFound", "Payment not found."))
-            : Result.Success(new GetPaymentStatusResponse(
-                payment.PaymentId,
-                payment.BookingId,
-                payment.Status,
-                payment.Amount,
-                payment.PayUrl,
-                payment.PaidAt));
+            : Result.Success(ToStatusResponse(payment));
     }
 
     public async Task<Result<GetPaymentStatusResponse>> QueryMomoPaymentAsync(
@@ -226,13 +215,7 @@ public sealed class PaymentService(
 
         if (string.Equals(payment.Status, PaymentStatuses.Paid, StringComparison.OrdinalIgnoreCase))
         {
-            return Result.Success(new GetPaymentStatusResponse(
-                payment.PaymentId,
-                payment.BookingId,
-                payment.Status,
-                payment.Amount,
-                payment.PayUrl,
-                payment.PaidAt));
+            return Result.Success(ToStatusResponse(payment));
         }
 
         if (payment.Amount <= 0m || decimal.Truncate(payment.Amount) != payment.Amount)
@@ -280,13 +263,7 @@ public sealed class PaymentService(
 
         if (providerResponse.ResultCode != 0)
         {
-            return Result.Success(new GetPaymentStatusResponse(
-                payment.PaymentId,
-                payment.BookingId,
-                payment.Status,
-                payment.Amount,
-                payment.PayUrl,
-                payment.PaidAt));
+            return Result.Success(ToStatusResponse(payment));
         }
 
         await ipnService.ProcessAsync(new MomoIpnRequest
@@ -311,13 +288,7 @@ public sealed class PaymentService(
             customerId,
             BookingHoldToken.Hash(holdToken),
             cancellationToken) ?? payment;
-        return Result.Success(new GetPaymentStatusResponse(
-            latestPayment.PaymentId,
-            latestPayment.BookingId,
-            latestPayment.Status,
-            latestPayment.Amount,
-            latestPayment.PayUrl,
-            latestPayment.PaidAt));
+        return Result.Success(ToStatusResponse(latestPayment));
     }
 
     private async Task<Guid?> GetCurrentCustomerIdAsync(CancellationToken cancellationToken)
@@ -339,6 +310,28 @@ public sealed class PaymentService(
             payment.PayUrl,
             payment.Deeplink,
             payment.QrCodeUrl);
+
+    private GetPaymentStatusResponse ToStatusResponse(PaymentTransactionProjection payment) =>
+        new(
+            payment.PaymentId,
+            payment.BookingId,
+            payment.Status,
+            payment.Amount,
+            payment.PayUrl,
+            payment.PaidAt,
+            payment.BookingStatus,
+            payment.BookingCode,
+            payment.PaymentCode,
+            payment.QrCodeUrl,
+            payment.BankCode,
+            payment.BankAccountNumber,
+            string.Equals(payment.Provider, PaymentProviders.Sepay, StringComparison.OrdinalIgnoreCase)
+                ? sePayOptions.Value.AccountHolderName
+                : null,
+            payment.ReceivedAmount,
+            payment.ExpiresAt,
+            payment.ServerTime,
+            payment.RemainingSeconds);
 
     private static string BuildReturnUrl(string configuredUrl, Guid bookingId)
     {
