@@ -15,7 +15,7 @@ public sealed class UserRolesController(
     ICurrentUserService currentUserService) : ApiControllerBase
 {
     [HttpGet("{id:guid}/roles")]
-    [Permission("role.assign")]
+    [Permission("role.view")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<UserRoleResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -32,7 +32,7 @@ public sealed class UserRolesController(
     }
 
     [HttpPost("{id:guid}/roles")]
-    //[Permission("role.assign")]
+    [Permission("role.create")]
     [ProducesResponseType(typeof(ApiResponse<UserRoleAssignmentResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]

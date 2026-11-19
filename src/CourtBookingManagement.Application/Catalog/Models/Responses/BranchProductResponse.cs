@@ -15,4 +15,4 @@ public sealed record BranchProductResponse(
     decimal? CostPrice,
     bool IsAvailableForSale,
     int DisplayOrder,
-    DateTimeOffset UpdatedAt);
+    DateTime UpdatedAt);

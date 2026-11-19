@@ -77,7 +77,7 @@ public sealed class BranchesController(
     }
 
     [HttpGet("my-branches")]
-    //[Permission(Permissions.BranchView)]
+    [Permission(Permissions.BranchView)]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<BranchLookupResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]

@@ -12,4 +12,4 @@ public sealed record SalesOrderListItemResponse(
     string PaymentStatus,
     Guid? InvoiceId,
     string? InvoiceNumber,
-    DateTimeOffset CreatedAt);
+    DateTime CreatedAt);

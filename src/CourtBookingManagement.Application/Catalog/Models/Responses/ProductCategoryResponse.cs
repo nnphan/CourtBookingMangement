@@ -8,5 +8,5 @@ public sealed record ProductCategoryResponse(
     string? Description,
     int DisplayOrder,
     bool IsActive,
-    DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTime CreatedAt,
+    DateTime UpdatedAt);

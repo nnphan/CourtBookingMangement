@@ -38,7 +38,7 @@ public sealed class SalesRepository(ISqlConnectionFactory connectionFactory) : I
             request.PageSize,
             Offset = (long)(request.Page - 1) * request.PageSize
         };
-        const string projection = """
+        const string dataSql = $"""
             SELECT
                 so.id AS Id,
                 so.branch_id AS BranchId,
@@ -52,10 +52,15 @@ public sealed class SalesRepository(ISqlConnectionFactory connectionFactory) : I
                 i.id AS InvoiceId,
                 i.invoice_number AS InvoiceNumber,
                 so.created_at AS CreatedAt
+                {filterSql}
+                ORDER BY so.created_at DESC,
+                so.id DESC
+                LIMIT @PageSize
+                OFFSET @Offset;
             """;
         using var connection = connectionFactory.CreateConnection();
         var items = (await connection.QueryAsync<SalesOrderListItemResponse>(new CommandDefinition(
-            projection + filterSql + " ORDER BY so.created_at DESC, so.id DESC LIMIT @PageSize OFFSET @Offset;",
+            dataSql,
             parameters,
             cancellationToken: cancellationToken))).AsList();
         var count = await connection.ExecuteScalarAsync<long>(new CommandDefinition(
@@ -920,8 +925,8 @@ public sealed class SalesRepository(ISqlConnectionFactory connectionFactory) : I
         string PaymentMethodCode,
         string PaymentStatus,
         string? Notes,
-        DateTimeOffset CreatedAt,
-        DateTimeOffset? CompletedAt,
+        DateTime CreatedAt,
+        DateTime? CompletedAt,
         Guid? InvoiceId,
         string? InvoiceNumber);
 
@@ -941,7 +946,7 @@ public sealed class SalesRepository(ISqlConnectionFactory connectionFactory) : I
         decimal TotalAmount,
         string PaymentMethodCode,
         string PaymentStatus,
-        DateTimeOffset IssuedAt);
+        DateTime IssuedAt);
 
     private sealed record ReportTotals(long CompletedOrderCount, decimal GrossSales);
 }

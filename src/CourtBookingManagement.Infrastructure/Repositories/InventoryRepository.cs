@@ -38,7 +38,7 @@ public sealed class InventoryRepository(ISqlConnectionFactory connectionFactory)
             request.PageSize,
             Offset = (long)(request.Page - 1) * request.PageSize
         };
-        const string projection = """
+        const string dataSql = $"""
             SELECT
                 p.id AS ProductId,
                 p.sku AS Sku,
@@ -51,11 +51,18 @@ public sealed class InventoryRepository(ISqlConnectionFactory connectionFactory)
                 COALESCE(bi.quantity_on_hand, 0) - COALESCE(bi.quantity_reserved, 0) AS AvailableQuantity,
                 COALESCE(bi.reorder_level, 0) AS ReorderLevel,
                 COALESCE(bi.updated_at, bp.updated_at) AS UpdatedAt
+                {filterSql}
+                ORDER BY
+                    c.name,
+                    p.name,
+                    p.id
+                LIMIT @PageSize
+                OFFSET @Offset;
             """;
 
         using var connection = connectionFactory.CreateConnection();
         var items = (await connection.QueryAsync<InventoryBalanceResponse>(new CommandDefinition(
-            projection + filterSql + " ORDER BY c.name, p.name, p.id LIMIT @PageSize OFFSET @Offset;",
+            dataSql,
             parameters,
             cancellationToken: cancellationToken))).AsList();
         var count = await connection.ExecuteScalarAsync<long>(new CommandDefinition(
@@ -89,7 +96,7 @@ public sealed class InventoryRepository(ISqlConnectionFactory connectionFactory)
             request.PageSize,
             Offset = (long)(request.Page - 1) * request.PageSize
         };
-        const string projection = """
+        const string dataSql = $"""
             SELECT
                 sm.id AS Id,
                 sm.product_id AS ProductId,
@@ -104,11 +111,16 @@ public sealed class InventoryRepository(ISqlConnectionFactory connectionFactory)
                 sm.notes AS Notes,
                 sm.created_at AS CreatedAt,
                 sm.created_by AS CreatedBy
+                {filterSql}
+                ORDER BY sm.created_at DESC, 
+                sm.id DESC 
+                LIMIT @PageSize
+                OFFSET @Offset;
             """;
 
         using var connection = connectionFactory.CreateConnection();
         var items = (await connection.QueryAsync<StockMovementResponse>(new CommandDefinition(
-            projection + filterSql + " ORDER BY sm.created_at DESC, sm.id DESC LIMIT @PageSize OFFSET @Offset;",
+            dataSql,
             parameters,
             cancellationToken: cancellationToken))).AsList();
         var count = await connection.ExecuteScalarAsync<long>(new CommandDefinition(
@@ -138,7 +150,7 @@ public sealed class InventoryRepository(ISqlConnectionFactory connectionFactory)
             request.PageSize,
             Offset = (long)(request.Page - 1) * request.PageSize
         };
-        const string projection = """
+        const string dataSql = $"""
             SELECT
                 gr.id AS Id,
                 gr.branch_id AS BranchId,
@@ -151,11 +163,18 @@ public sealed class InventoryRepository(ISqlConnectionFactory connectionFactory)
                 gr.created_at AS CreatedAt,
                 gr.posted_at AS PostedAt,
                 gr.posted_by AS PostedBy
+                {filterSql}
+                ORDER BY 
+                    gr.created_at DESC, 
+                    gr.id DESC LIMIT 
+                @PageSize 
+                OFFSET @Offset;
+
             """;
 
         using var connection = connectionFactory.CreateConnection();
         var items = (await connection.QueryAsync<GoodsReceiptResponse>(new CommandDefinition(
-            projection + filterSql + " ORDER BY gr.created_at DESC, gr.id DESC LIMIT @PageSize OFFSET @Offset;",
+            dataSql,
             parameters,
             cancellationToken: cancellationToken))).AsList();
         var count = await connection.ExecuteScalarAsync<long>(new CommandDefinition(

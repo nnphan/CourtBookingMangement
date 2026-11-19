@@ -214,6 +214,7 @@ public sealed class CatalogRepository(ISqlConnectionFactory connectionFactory) :
               AND (@IsActive IS NULL OR p.is_active = @IsActive)
               AND (@TrackInventory IS NULL OR p.track_inventory = @TrackInventory)
             """;
+
         var parameters = new
         {
             Search = string.IsNullOrWhiteSpace(request.Search) ? null : $"%{request.Search}%",
@@ -223,8 +224,10 @@ public sealed class CatalogRepository(ISqlConnectionFactory connectionFactory) :
             request.PageSize,
             Offset = (long)(request.Page - 1) * request.PageSize
         };
+
         var sortSql = GetSortExpression(request.Sort);
-        var dataSql = """
+
+        var dataSql = $"""
             SELECT
                 p.id AS Id,
                 p.category_id AS CategoryId,
@@ -241,7 +244,11 @@ public sealed class CatalogRepository(ISqlConnectionFactory connectionFactory) :
                 p.is_active AS IsActive,
                 p.created_at AS CreatedAt,
                 p.updated_at AS UpdatedAt
-            """ + filterSql + sortSql + " LIMIT @PageSize OFFSET @Offset;";
+            {filterSql}
+            {sortSql}
+            LIMIT @PageSize
+            OFFSET @Offset;
+            """;
 
         using var connection = connectionFactory.CreateConnection();
         var items = (await connection.QueryAsync<ProductResponse>(new CommandDefinition(

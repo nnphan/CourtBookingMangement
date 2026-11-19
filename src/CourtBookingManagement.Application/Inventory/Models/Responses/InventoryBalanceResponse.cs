@@ -11,4 +11,4 @@ public sealed record InventoryBalanceResponse(
     decimal QuantityReserved,
     decimal AvailableQuantity,
     decimal ReorderLevel,
-    DateTimeOffset UpdatedAt);
+    DateTime UpdatedAt);

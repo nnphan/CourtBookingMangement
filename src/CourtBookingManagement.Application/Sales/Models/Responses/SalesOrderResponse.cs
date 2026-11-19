@@ -15,8 +15,8 @@ public sealed record SalesOrderResponse(
     string PaymentMethodCode,
     string PaymentStatus,
     string? Notes,
-    DateTimeOffset CreatedAt,
-    DateTimeOffset? CompletedAt,
+    DateTime CreatedAt,
+    DateTime? CompletedAt,
     Guid? InvoiceId,
     string? InvoiceNumber,
     IReadOnlyList<SalesOrderItemResponse> Items);

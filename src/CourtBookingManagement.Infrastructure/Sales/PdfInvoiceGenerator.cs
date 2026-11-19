@@ -85,7 +85,7 @@ public sealed class PdfInvoiceGenerator : IInvoicePdfGenerator
         graphics.DrawString("HÓA ĐƠN BÁN HÀNG", headingFont, XBrushes.Black, margin, 108);
         graphics.DrawString($"Số hóa đơn: {invoice.InvoiceNumber}", bodyFont, XBrushes.Black, margin, 128);
         graphics.DrawString(
-            $"Ngày: {invoice.IssuedAt.ToOffset(VietnamTimeOffset).ToString("dd/MM/yyyy HH:mm", VietnameseCulture)}",
+            $"Ngày: {invoice.IssuedAt.ToString("dd/MM/yyyy HH:mm", VietnameseCulture)}",
             bodyFont,
             XBrushes.Black,
             margin,

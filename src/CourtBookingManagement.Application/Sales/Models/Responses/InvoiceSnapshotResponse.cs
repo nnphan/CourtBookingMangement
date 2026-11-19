@@ -16,7 +16,7 @@ public sealed record InvoiceSnapshotResponse(
     decimal TotalAmount,
     string PaymentMethodCode,
     string PaymentStatus,
-    DateTimeOffset IssuedAt,
+    DateTime IssuedAt,
     IReadOnlyList<InvoiceSnapshotItemResponse> Items);
 
 public sealed record InvoiceSnapshotItemResponse(

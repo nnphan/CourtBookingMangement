@@ -9,8 +9,8 @@ public sealed record GoodsReceiptResponse(
     string Status,
     decimal TotalCost,
     string? Notes,
-    DateTimeOffset CreatedAt,
-    DateTimeOffset? PostedAt,
+    DateTime CreatedAt,
+    DateTime? PostedAt,
     Guid? PostedBy)
 {
     public IReadOnlyList<GoodsReceiptItemResponse>? Items { get; init; }

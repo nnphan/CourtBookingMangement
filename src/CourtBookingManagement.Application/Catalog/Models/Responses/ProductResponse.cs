@@ -15,5 +15,5 @@ public sealed record ProductResponse(
     decimal DefaultSellingPrice,
     bool TrackInventory,
     bool IsActive,
-    DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTime CreatedAt,
+    DateTime UpdatedAt);

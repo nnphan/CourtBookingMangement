@@ -12,5 +12,5 @@ public sealed record StockMovementResponse(
     string? ReferenceType,
     Guid? ReferenceId,
     string? Notes,
-    DateTimeOffset CreatedAt,
+    DateTime CreatedAt,
     Guid? CreatedBy);
