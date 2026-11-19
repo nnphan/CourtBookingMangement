@@ -72,7 +72,7 @@ public sealed class BookingsController(ICourtStatusService courtStatusService, I
     }
 
     [HttpGet("my-bookings")]
-    //[Authorize(Roles = "CUSTOMER")]
+    [Authorize(Roles = "CUSTOMER")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<MyBookingResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]

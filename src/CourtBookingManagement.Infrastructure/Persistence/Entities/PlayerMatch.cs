@@ -36,14 +36,44 @@ public partial class PlayerMatch
     [Column("description")]
     public string? Description { get; set; }
 
+    [Column("room_code")]
+    [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+    public string RoomCode { get; set; } = null!;
+
     [Column("match_date")]
-    public DateOnly MatchDate { get; set; }
+    public DateOnly? MatchDate { get; set; }
 
     [Column("start_time")]
-    public TimeOnly StartTime { get; set; }
+    public TimeOnly? StartTime { get; set; }
 
     [Column("end_time")]
-    public TimeOnly EndTime { get; set; }
+    public TimeOnly? EndTime { get; set; }
+
+    [Column("game_type")]
+    [StringLength(10)]
+    public string? GameType { get; set; }
+
+    [Column("minimum_rating")]
+    public int? MinimumRating { get; set; }
+
+    [Column("maximum_rating")]
+    public int? MaximumRating { get; set; }
+
+    [Column("gender_policy")]
+    [StringLength(10)]
+    public string? GenderPolicy { get; set; }
+
+    [Column("required_gender")]
+    [StringLength(10)]
+    public string? RequiredGender { get; set; }
+
+    [Column("approval_mode")]
+    [StringLength(20)]
+    public string ApprovalMode { get; set; } = "MANUAL";
+
+    [Column("visibility")]
+    [StringLength(20)]
+    public string Visibility { get; set; } = "PUBLIC";
 
     [Column("skill_level")]
     [StringLength(30)]
@@ -72,6 +102,12 @@ public partial class PlayerMatch
 
     [Column("updated_at")]
     public DateTime UpdatedAt { get; set; }
+
+    [Column("cancelled_at")]
+    public DateTime? CancelledAt { get; set; }
+
+    [Column("cancelled_by")]
+    public Guid? CancelledBy { get; set; }
 
     [ForeignKey("BranchId")]
     [InverseProperty("PlayerMatches")]

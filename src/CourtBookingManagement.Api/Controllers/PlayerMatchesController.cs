@@ -6,6 +6,7 @@ using CourtBookingManagement.Application.Matching.Services;
 using CourtBookingManagement.Domain.Abstractions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace CourtBookingManagement.Api.Controllers;
 
@@ -20,6 +21,52 @@ public sealed class PlayerMatchesController(IPlayerMatchService service, ICurren
         var result = await service.GetMatchesAsync(request, cancellationToken);
         return result.IsSuccess
             ? Success(result.Value.Items, "Success", result.Value.Metadata)
+            : Error(result.Error);
+    }
+
+    [Authorize]
+    [HttpPost("search")]
+    [ProducesResponseType(typeof(ApiResponse<PersonalizedPlayerMatchSearchResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SearchPersonalized(
+        [FromBody] PersonalizedPlayerMatchSearchRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid userId)
+        {
+            return Error(new Error("PLAYER_MATCH.INVALID_USER", "A valid authenticated user is required."));
+        }
+
+        var result = await service.SearchPersonalizedAsync(request, userId, cancellationToken);
+        return result.IsSuccess
+            ? Success(result.Value.Data, "Personalized player matches retrieved successfully.", result.Value.Metadata)
+            : Error(result.Error);
+    }
+
+    [Authorize]
+    [HttpPost("{id:guid}/score")]
+    [ProducesResponseType(typeof(ApiResponse<PersonalizedPlayerMatchResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ScoreMatch(
+        Guid id,
+        [FromBody] PlayerMatchScoringCriteriaRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid userId)
+        {
+            return Error(new Error("PLAYER_MATCH.INVALID_USER", "A valid authenticated user is required."));
+        }
+
+        var result = await service.ScoreMatchAsync(id, request, userId, cancellationToken);
+        return result.IsSuccess
+            ? Success(result.Value, "Player match scored successfully.")
             : Error(result.Error);
     }
 
@@ -88,9 +135,95 @@ public sealed class PlayerMatchesController(IPlayerMatchService service, ICurren
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var result = await service.GetMatchByIdAsync(id, cancellationToken);
+        var result = await service.GetMatchByIdAsync(id, currentUserService.UserId, cancellationToken);
         return result.IsSuccess
             ? Success(result.Value, "Player match retrieved successfully.")
+            : Error(result.Error);
+    }
+
+    [Authorize]
+    [HttpPost("drafts")]
+    [ProducesResponseType(typeof(ApiResponse<PlayerMatchLifecycleResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CreateDraft([FromBody] PlayerMatchDraftRequest request, CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid userId)
+        {
+            return Error(new Error("PLAYER_MATCH.INVALID_USER", "A valid authenticated user is required."));
+        }
+
+        var result = await service.CreateDraftAsync(request, userId, cancellationToken);
+        return result.IsSuccess
+            ? CreatedAtAction(
+                nameof(GetById),
+                new { id = result.Value.Id },
+                ApiResponse<PlayerMatchLifecycleResponse>.Create(
+                    result.Value, "Player match draft created successfully.", HttpContext.TraceIdentifier))
+            : Error(result.Error);
+    }
+
+    [Authorize]
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(ApiResponse<PlayerMatchLifecycleResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> UpdateDraft(Guid id, [FromBody] PlayerMatchDraftRequest request, CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid userId)
+        {
+            return Error(new Error("PLAYER_MATCH.INVALID_USER", "A valid authenticated user is required."));
+        }
+
+        var result = await service.UpdateDraftAsync(id, request, userId, cancellationToken);
+        return result.IsSuccess
+            ? Success(result.Value, "Player match draft updated successfully.")
+            : Error(result.Error);
+    }
+
+    [Authorize]
+    [HttpPost("{id:guid}/publish")]
+    [ProducesResponseType(typeof(ApiResponse<PlayerMatchLifecycleResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> PublishDraft(Guid id, CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid userId)
+        {
+            return Error(new Error("PLAYER_MATCH.INVALID_USER", "A valid authenticated user is required."));
+        }
+
+        var result = await service.PublishDraftAsync(id, userId, cancellationToken);
+        return result.IsSuccess
+            ? Success(result.Value, "Player match published successfully.")
+            : Error(result.Error);
+    }
+
+    [Authorize]
+    [HttpPost("{id:guid}/cancel")]
+    [ProducesResponseType(typeof(ApiResponse<PlayerMatchLifecycleResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> CancelMatch(Guid id, CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid userId)
+        {
+            return Error(new Error("PLAYER_MATCH.INVALID_USER", "A valid authenticated user is required."));
+        }
+
+        var result = await service.CancelMatchAsync(id, userId, cancellationToken);
+        return result.IsSuccess
+            ? Success(result.Value, "Player match cancelled successfully.")
             : Error(result.Error);
     }
 
@@ -128,9 +261,50 @@ public sealed class PlayerMatchesController(IPlayerMatchService service, ICurren
             return Error(new Error("PLAYER_MATCH.INVALID_USER", "A valid authenticated user is required."));
         }
 
-        var result = await service.JoinMatchAsync(id, userId, cancellationToken);
+        var result = await service.JoinMatchAsync(id, userId, null, cancellationToken);
         return result.IsSuccess
             ? Success(result.Value, "Join request submitted successfully.")
+            : Error(result.Error);
+    }
+
+    [Authorize]
+    [HttpPost("{id:guid}/join-requests")]
+    [ProducesResponseType(typeof(ApiResponse<JoinMatchResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> CreateJoinRequest(
+        Guid id,
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] JoinMatchRequest? request,
+        CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid userId)
+        {
+            return Error(new Error("PLAYER_MATCH.INVALID_USER", "A valid authenticated user is required."));
+        }
+
+        var result = await service.JoinMatchAsync(id, userId, request?.Message, cancellationToken);
+        return result.IsSuccess
+            ? Success(result.Value, "Join request submitted successfully.")
+            : Error(result.Error);
+    }
+
+    [Authorize]
+    [HttpDelete("{id:guid}/join-requests/me")]
+    [ProducesResponseType(typeof(ApiResponse<JoinMatchResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> CancelJoinRequest(Guid id, CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid userId)
+        {
+            return Error(new Error("PLAYER_MATCH.INVALID_USER", "A valid authenticated user is required."));
+        }
+
+        var result = await service.CancelJoinRequestAsync(id, userId, cancellationToken);
+        return result.IsSuccess
+            ? Success(result.Value, "Join request cancelled successfully.")
             : Error(result.Error);
     }
 
@@ -163,14 +337,18 @@ public sealed class PlayerMatchesController(IPlayerMatchService service, ICurren
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> RejectJoinRequest(Guid id, Guid requestId, CancellationToken cancellationToken)
+    public async Task<IActionResult> RejectJoinRequest(
+        Guid id,
+        Guid requestId,
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] RejectJoinRequestRequest? request,
+        CancellationToken cancellationToken)
     {
         if (currentUserService.UserId is not Guid userId)
         {
             return Error(new Error("PLAYER_MATCH.INVALID_USER", "A valid authenticated user is required."));
         }
 
-        var result = await service.RejectJoinRequestAsync(id, requestId, userId, cancellationToken);
+        var result = await service.RejectJoinRequestAsync(id, requestId, userId, request?.Reason, cancellationToken);
         return result.IsSuccess
             ? Success(result.Value, "Join request rejected successfully.")
             : Error(result.Error);

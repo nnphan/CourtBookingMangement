@@ -9,7 +9,7 @@ namespace CourtBookingManagement.Infrastructure.Persistence.Entities;
 [Table("match_participants", Schema = "matching")]
 [Index("MatchId", Name = "idx_match_participants_match")]
 [Index("UserId", Name = "idx_match_participants_user")]
-[Index("MatchId", "UserId", Name = "uq_match_participant", IsUnique = true)]
+[Index("MatchId", "UserId", Name = "ux_match_participants_active", IsUnique = true)]
 public partial class MatchParticipant
 {
     [Key]

@@ -15,4 +15,8 @@ public sealed class PlayerMatchJoinRequestResponse
     public string Status { get; init; } = string.Empty;
 
     public DateTime RequestedAt { get; init; }
+
+    public string? Message { get; init; }
+
+    public string? RejectionReason { get; init; }
 }

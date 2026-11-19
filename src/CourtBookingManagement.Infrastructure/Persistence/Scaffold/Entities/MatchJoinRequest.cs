@@ -8,7 +8,7 @@ namespace CourtBookingManagement.Infrastructure.Persistence.Scaffold.Entities;
 
 [Table("match_join_requests", Schema = "matching")]
 [Index("MatchId", Name = "idx_join_requests_match")]
-[Index("MatchId", "RequesterId", Name = "uq_join_request", IsUnique = true)]
+[Index("MatchId", "RequesterId", Name = "ux_match_join_requests_pending", IsUnique = true)]
 public partial class MatchJoinRequest
 {
     [Key]
@@ -37,6 +37,13 @@ public partial class MatchJoinRequest
 
     [Column("reviewed_by")]
     public Guid? ReviewedBy { get; set; }
+
+    [Column("rejection_reason")]
+    [StringLength(500)]
+    public string? RejectionReason { get; set; }
+
+    [Column("updated_at")]
+    public DateTime UpdatedAt { get; set; }
 
     [ForeignKey("MatchId")]
     [InverseProperty("MatchJoinRequests")]

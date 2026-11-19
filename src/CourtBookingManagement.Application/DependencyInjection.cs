@@ -46,6 +46,7 @@ public static class DependencyInjection
         services.AddScoped<IBranchService, BranchService>();
         services.AddScoped<IAdminBranchService, AdminBranchService>();
         services.AddScoped<IPlayerMatchService, PlayerMatchService>();
+        services.AddScoped<IPlayerMatchingProfileService, PlayerMatchingProfileService>();
         services.AddScoped<IMyMatchService, MyMatchService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IRoleService, RoleService>();

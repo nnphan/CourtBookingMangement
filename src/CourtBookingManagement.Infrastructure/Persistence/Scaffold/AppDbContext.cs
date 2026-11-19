@@ -236,10 +236,13 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<MatchJoinRequest>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("match_join_requests_pkey");
+            entity.HasIndex(e => new { e.MatchId, e.RequesterId })
+                .HasFilter("\"status\" = 'PENDING'");
 
             entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
             entity.Property(e => e.RequestedAt).HasDefaultValueSql("now()");
             entity.Property(e => e.Status).HasDefaultValueSql("'PENDING'::character varying");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
 
             entity.HasOne(d => d.Match).WithMany(p => p.MatchJoinRequests)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -270,6 +273,8 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<MatchParticipant>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("match_participants_pkey");
+            entity.HasIndex(e => new { e.MatchId, e.UserId })
+                .HasFilter("\"status\" = 'ACTIVE'");
 
             entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v7()");
             entity.Property(e => e.JoinedAt).HasDefaultValueSql("now()");
@@ -372,6 +377,9 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.CurrentPlayers).HasDefaultValue(1);
             entity.Property(e => e.Status).HasDefaultValueSql("'OPEN'::character varying");
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.ApprovalMode).HasMaxLength(20).HasDefaultValue("MANUAL");
+            entity.Property(e => e.Visibility).HasMaxLength(20).HasDefaultValue("PUBLIC");
+            entity.Property(e => e.RoomCode).ValueGeneratedOnAddOrUpdate();
 
             entity.HasOne(d => d.Branch).WithMany(p => p.PlayerMatches)
                 .OnDelete(DeleteBehavior.ClientSetNull)

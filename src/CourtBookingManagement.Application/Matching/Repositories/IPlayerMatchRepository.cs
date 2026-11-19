@@ -9,21 +9,133 @@ public interface IPlayerMatchRepository
 {
     Task<PagedResult<PlayerMatchResponse>> SearchAsync(PlayerMatchSearchRequest request, CancellationToken cancellationToken);
 
+    Task<bool> BranchesExistAsync(IReadOnlyList<Guid> branchIds, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<PersonalizedMatchCandidate>> SearchPersonalizedCandidatesAsync(
+        Guid viewerUserId,
+        int currentRating,
+        string? viewerGender,
+        PlayerMatchScoringCriteriaRequest criteria,
+        Guid? matchId,
+        int candidateLimit,
+        CancellationToken cancellationToken);
+
     Task<PagedResult<HostedPlayerMatchResponse>> GetHostedMatchesAsync(Guid userId, GetHostedMatchesRequest request, CancellationToken cancellationToken);
 
     Task<Guid?> GetMatchHostIdAsync(Guid matchId, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<PlayerMatchJoinRequestResponse>> GetJoinRequestsAsync(Guid matchId, string? status, CancellationToken cancellationToken);
 
+    Task<PagedResult<MyMatchJoinRequestResponse>> GetMyJoinRequestsAsync(
+        Guid userId,
+        GetMyMatchJoinRequestsRequest request,
+        CancellationToken cancellationToken);
+
     Task<PagedResult<ParticipatingPlayerMatchResponse>> GetParticipatingMatchesAsync(Guid userId, GetParticipatingMatchesRequest request, CancellationToken cancellationToken);
 
-    Task<PlayerMatchDetailResponse?> GetByIdAsync(Guid matchId, CancellationToken cancellationToken);
+    Task<PlayerMatchDetailResponse?> GetByIdAsync(Guid matchId, Guid? viewerUserId, CancellationToken cancellationToken);
 
     Task<PlayerMatchDetailResponse?> GetMatchByIdAsync(Guid matchId, CancellationToken cancellationToken);
 
+    Task<PlayerMatchLifecycleContext?> LockMatchForLifecycleAsync(
+        Guid matchId,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
+
+    Task<Guid> CreateDraftAsync(
+        PlayerMatchDraftRequest request,
+        Guid createdBy,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
+
+    Task<bool> UpdateDraftAsync(
+        Guid matchId,
+        PlayerMatchDraftRequest request,
+        Guid currentUserId,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
+
+    Task<bool> IsBookingValidForPublicationAsync(
+        PlayerMatchLifecycleContext match,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
+
+    Task<bool> HasOverlappingPublishedMatchAsync(
+        PlayerMatchLifecycleContext match,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
+
+    Task<bool> PublishDraftAsync(
+        Guid matchId,
+        Guid currentUserId,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
+
+    Task<bool> CancelMatchAsync(
+        Guid matchId,
+        Guid currentUserId,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
+
     Task<PlayerMatchJoinRequest?> GetJoinRequestAsync(Guid requestId, CancellationToken cancellationToken);
 
-    Task<bool> RejectJoinRequestAsync(Guid requestId, IDbTransaction transaction, CancellationToken cancellationToken);
+    Task<PlayerMatchEligibilityContext?> LockMatchForApprovalAsync(
+        Guid matchId,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
+
+    Task<PlayerMatchEligibilityContext?> LockMatchForJoinAsync(
+        Guid matchId,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
+
+    Task<PlayerMatchJoinRequest?> LockJoinRequestForApprovalAsync(
+        Guid matchId,
+        Guid requestId,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
+
+    Task<int> CountActiveParticipantsAsync(Guid matchId, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    Task<bool> IsBookingValidAsync(
+        PlayerMatchEligibilityContext match,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
+
+    Task<bool> IsPlayerEligibleForApprovalAsync(
+        PlayerMatchEligibilityContext match,
+        Guid userId,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
+
+    Task<bool> IsActiveParticipantAsync(
+        Guid matchId,
+        Guid userId,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
+
+    Task<bool> RejectJoinRequestAsync(
+        Guid matchId,
+        Guid requestId,
+        Guid currentUserId,
+        string? reason,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
+
+    Task<Guid?> CancelJoinRequestAsync(Guid matchId, Guid userId, CancellationToken cancellationToken);
+
+    Task<bool> HasPendingJoinRequestAsync(
+        Guid matchId,
+        Guid userId,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
+
+    Task ExpirePendingJoinRequestsAsync(Guid matchId, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    Task<bool> CancelInvalidatedMatchAsync(
+        Guid matchId,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
 
     Task<bool> BranchExistsAsync(Guid branchId, CancellationToken cancellationToken);
 
@@ -39,7 +151,12 @@ public interface IPlayerMatchRepository
 
     Task<Guid> CreateAsync(CreatePlayerMatchRequest request, Guid createdBy, IDbTransaction transaction, CancellationToken cancellationToken);
 
-    Task<Guid?> CreateJoinRequestAsync(Guid matchId, Guid userId, IDbTransaction transaction, CancellationToken cancellationToken);
+    Task<Guid?> CreateJoinRequestAsync(
+        Guid matchId,
+        Guid userId,
+        string? message,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
 
     Task CreateParticipantAsync(Guid matchId, Guid userId, IDbTransaction transaction, CancellationToken cancellationToken);
 
@@ -47,13 +164,20 @@ public interface IPlayerMatchRepository
 
     Task<bool> ApproveJoinRequestAsync(Guid matchId, Guid requestId, Guid currentUserId, IDbTransaction transaction, CancellationToken cancellationToken);
 
-    Task<int?> TryIncrementCurrentPlayersAsync(Guid matchId, IDbTransaction transaction, CancellationToken cancellationToken);
+    Task<int?> TryIncrementCurrentPlayersAsync(
+        Guid matchId,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
 
     Task UpdateMatchStatusAsync(Guid matchId, string status, IDbTransaction transaction, CancellationToken cancellationToken);
 
-    Task CreateNotificationAsync(Guid matchId, Guid hostUserId, string message, IDbTransaction transaction, CancellationToken cancellationToken);
+    Task CreateNotificationAsync(
+        Guid userId,
+        Guid? matchId,
+        string type,
+        string title,
+        string message,
+        CancellationToken cancellationToken);
 
-    Task CreateNotificationAsync(Guid userId, Guid? matchId, string type, string title, string message, IDbTransaction transaction, CancellationToken cancellationToken);
-
-    Task CreateMatchFullNotificationsAsync(Guid matchId, IDbTransaction transaction, CancellationToken cancellationToken);
+    Task CreateMatchFullNotificationsAsync(Guid matchId, CancellationToken cancellationToken);
 }

@@ -9,16 +9,18 @@ public static class ErrorStatusMapper
         "Auth.InvalidCredentials" or "Auth.RefreshTokenInvalid" or
         "Auth.RefreshTokenRevoked" or "Auth.RefreshTokenExpired" or
         "SePay.WebhookUnauthorized" => StatusCodes.Status401Unauthorized,
-        "Auth.UserDisabled" or "Auth.EmailNotVerified" or "Auth.Unauthorized" => StatusCodes.Status403Forbidden,
+        "Auth.UserDisabled" or "Auth.EmailNotVerified" or "Auth.Unauthorized" or
+        "PLAYER_MATCHING_DISABLED" => StatusCodes.Status403Forbidden,
         "NOTIFICATION.FORBIDDEN" => StatusCodes.Status403Forbidden,
         "NOTIFICATION.NOT_FOUND" => StatusCodes.Status404NotFound,
         "User.NotFound" or "Role.NotFound" or "Permission.NotFound" or "Branch.NotFound" or "Booking.NotFound" or
         "Payment.NotFound" or "PLAYER_MATCH.NOT_FOUND" or
         "PLAYER_MATCH.REQUEST_NOT_FOUND" or "PLAYER_MATCH.BOOKING_NOT_FOUND" or
         "PLAYER_MATCH.BRANCH_NOT_FOUND" or "PLAYER_MATCH.COURT_NOT_FOUND" or
-        "PLAYER_MATCH.REQUEST_MISMATCH" => StatusCodes.Status404NotFound,
+        "PLAYER_MATCH.REQUEST_MISMATCH" or "PLAYER_MATCHING_PROFILE_REQUIRED" or
+        "MATCH_ROOM_NOT_FOUND" or "JOIN_REQUEST_NOT_FOUND" => StatusCodes.Status404NotFound,
         "PLAYER_MATCH.INVALID_USER" => StatusCodes.Status401Unauthorized,
-        "PLAYER_MATCH.NOT_HOST" => StatusCodes.Status403Forbidden,
+        "PLAYER_MATCH.NOT_HOST" or "MATCH_ROOM_NOT_OWNED" => StatusCodes.Status403Forbidden,
         "User.EmailAlreadyExists" or "AUTH_EMAIL_ALREADY_EXISTS" or "AUTH_PHONE_ALREADY_EXISTS" or
         "Permission.CodeAlreadyExists" or "Permission.InUse" or
         "Role.CodeAlreadyExists" or "Role.InUse" or
@@ -29,8 +31,15 @@ public static class ErrorStatusMapper
             StatusCodes.Status409Conflict,
         "PLAYER_MATCH.MATCH_EXPIRED" or "PLAYER_MATCH.REQUEST_STATE_CHANGED" or
         "PLAYER_MATCH.REQUEST_NOT_PENDING" or "PLAYER_MATCH.HOST_ALREADY_PARTICIPANT" or
-        "PLAYER_MATCH.BOOKING_INVALID_STATUS" => StatusCodes.Status409Conflict,
-        "PLAYER_MATCH.INVALID_REQUEST_STATUS" or "Error.Validation" or
+        "PLAYER_MATCH.BOOKING_INVALID_STATUS" or "MATCH_ROOM_INVALID_STATUS_TRANSITION" or
+        "MATCH_ROOM_BOOKING_INVALID" or "MATCH_ROOM_CAPACITY_INCONSISTENT" or
+        "MATCH_ROOM_FULL" or "MATCH_ROOM_ALREADY_MEMBER" or "MATCH_ROOM_SCHEDULE_CONFLICT" or
+        "JOIN_REQUEST_INVALID_STATUS" or
+        "PLAYER_NOT_ELIGIBLE" => StatusCodes.Status409Conflict,
+        "PLAYER_MATCH.INVALID_REQUEST_STATUS" or "Error.Validation" or "SEARCH_CRITERIA_INVALID" or
+        "MATCH_ROOM_DRAFT_INCOMPLETE" or
+        "PLAYER_MATCHING_PROFILE_INVALID" or "PREFERENCE_INVALID" or "PREFERENCE_WEIGHT_TOTAL_INVALID" or
+        "PREFERENCE_BRANCH_INVALID" or
         "SePay.WebhookInvalidPayload" => StatusCodes.Status400BadRequest,
         "Booking.LockServiceUnavailable" => StatusCodes.Status503ServiceUnavailable,
         "Payment.MomoNotConfigured" or "Payment.SePayNotConfigured" or "Payment.ProviderUnavailable" =>

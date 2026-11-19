@@ -14,6 +14,8 @@ public sealed class PlayerMatchDetailResponse
 
     public Guid? BookingId { get; set; }
 
+    public string RoomCode { get; set; } = string.Empty;
+
     public string BranchName { get; set; } = string.Empty;
 
     public string City { get; set; } = string.Empty;
@@ -22,15 +24,25 @@ public sealed class PlayerMatchDetailResponse
 
     public string? CourtName { get; set; }
 
-    public DateOnly MatchDate { get; set; }
+    public DateOnly? MatchDate { get; set; }
 
-    public TimeOnly StartTime { get; set; }
+    public TimeOnly? StartTime { get; set; }
 
-    public TimeOnly EndTime { get; set; }
+    public TimeOnly? EndTime { get; set; }
 
     public string SkillLevel { get; set; } = string.Empty;
 
     public string GenderPreference { get; set; } = GenderPreferences.Both;
+
+    public string? GameType { get; set; }
+
+    public int? MinimumRating { get; set; }
+
+    public int? MaximumRating { get; set; }
+
+    public string? GenderPolicy { get; set; }
+
+    public string? RequiredGender { get; set; }
 
     public int MaxPlayers { get; set; }
 

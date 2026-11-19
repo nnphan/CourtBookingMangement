@@ -16,11 +16,11 @@ public sealed class HostedPlayerMatchResponse
 
     public string? CourtName { get; set; }
 
-    public DateOnly MatchDate { get; set; }
+    public DateOnly? MatchDate { get; set; }
 
-    public TimeOnly StartTime { get; set; }
+    public TimeOnly? StartTime { get; set; }
 
-    public TimeOnly EndTime { get; set; }
+    public TimeOnly? EndTime { get; set; }
 
     public string SkillLevel { get; set; } = string.Empty;
 

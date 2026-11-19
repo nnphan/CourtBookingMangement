@@ -13,4 +13,8 @@ public sealed class PlayerMatchJoinRequest
     public DateTime? ReviewedAt { get; set; }
 
     public Guid? ReviewedBy { get; set; }
+
+    public string? Message { get; set; }
+
+    public string? RejectionReason { get; set; }
 }

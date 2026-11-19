@@ -1,0 +1,980 @@
+2026-11-19 00:00:25.991 +07:00 [INF] Now listening on: http://localhost:5117 {"EventId":{"Id":14,"Name":"ListeningOnAddress"},"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:00:26.113 +07:00 [INF] Application started. Press Ctrl+C to shut down. {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:00:26.118 +07:00 [INF] Hosting environment: Development {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:00:26.123 +07:00 [INF] Content root path: D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api {"SourceContext":"Microsoft.Hosting.Lifetime","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:00:35.046 +07:00 [INF] HTTP GET /api/player-matching/stats responded 404 in 37.7001ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"cbf20970-ecd1-474b-bb6a-dfb1e92dd836","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVN7:00000001","ConnectionId":"0HNQ5ILOLOVN7","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:00:35.412 +07:00 [INF] Searching admin branches. Keyword: null, City: null, District: null, IsActive: true, PageNumber: 1, PageSize: 9 {"SourceContext":"CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository","ActionId":"8babd64c-bf2d-485e-89b2-f62a8417ed1f","ActionName":"CourtBookingManagement.Api.Controllers.BranchesController.Get (CourtBookingManagement.Api)","RequestId":"0HNQ5ILOLOVN8:00000001","RequestPath":"/api/branches","ConnectionId":"0HNQ5ILOLOVN8","CorrelationId":"76843a5f-4749-41f7-871b-ac15950ec3c7","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:00:35.531 +07:00 [ERR] Admin branch query failed after 120.2378 ms. Keyword: null, City: null, District: null, IsActive: true, PageNumber: 1, PageSize: 9 {"SourceContext":"CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository","ActionId":"8babd64c-bf2d-485e-89b2-f62a8417ed1f","ActionName":"CourtBookingManagement.Api.Controllers.BranchesController.Get (CourtBookingManagement.Api)","RequestId":"0HNQ5ILOLOVN8:00000001","RequestPath":"/api/branches","ConnectionId":"0HNQ5ILOLOVN8","CorrelationId":"76843a5f-4749-41f7-871b-ac15950ec3c7","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+System.Threading.Tasks.TaskCanceledException: A task was canceled.
+   at Npgsql.TaskTimeoutAndCancellation.ExecuteAsync(Func`2 getTaskFunc, NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.TaskTimeoutAndCancellation.ExecuteAsync[TResult](Func`2 getTaskFunc, NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|213_1(NpgsqlConnector conn, SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|34_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryMultipleAsync(IDbConnection cnn, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 1040
+   at CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository.SearchBranchesAsync(BranchAdminSearchRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\BranchQueryRepository.cs:line 95
+2026-11-19 00:00:35.600 +07:00 [ERR] HTTP GET /api/branches responded 500 in 593.6320ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"76843a5f-4749-41f7-871b-ac15950ec3c7","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVN8:00000001","ConnectionId":"0HNQ5ILOLOVN8","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+System.Threading.Tasks.TaskCanceledException: A task was canceled.
+   at Npgsql.TaskTimeoutAndCancellation.ExecuteAsync(Func`2 getTaskFunc, NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.TaskTimeoutAndCancellation.ExecuteAsync[TResult](Func`2 getTaskFunc, NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|213_1(NpgsqlConnector conn, SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|34_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryMultipleAsync(IDbConnection cnn, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 1040
+   at CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository.SearchBranchesAsync(BranchAdminSearchRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\BranchQueryRepository.cs:line 95
+   at CourtBookingManagement.Api.Controllers.BranchesController.Get(BranchAdminSearchRequest request, CancellationToken ct) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\BranchesController.cs:line 75
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+2026-11-19 00:00:35.650 +07:00 [INF] HTTP GET /api/player-matching/stats responded 404 in 1.5392ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"a159f208-f96b-4e8e-be68-255d6f4e4901","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVN7:00000002","ConnectionId":"0HNQ5ILOLOVN7","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:00:35.654 +07:00 [INF] Searching admin branches. Keyword: null, City: null, District: null, IsActive: true, PageNumber: 1, PageSize: 9 {"SourceContext":"CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository","ActionId":"8babd64c-bf2d-485e-89b2-f62a8417ed1f","ActionName":"CourtBookingManagement.Api.Controllers.BranchesController.Get (CourtBookingManagement.Api)","RequestId":"0HNQ5ILOLOVN9:00000001","RequestPath":"/api/branches","ConnectionId":"0HNQ5ILOLOVN9","CorrelationId":"2f87af78-9da2-4c12-b0f2-96002c8f9dc2","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:00:36.029 +07:00 [INF] Admin branch query completed in 374.5843 ms. BranchCount: 5, TotalCount: 5 {"SourceContext":"CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository","ActionId":"8babd64c-bf2d-485e-89b2-f62a8417ed1f","ActionName":"CourtBookingManagement.Api.Controllers.BranchesController.Get (CourtBookingManagement.Api)","RequestId":"0HNQ5ILOLOVN9:00000001","RequestPath":"/api/branches","ConnectionId":"0HNQ5ILOLOVN9","CorrelationId":"2f87af78-9da2-4c12-b0f2-96002c8f9dc2","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:00:36.120 +07:00 [INF] HTTP GET /api/branches responded 200 in 471.0970ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"2f87af78-9da2-4c12-b0f2-96002c8f9dc2","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVN9:00000001","ConnectionId":"0HNQ5ILOLOVN9","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:00:50.350 +07:00 [INF] HTTP POST /api/auth/login/email responded 200 in 2361.9013ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"497f7322-e69f-41f2-972c-686e80de7b6e","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVN9:00000003","ConnectionId":"0HNQ5ILOLOVN9","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:00:50.529 +07:00 [INF] HTTP GET /api/auth/me responded 200 in 136.3472ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"ae7c3fbb-07c0-4bfa-81d8-82603893b742","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVN9:00000005","ConnectionId":"0HNQ5ILOLOVN9","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:01:00.232 +07:00 [INF] HTTP GET /api/bookings/my-bookings responded 200 in 136.7037ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"fae45da5-90de-4509-a032-cc8ee6558067","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVN9:00000007","ConnectionId":"0HNQ5ILOLOVN9","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:01:02.358 +07:00 [INF] Searching admin branches. Keyword: null, City: null, District: null, IsActive: null, PageNumber: 1, PageSize: 100 {"SourceContext":"CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository","ActionId":"8babd64c-bf2d-485e-89b2-f62a8417ed1f","ActionName":"CourtBookingManagement.Api.Controllers.BranchesController.Get (CourtBookingManagement.Api)","RequestId":"0HNQ5ILOLOVN9:00000009","RequestPath":"/api/branches","ConnectionId":"0HNQ5ILOLOVN9","CorrelationId":"19286051-926a-4859-8bc5-4f908b2f199a","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:01:02.381 +07:00 [INF] Admin branch query completed in 23.3967 ms. BranchCount: 5, TotalCount: 5 {"SourceContext":"CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository","ActionId":"8babd64c-bf2d-485e-89b2-f62a8417ed1f","ActionName":"CourtBookingManagement.Api.Controllers.BranchesController.Get (CourtBookingManagement.Api)","RequestId":"0HNQ5ILOLOVN9:00000009","RequestPath":"/api/branches","ConnectionId":"0HNQ5ILOLOVN9","CorrelationId":"19286051-926a-4859-8bc5-4f908b2f199a","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:01:02.390 +07:00 [INF] HTTP GET /api/branches responded 200 in 38.5894ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"19286051-926a-4859-8bc5-4f908b2f199a","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVN9:00000009","ConnectionId":"0HNQ5ILOLOVN9","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:01:11.790 +07:00 [ERR] HTTP POST /api/player-matches/drafts responded 500 in 260.2816ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"4f61f00a-92ea-493a-a9ce-4c388467b929","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVN9:0000000B","ConnectionId":"0HNQ5ILOLOVN9","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42703: column "game_type" of relation "player_matches" does not exist
+
+POSITION: 313
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryRowAsync[T](IDbConnection cnn, Row row, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 489
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchRepository.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, IDbTransaction transaction, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchRepository.cs:line 859
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchService.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchService.cs:line 518
+   at CourtBookingManagement.Api.Controllers.PlayerMatchesController.CreateDraft(PlayerMatchDraftRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchesController.cs:line 157
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column "game_type" of relation "player_matches" does not exist
+    Position: 313
+    File: parse_target.c
+    Line: 1068
+    Routine: checkInsertTargets
+2026-11-19 00:01:11.815 +07:00 [ERR] An unhandled exception has occurred while executing the request. {"EventId":{"Id":1,"Name":"UnhandledException"},"SourceContext":"Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware","RequestId":"0HNQ5ILOLOVN9:0000000B","RequestPath":"/api/player-matches/drafts","ConnectionId":"0HNQ5ILOLOVN9","CorrelationId":"4f61f00a-92ea-493a-a9ce-4c388467b929","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42703: column "game_type" of relation "player_matches" does not exist
+
+POSITION: 313
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryRowAsync[T](IDbConnection cnn, Row row, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 489
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchRepository.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, IDbTransaction transaction, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchRepository.cs:line 859
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchService.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchService.cs:line 518
+   at CourtBookingManagement.Api.Controllers.PlayerMatchesController.CreateDraft(PlayerMatchDraftRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchesController.cs:line 157
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column "game_type" of relation "player_matches" does not exist
+    Position: 313
+    File: parse_target.c
+    Line: 1068
+    Routine: checkInsertTargets
+2026-11-19 00:01:11.842 +07:00 [ERR] Unhandled API exception. TraceId: 4f61f00a-92ea-493a-a9ce-4c388467b929 {"SourceContext":"CourtBookingManagement.Api.Common.Middleware.ApiExceptionHandler","RequestId":"0HNQ5ILOLOVN9:0000000B","RequestPath":"/api/player-matches/drafts","ConnectionId":"0HNQ5ILOLOVN9","CorrelationId":"4f61f00a-92ea-493a-a9ce-4c388467b929","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42703: column "game_type" of relation "player_matches" does not exist
+
+POSITION: 313
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryRowAsync[T](IDbConnection cnn, Row row, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 489
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchRepository.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, IDbTransaction transaction, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchRepository.cs:line 859
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchService.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchService.cs:line 518
+   at CourtBookingManagement.Api.Controllers.PlayerMatchesController.CreateDraft(PlayerMatchDraftRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchesController.cs:line 157
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column "game_type" of relation "player_matches" does not exist
+    Position: 313
+    File: parse_target.c
+    Line: 1068
+    Routine: checkInsertTargets
+2026-11-19 00:01:52.874 +07:00 [ERR] HTTP POST /api/player-matches/drafts responded 500 in 128.4853ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"ebe668a4-586d-41de-8758-591155a41f80","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVN9:0000000D","ConnectionId":"0HNQ5ILOLOVN9","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42703: column "game_type" of relation "player_matches" does not exist
+
+POSITION: 313
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryRowAsync[T](IDbConnection cnn, Row row, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 489
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchRepository.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, IDbTransaction transaction, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchRepository.cs:line 859
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchService.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchService.cs:line 518
+   at CourtBookingManagement.Api.Controllers.PlayerMatchesController.CreateDraft(PlayerMatchDraftRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchesController.cs:line 157
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column "game_type" of relation "player_matches" does not exist
+    Position: 313
+    File: parse_target.c
+    Line: 1068
+    Routine: checkInsertTargets
+2026-11-19 00:01:52.902 +07:00 [ERR] An unhandled exception has occurred while executing the request. {"EventId":{"Id":1,"Name":"UnhandledException"},"SourceContext":"Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware","RequestId":"0HNQ5ILOLOVN9:0000000D","RequestPath":"/api/player-matches/drafts","ConnectionId":"0HNQ5ILOLOVN9","CorrelationId":"ebe668a4-586d-41de-8758-591155a41f80","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42703: column "game_type" of relation "player_matches" does not exist
+
+POSITION: 313
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryRowAsync[T](IDbConnection cnn, Row row, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 489
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchRepository.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, IDbTransaction transaction, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchRepository.cs:line 859
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchService.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchService.cs:line 518
+   at CourtBookingManagement.Api.Controllers.PlayerMatchesController.CreateDraft(PlayerMatchDraftRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchesController.cs:line 157
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column "game_type" of relation "player_matches" does not exist
+    Position: 313
+    File: parse_target.c
+    Line: 1068
+    Routine: checkInsertTargets
+2026-11-19 00:01:52.933 +07:00 [ERR] Unhandled API exception. TraceId: ebe668a4-586d-41de-8758-591155a41f80 {"SourceContext":"CourtBookingManagement.Api.Common.Middleware.ApiExceptionHandler","RequestId":"0HNQ5ILOLOVN9:0000000D","RequestPath":"/api/player-matches/drafts","ConnectionId":"0HNQ5ILOLOVN9","CorrelationId":"ebe668a4-586d-41de-8758-591155a41f80","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42703: column "game_type" of relation "player_matches" does not exist
+
+POSITION: 313
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryRowAsync[T](IDbConnection cnn, Row row, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 489
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchRepository.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, IDbTransaction transaction, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchRepository.cs:line 859
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchService.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchService.cs:line 518
+   at CourtBookingManagement.Api.Controllers.PlayerMatchesController.CreateDraft(PlayerMatchDraftRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchesController.cs:line 157
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column "game_type" of relation "player_matches" does not exist
+    Position: 313
+    File: parse_target.c
+    Line: 1068
+    Routine: checkInsertTargets
+2026-11-19 00:02:49.527 +07:00 [INF] HTTP GET /api/bookings/my-bookings responded 200 in 17.2250ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"33856b21-fa47-4a8a-bf5a-b91717c16943","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVN9:0000000F","ConnectionId":"0HNQ5ILOLOVN9","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:02:57.293 +07:00 [ERR] HTTP POST /api/player-matches/drafts responded 500 in 5790.2632ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"8db4e2c2-c376-481d-8313-aeda6801a3d0","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVN9:00000011","ConnectionId":"0HNQ5ILOLOVN9","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42703: column "game_type" of relation "player_matches" does not exist
+
+POSITION: 313
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryRowAsync[T](IDbConnection cnn, Row row, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 489
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchRepository.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, IDbTransaction transaction, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchRepository.cs:line 859
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchService.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchService.cs:line 518
+   at CourtBookingManagement.Api.Controllers.PlayerMatchesController.CreateDraft(PlayerMatchDraftRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchesController.cs:line 157
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column "game_type" of relation "player_matches" does not exist
+    Position: 313
+    File: parse_target.c
+    Line: 1068
+    Routine: checkInsertTargets
+2026-11-19 00:02:57.309 +07:00 [ERR] An unhandled exception has occurred while executing the request. {"EventId":{"Id":1,"Name":"UnhandledException"},"SourceContext":"Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware","RequestId":"0HNQ5ILOLOVN9:00000011","RequestPath":"/api/player-matches/drafts","ConnectionId":"0HNQ5ILOLOVN9","CorrelationId":"8db4e2c2-c376-481d-8313-aeda6801a3d0","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42703: column "game_type" of relation "player_matches" does not exist
+
+POSITION: 313
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryRowAsync[T](IDbConnection cnn, Row row, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 489
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchRepository.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, IDbTransaction transaction, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchRepository.cs:line 859
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchService.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchService.cs:line 518
+   at CourtBookingManagement.Api.Controllers.PlayerMatchesController.CreateDraft(PlayerMatchDraftRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchesController.cs:line 157
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column "game_type" of relation "player_matches" does not exist
+    Position: 313
+    File: parse_target.c
+    Line: 1068
+    Routine: checkInsertTargets
+2026-11-19 00:02:57.326 +07:00 [ERR] Unhandled API exception. TraceId: 8db4e2c2-c376-481d-8313-aeda6801a3d0 {"SourceContext":"CourtBookingManagement.Api.Common.Middleware.ApiExceptionHandler","RequestId":"0HNQ5ILOLOVN9:00000011","RequestPath":"/api/player-matches/drafts","ConnectionId":"0HNQ5ILOLOVN9","CorrelationId":"8db4e2c2-c376-481d-8313-aeda6801a3d0","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42703: column "game_type" of relation "player_matches" does not exist
+
+POSITION: 313
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryRowAsync[T](IDbConnection cnn, Row row, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 489
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchRepository.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, IDbTransaction transaction, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchRepository.cs:line 859
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchService.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchService.cs:line 518
+   at CourtBookingManagement.Api.Controllers.PlayerMatchesController.CreateDraft(PlayerMatchDraftRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchesController.cs:line 157
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column "game_type" of relation "player_matches" does not exist
+    Position: 313
+    File: parse_target.c
+    Line: 1068
+    Routine: checkInsertTargets
+2026-11-19 00:03:44.986 +07:00 [INF] HTTP GET /api/bookings/my-bookings responded 200 in 10836.7002ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"afc4ea08-845c-455e-981b-acce0aca8848","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVN9:00000013","ConnectionId":"0HNQ5ILOLOVN9","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:04:31.352 +07:00 [ERR] HTTP POST /api/player-matches/drafts responded 500 in 57202.5256ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"96e8c64a-2f4a-48c8-956a-e5b859cf2ad6","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVN7:00000004","ConnectionId":"0HNQ5ILOLOVN7","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42703: column "game_type" of relation "player_matches" does not exist
+
+POSITION: 313
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryRowAsync[T](IDbConnection cnn, Row row, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 489
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchRepository.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, IDbTransaction transaction, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchRepository.cs:line 859
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchService.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchService.cs:line 518
+   at CourtBookingManagement.Api.Controllers.PlayerMatchesController.CreateDraft(PlayerMatchDraftRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchesController.cs:line 157
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column "game_type" of relation "player_matches" does not exist
+    Position: 313
+    File: parse_target.c
+    Line: 1068
+    Routine: checkInsertTargets
+2026-11-19 00:04:31.367 +07:00 [ERR] An unhandled exception has occurred while executing the request. {"EventId":{"Id":1,"Name":"UnhandledException"},"SourceContext":"Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware","RequestId":"0HNQ5ILOLOVN7:00000004","RequestPath":"/api/player-matches/drafts","ConnectionId":"0HNQ5ILOLOVN7","CorrelationId":"96e8c64a-2f4a-48c8-956a-e5b859cf2ad6","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42703: column "game_type" of relation "player_matches" does not exist
+
+POSITION: 313
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryRowAsync[T](IDbConnection cnn, Row row, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 489
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchRepository.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, IDbTransaction transaction, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchRepository.cs:line 859
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchService.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchService.cs:line 518
+   at CourtBookingManagement.Api.Controllers.PlayerMatchesController.CreateDraft(PlayerMatchDraftRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchesController.cs:line 157
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column "game_type" of relation "player_matches" does not exist
+    Position: 313
+    File: parse_target.c
+    Line: 1068
+    Routine: checkInsertTargets
+2026-11-19 00:04:31.380 +07:00 [ERR] Unhandled API exception. TraceId: 96e8c64a-2f4a-48c8-956a-e5b859cf2ad6 {"SourceContext":"CourtBookingManagement.Api.Common.Middleware.ApiExceptionHandler","RequestId":"0HNQ5ILOLOVN7:00000004","RequestPath":"/api/player-matches/drafts","ConnectionId":"0HNQ5ILOLOVN7","CorrelationId":"96e8c64a-2f4a-48c8-956a-e5b859cf2ad6","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42703: column "game_type" of relation "player_matches" does not exist
+
+POSITION: 313
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryRowAsync[T](IDbConnection cnn, Row row, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 489
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchRepository.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, IDbTransaction transaction, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchRepository.cs:line 859
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchService.CreateDraftAsync(PlayerMatchDraftRequest request, Guid createdBy, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchService.cs:line 518
+   at CourtBookingManagement.Api.Controllers.PlayerMatchesController.CreateDraft(PlayerMatchDraftRequest request, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchesController.cs:line 157
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column "game_type" of relation "player_matches" does not exist
+    Position: 313
+    File: parse_target.c
+    Line: 1068
+    Routine: checkInsertTargets
+2026-11-19 00:20:56.730 +07:00 [INF] HTTP GET /api/bookings/my-bookings responded 401 in 7.8351ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"c31c39c0-bf70-4762-b9d1-65fd78f207d6","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNA:00000001","ConnectionId":"0HNQ5ILOLOVNA","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:21:04.899 +07:00 [INF] HTTP POST /api/auth/login/email responded 200 in 288.2606ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"6b311881-e57d-4d03-a2d6-4402efdd05ff","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNA:00000003","ConnectionId":"0HNQ5ILOLOVNA","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:21:05.235 +07:00 [INF] HTTP GET /api/player-matching/stats responded 404 in 0.6965ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"5c1f8cb4-fc84-4853-a4ca-66d16adcba61","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNC:00000001","ConnectionId":"0HNQ5ILOLOVNC","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:21:05.237 +07:00 [INF] Searching admin branches. Keyword: null, City: null, District: null, IsActive: true, PageNumber: 1, PageSize: 9 {"SourceContext":"CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository","ActionId":"8babd64c-bf2d-485e-89b2-f62a8417ed1f","ActionName":"CourtBookingManagement.Api.Controllers.BranchesController.Get (CourtBookingManagement.Api)","RequestId":"0HNQ5ILOLOVNB:00000002","RequestPath":"/api/branches","ConnectionId":"0HNQ5ILOLOVNB","CorrelationId":"81ee5f56-a6a4-4f47-addc-e3bb1fe13125","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:21:05.261 +07:00 [INF] Admin branch query completed in 24.1675 ms. BranchCount: 5, TotalCount: 5 {"SourceContext":"CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository","ActionId":"8babd64c-bf2d-485e-89b2-f62a8417ed1f","ActionName":"CourtBookingManagement.Api.Controllers.BranchesController.Get (CourtBookingManagement.Api)","RequestId":"0HNQ5ILOLOVNB:00000002","RequestPath":"/api/branches","ConnectionId":"0HNQ5ILOLOVNB","CorrelationId":"81ee5f56-a6a4-4f47-addc-e3bb1fe13125","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:21:05.281 +07:00 [INF] HTTP GET /api/branches responded 200 in 46.4572ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"81ee5f56-a6a4-4f47-addc-e3bb1fe13125","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNB:00000002","ConnectionId":"0HNQ5ILOLOVNB","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:21:05.330 +07:00 [INF] HTTP GET /api/auth/me responded 200 in 96.4025ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"5b5b0d40-2bfe-4460-b1c0-9eb4a240ed53","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNA:00000006","ConnectionId":"0HNQ5ILOLOVNA","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:21:10.186 +07:00 [INF] HTTP GET /api/bookings/my-bookings responded 200 in 6.9729ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"6f69ddb6-6522-480d-b1e7-2464a367d03e","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNA:00000008","ConnectionId":"0HNQ5ILOLOVNA","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:21:11.752 +07:00 [INF] Searching admin branches. Keyword: null, City: null, District: null, IsActive: null, PageNumber: 1, PageSize: 100 {"SourceContext":"CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository","ActionId":"8babd64c-bf2d-485e-89b2-f62a8417ed1f","ActionName":"CourtBookingManagement.Api.Controllers.BranchesController.Get (CourtBookingManagement.Api)","RequestId":"0HNQ5ILOLOVNA:0000000A","RequestPath":"/api/branches","ConnectionId":"0HNQ5ILOLOVNA","CorrelationId":"bc4a7594-b3ab-4dff-b594-f4707798d772","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:21:11.774 +07:00 [INF] Admin branch query completed in 21.5089 ms. BranchCount: 5, TotalCount: 5 {"SourceContext":"CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository","ActionId":"8babd64c-bf2d-485e-89b2-f62a8417ed1f","ActionName":"CourtBookingManagement.Api.Controllers.BranchesController.Get (CourtBookingManagement.Api)","RequestId":"0HNQ5ILOLOVNA:0000000A","RequestPath":"/api/branches","ConnectionId":"0HNQ5ILOLOVNA","CorrelationId":"bc4a7594-b3ab-4dff-b594-f4707798d772","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:21:11.788 +07:00 [INF] HTTP GET /api/branches responded 200 in 37.1402ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"bc4a7594-b3ab-4dff-b594-f4707798d772","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNA:0000000A","ConnectionId":"0HNQ5ILOLOVNA","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:21:29.051 +07:00 [INF] HTTP POST /api/player-matches/drafts responded 201 in 5302.0217ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"de3c55b3-f142-41a9-ae84-189270f7de3a","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNA:0000000C","ConnectionId":"0HNQ5ILOLOVNA","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:21:29.121 +07:00 [INF] HTTP POST /api/player-matches/31dfb269-02e6-4a7a-ac13-319a9a58c2f5/publish responded 200 in 51.3558ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"ae176239-4892-4720-ad36-9dbd65274c9e","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNA:0000000E","ConnectionId":"0HNQ5ILOLOVNA","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:21:45.863 +07:00 [INF] HTTP GET /api/bookings/my-bookings responded 200 in 9.4447ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"0d2247a7-2ac3-4da2-ac0d-43a0ea88ad6b","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNA:00000010","ConnectionId":"0HNQ5ILOLOVNA","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:21:58.086 +07:00 [INF] HTTP GET /api/player-matching/stats responded 404 in 0.9386ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"1313ab00-fb77-44f7-a82d-4047264d729a","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNA:00000012","ConnectionId":"0HNQ5ILOLOVNA","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:21:59.260 +07:00 [INF] Searching admin branches. Keyword: null, City: null, District: null, IsActive: true, PageNumber: 1, PageSize: 100 {"SourceContext":"CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository","ActionId":"8babd64c-bf2d-485e-89b2-f62a8417ed1f","ActionName":"CourtBookingManagement.Api.Controllers.BranchesController.Get (CourtBookingManagement.Api)","RequestId":"0HNQ5ILOLOVNA:00000014","RequestPath":"/api/branches","ConnectionId":"0HNQ5ILOLOVNA","CorrelationId":"027c8143-1cdc-4cef-a030-b0a1def4a8dc","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:21:59.343 +07:00 [ERR] HTTP GET /api/me/match-preferences responded 500 in 83.8685ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"36fb9734-42d4-4675-804f-0a811bb998a9","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNC:00000003","ConnectionId":"0HNQ5ILOLOVNC","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42P01: relation "matching.player_profiles" does not exist
+
+POSITION: 534
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryMultipleAsync(IDbConnection cnn, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 1042
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchingProfileRepository.GetPreferencesAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchingProfileRepository.cs:line 103
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchingProfileService.GetPreferencesAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchingProfileService.cs:line 65
+   at CourtBookingManagement.Api.Controllers.PlayerMatchingProfileController.GetPreferences(CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchingProfileController.cs:line 66
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "matching.player_profiles" does not exist
+    Position: 534
+    File: parse_relation.c
+    Line: 1445
+    Routine: parserOpenTable
+2026-11-19 00:21:59.343 +07:00 [ERR] HTTP GET /api/me/player-matching-profile responded 500 in 84.2627ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"ec92d799-ad08-46b6-8d74-def0a855873a","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNB:00000004","ConnectionId":"0HNQ5ILOLOVNB","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42P01: relation "matching.player_profiles" does not exist
+
+POSITION: 282
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryRowAsync[T](IDbConnection cnn, Row row, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 489
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchingProfileRepository.GetProfileAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchingProfileRepository.cs:line 29
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchingProfileService.GetProfileAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchingProfileService.cs:line 23
+   at CourtBookingManagement.Api.Controllers.PlayerMatchingProfileController.GetProfile(CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchingProfileController.cs:line 30
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "matching.player_profiles" does not exist
+    Position: 282
+    File: parse_relation.c
+    Line: 1445
+    Routine: parserOpenTable
+2026-11-19 00:21:59.354 +07:00 [INF] Admin branch query completed in 94.1286 ms. BranchCount: 5, TotalCount: 5 {"SourceContext":"CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository","ActionId":"8babd64c-bf2d-485e-89b2-f62a8417ed1f","ActionName":"CourtBookingManagement.Api.Controllers.BranchesController.Get (CourtBookingManagement.Api)","RequestId":"0HNQ5ILOLOVNA:00000014","RequestPath":"/api/branches","ConnectionId":"0HNQ5ILOLOVNA","CorrelationId":"027c8143-1cdc-4cef-a030-b0a1def4a8dc","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:21:59.361 +07:00 [ERR] An unhandled exception has occurred while executing the request. {"EventId":{"Id":1,"Name":"UnhandledException"},"SourceContext":"Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware","RequestId":"0HNQ5ILOLOVNC:00000003","RequestPath":"/api/me/match-preferences","ConnectionId":"0HNQ5ILOLOVNC","CorrelationId":"36fb9734-42d4-4675-804f-0a811bb998a9","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42P01: relation "matching.player_profiles" does not exist
+
+POSITION: 534
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryMultipleAsync(IDbConnection cnn, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 1042
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchingProfileRepository.GetPreferencesAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchingProfileRepository.cs:line 103
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchingProfileService.GetPreferencesAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchingProfileService.cs:line 65
+   at CourtBookingManagement.Api.Controllers.PlayerMatchingProfileController.GetPreferences(CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchingProfileController.cs:line 66
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "matching.player_profiles" does not exist
+    Position: 534
+    File: parse_relation.c
+    Line: 1445
+    Routine: parserOpenTable
+2026-11-19 00:21:59.372 +07:00 [ERR] An unhandled exception has occurred while executing the request. {"EventId":{"Id":1,"Name":"UnhandledException"},"SourceContext":"Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware","RequestId":"0HNQ5ILOLOVNB:00000004","RequestPath":"/api/me/player-matching-profile","ConnectionId":"0HNQ5ILOLOVNB","CorrelationId":"ec92d799-ad08-46b6-8d74-def0a855873a","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42P01: relation "matching.player_profiles" does not exist
+
+POSITION: 282
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryRowAsync[T](IDbConnection cnn, Row row, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 489
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchingProfileRepository.GetProfileAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchingProfileRepository.cs:line 29
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchingProfileService.GetProfileAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchingProfileService.cs:line 23
+   at CourtBookingManagement.Api.Controllers.PlayerMatchingProfileController.GetProfile(CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchingProfileController.cs:line 30
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "matching.player_profiles" does not exist
+    Position: 282
+    File: parse_relation.c
+    Line: 1445
+    Routine: parserOpenTable
+2026-11-19 00:21:59.377 +07:00 [INF] HTTP GET /api/branches responded 200 in 117.9789ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"027c8143-1cdc-4cef-a030-b0a1def4a8dc","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNA:00000014","ConnectionId":"0HNQ5ILOLOVNA","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:21:59.390 +07:00 [ERR] Unhandled API exception. TraceId: 36fb9734-42d4-4675-804f-0a811bb998a9 {"SourceContext":"CourtBookingManagement.Api.Common.Middleware.ApiExceptionHandler","RequestId":"0HNQ5ILOLOVNC:00000003","RequestPath":"/api/me/match-preferences","ConnectionId":"0HNQ5ILOLOVNC","CorrelationId":"36fb9734-42d4-4675-804f-0a811bb998a9","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42P01: relation "matching.player_profiles" does not exist
+
+POSITION: 534
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryMultipleAsync(IDbConnection cnn, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 1042
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchingProfileRepository.GetPreferencesAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchingProfileRepository.cs:line 103
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchingProfileService.GetPreferencesAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchingProfileService.cs:line 65
+   at CourtBookingManagement.Api.Controllers.PlayerMatchingProfileController.GetPreferences(CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchingProfileController.cs:line 66
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "matching.player_profiles" does not exist
+    Position: 534
+    File: parse_relation.c
+    Line: 1445
+    Routine: parserOpenTable
+2026-11-19 00:21:59.404 +07:00 [ERR] Unhandled API exception. TraceId: ec92d799-ad08-46b6-8d74-def0a855873a {"SourceContext":"CourtBookingManagement.Api.Common.Middleware.ApiExceptionHandler","RequestId":"0HNQ5ILOLOVNB:00000004","RequestPath":"/api/me/player-matching-profile","ConnectionId":"0HNQ5ILOLOVNB","CorrelationId":"ec92d799-ad08-46b6-8d74-def0a855873a","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42P01: relation "matching.player_profiles" does not exist
+
+POSITION: 282
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryRowAsync[T](IDbConnection cnn, Row row, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 489
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchingProfileRepository.GetProfileAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchingProfileRepository.cs:line 29
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchingProfileService.GetProfileAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchingProfileService.cs:line 23
+   at CourtBookingManagement.Api.Controllers.PlayerMatchingProfileController.GetProfile(CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchingProfileController.cs:line 30
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "matching.player_profiles" does not exist
+    Position: 282
+    File: parse_relation.c
+    Line: 1445
+    Routine: parserOpenTable
+2026-11-19 00:22:04.118 +07:00 [INF] HTTP GET /api/player-matches responded 200 in 40.9024ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"f365776f-33df-4ebc-a50e-51a696f189fc","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNB:00000006","ConnectionId":"0HNQ5ILOLOVNB","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:22:10.032 +07:00 [INF] HTTP GET /api/player-matches/31dfb269-02e6-4a7a-ac13-319a9a58c2f5 responded 200 in 41.3209ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"9e42844b-83ea-4f90-b835-1e8297365783","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNB:00000008","ConnectionId":"0HNQ5ILOLOVNB","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:22:36.088 +07:00 [ERR] HTTP GET /api/me/match-preferences responded 500 in 74.7136ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"3d96c3da-c6ae-4bf4-bdad-3ec3fd6b3267","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNB:0000000A","ConnectionId":"0HNQ5ILOLOVNB","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42P01: relation "matching.player_profiles" does not exist
+
+POSITION: 534
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryMultipleAsync(IDbConnection cnn, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 1042
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchingProfileRepository.GetPreferencesAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchingProfileRepository.cs:line 103
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchingProfileService.GetPreferencesAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchingProfileService.cs:line 65
+   at CourtBookingManagement.Api.Controllers.PlayerMatchingProfileController.GetPreferences(CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchingProfileController.cs:line 66
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "matching.player_profiles" does not exist
+    Position: 534
+    File: parse_relation.c
+    Line: 1445
+    Routine: parserOpenTable
+2026-11-19 00:22:36.088 +07:00 [ERR] HTTP GET /api/me/player-matching-profile responded 500 in 74.8271ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"8df0d653-416d-4056-ab96-2329779fe368","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNC:00000005","ConnectionId":"0HNQ5ILOLOVNC","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42P01: relation "matching.player_profiles" does not exist
+
+POSITION: 282
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryRowAsync[T](IDbConnection cnn, Row row, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 489
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchingProfileRepository.GetProfileAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchingProfileRepository.cs:line 29
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchingProfileService.GetProfileAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchingProfileService.cs:line 23
+   at CourtBookingManagement.Api.Controllers.PlayerMatchingProfileController.GetProfile(CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchingProfileController.cs:line 30
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "matching.player_profiles" does not exist
+    Position: 282
+    File: parse_relation.c
+    Line: 1445
+    Routine: parserOpenTable
+2026-11-19 00:22:36.108 +07:00 [ERR] An unhandled exception has occurred while executing the request. {"EventId":{"Id":1,"Name":"UnhandledException"},"SourceContext":"Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware","RequestId":"0HNQ5ILOLOVNB:0000000A","RequestPath":"/api/me/match-preferences","ConnectionId":"0HNQ5ILOLOVNB","CorrelationId":"3d96c3da-c6ae-4bf4-bdad-3ec3fd6b3267","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42P01: relation "matching.player_profiles" does not exist
+
+POSITION: 534
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryMultipleAsync(IDbConnection cnn, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 1042
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchingProfileRepository.GetPreferencesAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchingProfileRepository.cs:line 103
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchingProfileService.GetPreferencesAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchingProfileService.cs:line 65
+   at CourtBookingManagement.Api.Controllers.PlayerMatchingProfileController.GetPreferences(CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchingProfileController.cs:line 66
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "matching.player_profiles" does not exist
+    Position: 534
+    File: parse_relation.c
+    Line: 1445
+    Routine: parserOpenTable
+2026-11-19 00:22:36.121 +07:00 [ERR] An unhandled exception has occurred while executing the request. {"EventId":{"Id":1,"Name":"UnhandledException"},"SourceContext":"Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware","RequestId":"0HNQ5ILOLOVNC:00000005","RequestPath":"/api/me/player-matching-profile","ConnectionId":"0HNQ5ILOLOVNC","CorrelationId":"8df0d653-416d-4056-ab96-2329779fe368","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42P01: relation "matching.player_profiles" does not exist
+
+POSITION: 282
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryRowAsync[T](IDbConnection cnn, Row row, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 489
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchingProfileRepository.GetProfileAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchingProfileRepository.cs:line 29
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchingProfileService.GetProfileAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchingProfileService.cs:line 23
+   at CourtBookingManagement.Api.Controllers.PlayerMatchingProfileController.GetProfile(CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchingProfileController.cs:line 30
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "matching.player_profiles" does not exist
+    Position: 282
+    File: parse_relation.c
+    Line: 1445
+    Routine: parserOpenTable
+2026-11-19 00:22:36.141 +07:00 [ERR] Unhandled API exception. TraceId: 3d96c3da-c6ae-4bf4-bdad-3ec3fd6b3267 {"SourceContext":"CourtBookingManagement.Api.Common.Middleware.ApiExceptionHandler","RequestId":"0HNQ5ILOLOVNB:0000000A","RequestPath":"/api/me/match-preferences","ConnectionId":"0HNQ5ILOLOVNB","CorrelationId":"3d96c3da-c6ae-4bf4-bdad-3ec3fd6b3267","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42P01: relation "matching.player_profiles" does not exist
+
+POSITION: 534
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryMultipleAsync(IDbConnection cnn, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 1042
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchingProfileRepository.GetPreferencesAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchingProfileRepository.cs:line 103
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchingProfileService.GetPreferencesAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchingProfileService.cs:line 65
+   at CourtBookingManagement.Api.Controllers.PlayerMatchingProfileController.GetPreferences(CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchingProfileController.cs:line 66
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "matching.player_profiles" does not exist
+    Position: 534
+    File: parse_relation.c
+    Line: 1445
+    Routine: parserOpenTable
+2026-11-19 00:22:36.155 +07:00 [ERR] Unhandled API exception. TraceId: 8df0d653-416d-4056-ab96-2329779fe368 {"SourceContext":"CourtBookingManagement.Api.Common.Middleware.ApiExceptionHandler","RequestId":"0HNQ5ILOLOVNC:00000005","RequestPath":"/api/me/player-matching-profile","ConnectionId":"0HNQ5ILOLOVNC","CorrelationId":"8df0d653-416d-4056-ab96-2329779fe368","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+Npgsql.PostgresException (0x80004005): 42P01: relation "matching.player_profiles" does not exist
+
+POSITION: 282
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryRowAsync[T](IDbConnection cnn, Row row, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 489
+   at CourtBookingManagement.Infrastructure.Repositories.PlayerMatchingProfileRepository.GetProfileAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Infrastructure\Repositories\PlayerMatchingProfileRepository.cs:line 29
+   at CourtBookingManagement.Application.Matching.Services.PlayerMatchingProfileService.GetProfileAsync(Guid userId, CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Application\Matching\Services\PlayerMatchingProfileService.cs:line 23
+   at CourtBookingManagement.Api.Controllers.PlayerMatchingProfileController.GetProfile(CancellationToken cancellationToken) in D:\CODE\CourtsBookingManagement\BE_FE\CourtsBookingManagement.Backend\src\CourtBookingManagement.Api\Controllers\PlayerMatchingProfileController.cs:line 30
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "matching.player_profiles" does not exist
+    Position: 282
+    File: parse_relation.c
+    Line: 1445
+    Routine: parserOpenTable
+2026-11-19 00:23:34.087 +07:00 [INF] HTTP POST /api/auth/logout responded 415 in 19.5085ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"62152840-315b-4f6a-b472-d9e7a65b633d","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNC:00000007","ConnectionId":"0HNQ5ILOLOVNC","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:23:34.140 +07:00 [INF] Searching admin branches. Keyword: null, City: null, District: null, IsActive: true, PageNumber: 1, PageSize: 100 {"SourceContext":"CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository","ActionId":"8babd64c-bf2d-485e-89b2-f62a8417ed1f","ActionName":"CourtBookingManagement.Api.Controllers.BranchesController.Get (CourtBookingManagement.Api)","RequestId":"0HNQ5ILOLOVNC:00000008","RequestPath":"/api/branches","ConnectionId":"0HNQ5ILOLOVNC","CorrelationId":"be4c0a03-0264-4aae-bbce-114d52f9eff4","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:23:34.156 +07:00 [INF] Admin branch query completed in 15.8623 ms. BranchCount: 5, TotalCount: 5 {"SourceContext":"CourtBookingManagement.Infrastructure.Repositories.BranchQueryRepository","ActionId":"8babd64c-bf2d-485e-89b2-f62a8417ed1f","ActionName":"CourtBookingManagement.Api.Controllers.BranchesController.Get (CourtBookingManagement.Api)","RequestId":"0HNQ5ILOLOVNC:00000008","RequestPath":"/api/branches","ConnectionId":"0HNQ5ILOLOVNC","CorrelationId":"be4c0a03-0264-4aae-bbce-114d52f9eff4","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:23:34.165 +07:00 [INF] HTTP GET /api/branches responded 200 in 26.1569ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"be4c0a03-0264-4aae-bbce-114d52f9eff4","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNC:00000008","ConnectionId":"0HNQ5ILOLOVNC","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:23:39.970 +07:00 [INF] HTTP POST /api/auth/login/email responded 200 in 153.4157ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"9c78ac34-8ea6-4ffd-bfa1-e5db3594db91","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNC:0000000A","ConnectionId":"0HNQ5ILOLOVNC","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:23:40.060 +07:00 [INF] HTTP GET /api/auth/me responded 200 in 15.9042ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"a46b6755-e19c-4b54-aaf1-ed900c7d6e20","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNC:0000000C","ConnectionId":"0HNQ5ILOLOVNC","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:23:49.628 +07:00 [INF] HTTP GET /api/permissions responded 200 in 26.1295ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"7654cc5e-a70e-49ea-be28-fd0d1e3dcb5e","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNC:0000000E","ConnectionId":"0HNQ5ILOLOVNC","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:24:08.669 +07:00 [INF] HTTP GET /api/roles responded 200 in 34.2915ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"5cf75e07-2b33-49e3-9faa-dc9a9cffda77","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNC:00000010","ConnectionId":"0HNQ5ILOLOVNC","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:24:26.690 +07:00 [INF] HTTP GET /api/customers/stats responded 404 in 0.2866ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"b9bfebd6-70d1-48a3-b931-e628084b17fd","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNC:00000012","ConnectionId":"0HNQ5ILOLOVNC","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:24:26.698 +07:00 [INF] HTTP GET /api/customers responded 403 in 8.1991ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"fd3b8c75-5d63-4b6b-9469-881d4d806cc6","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNB:0000000C","ConnectionId":"0HNQ5ILOLOVNB","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:24:35.047 +07:00 [INF] HTTP GET /api/roles responded 200 in 8.8128ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"5a8ea3f1-45e6-4e81-b3d3-3417caca5b48","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNB:0000000E","ConnectionId":"0HNQ5ILOLOVNB","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:24:35.083 +07:00 [INF] HTTP GET /api/users/getlist responded 200 in 44.6962ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"ee494afd-1596-46c3-8e60-4b9a68e7a153","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNC:00000014","ConnectionId":"0HNQ5ILOLOVNC","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:24:44.879 +07:00 [INF] HTTP GET /api/users/f1404093-4059-4d8b-a8b5-04b32f167c86/roles responded 403 in 1.1774ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"6a8c883e-0b37-4ae3-bb88-f425c21fa8d6","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNC:00000016","ConnectionId":"0HNQ5ILOLOVNC","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}
+2026-11-19 00:24:45.896 +07:00 [INF] HTTP GET /api/users/f1404093-4059-4d8b-a8b5-04b32f167c86/roles responded 403 in 0.5388ms {"RequestHost":"localhost:5117","UserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0","CorrelationId":"6d832051-96cf-486d-a044-0a3ab0762ad7","SourceContext":"Serilog.AspNetCore.RequestLoggingMiddleware","RequestId":"0HNQ5ILOLOVNC:00000017","ConnectionId":"0HNQ5ILOLOVNC","MachineName":"LAPTOP-PE1B4B6N","EnvironmentName":"Development","ProcessId":32100,"ProcessName":"CourtBookingManagement.Api","Application":"CourtBookingManagement.Api"}

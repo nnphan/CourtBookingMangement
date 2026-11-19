@@ -6,12 +6,14 @@ public static class JoinRequestStatus
     public const string Approved = "APPROVED";
     public const string Rejected = "REJECTED";
     public const string Cancelled = "CANCELLED";
+    public const string Expired = "EXPIRED";
 
     public static readonly string[] All =
     [
         Pending,
         Approved,
         Rejected,
-        Cancelled
+        Cancelled,
+        Expired
     ];
 }
