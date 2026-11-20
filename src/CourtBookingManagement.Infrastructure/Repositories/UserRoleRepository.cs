@@ -142,6 +142,22 @@ public sealed class UserRoleRepository(ISqlConnectionFactory sqlConnectionFactor
         Guid userId,
         CancellationToken cancellationToken)
     {
+        using var connection = sqlConnectionFactory.CreateConnection();
+        return await GetUserRoleAssignmentAsync(userId, connection, null, cancellationToken);
+    }
+
+    public Task<UserRoleAssignmentResponse?> GetUserRoleAssignmentAsync(
+        Guid userId,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken) =>
+        GetUserRoleAssignmentAsync(userId, transaction.Connection!, transaction, cancellationToken);
+
+    private static async Task<UserRoleAssignmentResponse?> GetUserRoleAssignmentAsync(
+        Guid userId,
+        IDbConnection connection,
+        IDbTransaction? transaction,
+        CancellationToken cancellationToken)
+    {
         const string userSql = """
             SELECT
                 u.id AS UserId,
@@ -164,11 +180,10 @@ public sealed class UserRoleRepository(ISqlConnectionFactory sqlConnectionFactor
             ORDER BY r.code;
             """;
 
-        using var connection = sqlConnectionFactory.CreateConnection();
         var parameters = new { UserId = userId };
 
         var assignment = await connection.QuerySingleOrDefaultAsync<UserRoleAssignmentResponse>(
-            new CommandDefinition(userSql, parameters, cancellationToken: cancellationToken));
+            new CommandDefinition(userSql, parameters, transaction, cancellationToken: cancellationToken));
 
         if (assignment is null)
         {
@@ -176,10 +191,59 @@ public sealed class UserRoleRepository(ISqlConnectionFactory sqlConnectionFactor
         }
 
         var roles = await connection.QueryAsync<RoleItemResponse>(
-            new CommandDefinition(rolesSql, parameters, cancellationToken: cancellationToken));
+            new CommandDefinition(rolesSql, parameters, transaction, cancellationToken: cancellationToken));
 
         assignment.Roles = roles.AsList();
         return assignment;
+    }
+
+    public async Task<bool> LockUserAsync(
+        Guid userId,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        const string sql = """
+            SELECT u.id
+            FROM auth.users u
+            WHERE u.id = @UserId AND u.deleted_at IS NULL
+            FOR UPDATE;
+            """;
+
+        var id = await transaction.Connection!.QuerySingleOrDefaultAsync<Guid?>(
+            new CommandDefinition(sql, new { UserId = userId }, transaction, cancellationToken: cancellationToken));
+        return id.HasValue;
+    }
+
+    public async Task<IReadOnlyList<RoleItemResponse>> GetActiveRolesAsync(
+        IReadOnlyCollection<Guid> roleIds,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        const string sql = """
+            SELECT r.id AS RoleId, r.code AS RoleCode, r.name AS RoleName
+            FROM auth.roles r
+            WHERE r.id = ANY(@RoleIds) AND r.deleted_at IS NULL AND r.is_active = TRUE
+            FOR SHARE;
+            """;
+
+        var roles = await transaction.Connection!.QueryAsync<RoleItemResponse>(
+            new CommandDefinition(sql, new { RoleIds = roleIds.ToArray() }, transaction, cancellationToken: cancellationToken));
+        return roles.AsList();
+    }
+
+    public async Task RemoveOtherRolesAsync(
+        Guid userId,
+        IReadOnlyCollection<Guid> roleIds,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        const string sql = """
+            DELETE FROM auth.user_roles
+            WHERE user_id = @UserId AND NOT (role_id = ANY(@RoleIds));
+            """;
+
+        await transaction.Connection!.ExecuteAsync(
+            new CommandDefinition(sql, new { UserId = userId, RoleIds = roleIds.ToArray() }, transaction, cancellationToken: cancellationToken));
     }
 
     public async Task AssignRoleAsync(

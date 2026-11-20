@@ -393,6 +393,7 @@ public sealed class AuthService : IAuthService
         {
             Id = user.Id,
             Email = user.Email,
+            FullName = user.FullName,
             PhoneNumber = user.PhoneNumber,
             IsActive = user.IsActive,
             IsEmailVerified = user.IsEmailVerified,

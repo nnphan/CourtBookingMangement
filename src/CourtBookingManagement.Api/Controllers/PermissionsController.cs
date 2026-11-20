@@ -12,7 +12,7 @@ namespace CourtBookingManagement.Api.Controllers;
 public sealed class PermissionsController(IPermissionService service) : ApiControllerBase
 {
     [HttpGet]
-    //[Permission("permission.view")]
+    [Permission("permission.view")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<PermissionResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -28,7 +28,7 @@ public sealed class PermissionsController(IPermissionService service) : ApiContr
     }
 
     [HttpGet("{id:guid}")]
-    //[Permission("permission.view")]
+    [Permission("permission.view")]
     [ProducesResponseType(typeof(ApiResponse<PermissionResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -41,7 +41,7 @@ public sealed class PermissionsController(IPermissionService service) : ApiContr
     }
 
     [HttpPost]
-    //[Permission("role.assign")]
+    [Permission("role.assign")]
     [ProducesResponseType(typeof(ApiResponse<PermissionResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -58,7 +58,7 @@ public sealed class PermissionsController(IPermissionService service) : ApiContr
     }
 
     [HttpPut("{id:guid}")]
-    //[Permission("role.assign")]
+    [Permission("role.assign")]
     [ProducesResponseType(typeof(ApiResponse<PermissionResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -74,7 +74,7 @@ public sealed class PermissionsController(IPermissionService service) : ApiContr
     }
 
     [HttpDelete("{id:guid}")]
-    //[Permission("role.assign")]
+    [Permission("role.assign")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]

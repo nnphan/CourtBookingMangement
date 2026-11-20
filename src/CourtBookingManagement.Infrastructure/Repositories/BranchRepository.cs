@@ -43,7 +43,7 @@ public sealed class BranchRepository(
                       WHERE bur.branch_id = b.id
                         AND bur.user_id = @UserId
                         AND bur.is_active
-                        AND r.code IN ('BRANCH_ADMIN', 'STAFF')
+                        AND r.code IN ('BRANCH_MANAGER', 'STAFF')
                         AND r.is_active
                         AND r.deleted_at IS NULL
                   )

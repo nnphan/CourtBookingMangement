@@ -38,4 +38,22 @@ public interface IUserRoleRepository
         Guid assignedBy,
         IDbTransaction transaction,
         CancellationToken cancellationToken);
+
+    Task<bool> LockUserAsync(Guid userId, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<RoleItemResponse>> GetActiveRolesAsync(
+        IReadOnlyCollection<Guid> roleIds,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
+
+    Task RemoveOtherRolesAsync(
+        Guid userId,
+        IReadOnlyCollection<Guid> roleIds,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
+
+    Task<UserRoleAssignmentResponse?> GetUserRoleAssignmentAsync(
+        Guid userId,
+        IDbTransaction transaction,
+        CancellationToken cancellationToken);
 }

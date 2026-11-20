@@ -22,7 +22,7 @@ public sealed class BranchesController(
     IBranchService branchService,
     ICurrentUserService currentUserService) : ApiControllerBase
 {
-    //[Authorize(Policy = Permissions.BranchCreate)]
+    [Authorize(Policy = Permissions.BranchCreate)]
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<CreateBranchResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -46,7 +46,7 @@ public sealed class BranchesController(
                 HttpContext.TraceIdentifier));
     }
 
-    //[Authorize(Policy = Permissions.BranchUpdate)]
+    [Authorize(Policy = Permissions.BranchUpdate)]
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(ApiResponse<CreateBranchResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -67,7 +67,7 @@ public sealed class BranchesController(
         return FromResult(result, "Branch updated successfully");
     }
 
-    //[Permission(Permissions.BranchView)]
+    [Permission(Permissions.BranchView)]
     [HttpGet]
     [AllowAnonymous]
     public async Task<IActionResult> Get([FromQuery] BranchAdminSearchRequest request, CancellationToken ct)
@@ -103,7 +103,7 @@ public sealed class BranchesController(
     }
 
     [HttpDelete("{id:guid}")]
-    //[Permission("branch.delete")]
+    [Permission("branch.delete")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]

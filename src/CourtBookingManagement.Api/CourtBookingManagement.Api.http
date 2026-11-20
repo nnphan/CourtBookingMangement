@@ -2,6 +2,34 @@
 
 @matchId = 019a2e4b-0000-7000-8000-000000000001
 @accessToken = replace-with-jwt
+@userId = 00000000-0000-4000-8000-000000000001
+@roleId = 00000000-0000-4000-8000-000000000002
+
+### Replace global roles (requires role.create; branch roles are unchanged)
+# Permissions in existing access tokens remain unchanged until token refresh or expiry.
+PUT {{CourtBookingManagement.Api_HostAddress}}/api/users/{{userId}}/roles
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "roleIds": ["{{roleId}}"]
+}
+
+### Remove all global roles
+PUT {{CourtBookingManagement.Api_HostAddress}}/api/users/{{userId}}/roles
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "roleIds": []
+}
+
+### Invalid request (roleIds is required)
+PUT {{CourtBookingManagement.Api_HostAddress}}/api/users/{{userId}}/roles
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{}
 
 ### Get pending join requests (host only)
 GET {{CourtBookingManagement.Api_HostAddress}}/api/player-matches/{{matchId}}/join-requests?status=PENDING

@@ -12,7 +12,7 @@ namespace CourtBookingManagement.Api.Controllers;
 public sealed class OwnerController(IOwnerService service, ICurrentUserService currentUserService) : ApiControllerBase
 {
     [HttpGet]
-    //[Permission("owner.view")]
+    [Permission("owner.view")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<OwnerResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetOwners([FromQuery] OwnerSearchRequest request, CancellationToken cancellationToken)
@@ -24,14 +24,14 @@ public sealed class OwnerController(IOwnerService service, ICurrentUserService c
     }
 
     [HttpGet("{id:guid}")]
-    //[Permission("owner.view")]
+    [Permission("owner.view")]
     [ProducesResponseType(typeof(ApiResponse<OwnerResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken) =>
         FromResult(await service.GetByIdAsync(id, cancellationToken), "Owner retrieved successfully.");
 
     [HttpPost]
-    //[Permission("owner.create")]
+    [Permission("owner.create")]
     [ProducesResponseType(typeof(ApiResponse<OwnerResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
@@ -44,7 +44,7 @@ public sealed class OwnerController(IOwnerService service, ICurrentUserService c
     }
 
     [HttpPut("{id:guid}")]
-   //[Permission("owner.update")]
+    [Permission("owner.update")]
     [ProducesResponseType(typeof(ApiResponse<OwnerResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
@@ -58,7 +58,7 @@ public sealed class OwnerController(IOwnerService service, ICurrentUserService c
             "Owner updated successfully.");
 
     [HttpDelete("{id:guid}")]
-    //[Permission("owner.delete")]
+    [Permission("owner.delete")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]

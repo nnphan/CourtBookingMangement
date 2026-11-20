@@ -15,4 +15,10 @@ public interface IUserRoleService
         AssignUserRolesRequest request,
         Guid assignedBy,
         CancellationToken cancellationToken);
+
+    Task<Result<UserRoleAssignmentResponse>> UpdateRolesAsync(
+        Guid userId,
+        UpdateUserRolesRequest request,
+        Guid assignedBy,
+        CancellationToken cancellationToken);
 }

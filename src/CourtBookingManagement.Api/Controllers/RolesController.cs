@@ -15,7 +15,7 @@ public sealed class RolesController(
     ICurrentUserService currentUserService) : ApiControllerBase
 {
     [HttpGet]
-    //[Permission("permission.view")]
+    [Permission("permission.view")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<RoleResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -44,7 +44,7 @@ public sealed class RolesController(
     }
 
     [HttpPost]
-    //[Permission("role.assign")]
+    [Permission("role.assign")]
     [ProducesResponseType(typeof(ApiResponse<RoleResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -79,7 +79,7 @@ public sealed class RolesController(
     }
 
     [HttpDelete("{id:guid}")]
-    //[Permission("role.assign")]
+    [Permission("role.assign")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]

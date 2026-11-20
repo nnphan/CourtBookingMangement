@@ -24,7 +24,7 @@ public sealed class UserController(IUserService userService) : ApiControllerBase
     }
 
     [HttpGet]
-    //[Permission("user.view")]
+    [Permission("user.view")]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         var result = await userService.GetAllUsersAsync(cancellationToken);
@@ -32,7 +32,7 @@ public sealed class UserController(IUserService userService) : ApiControllerBase
     }
 
     [HttpGet("getlist")]
-    //[Permission("user.view")]
+    [Permission("user.view")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<UserListItemResponseDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]

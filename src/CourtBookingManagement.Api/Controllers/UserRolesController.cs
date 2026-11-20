@@ -53,4 +53,28 @@ public sealed class UserRolesController(
             ? Success(result.Value, "Role assigned successfully.")
             : Error(result.Error);
     }
+
+    /// <summary>Replace all global roles assigned to a user.</summary>
+    [HttpPut("{userId:guid}/roles")]
+    [Permission("role.create")]
+    [ProducesResponseType(typeof(ApiResponse<UserRoleAssignmentResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateRoles(
+        Guid userId,
+        [FromBody] UpdateUserRolesRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid currentUserId)
+        {
+            return Unauthorized();
+        }
+
+        var result = await service.UpdateRolesAsync(userId, request, currentUserId, cancellationToken);
+        return result.IsSuccess
+            ? Success(result.Value, "User roles updated successfully.")
+            : Error(result.Error);
+    }
 }

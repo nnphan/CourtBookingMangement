@@ -77,30 +77,32 @@ public sealed class UserRoleService(
 
         try
         {
-            if (!await repository.UserExistsAsync(userId, cancellationToken))
+            using var connection = sqlConnectionFactory.CreateConnection();
+            connection.Open();
+            using var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
+
+            if (!await repository.LockUserAsync(userId, transaction, cancellationToken))
             {
                 return Result.Failure<UserRoleAssignmentResponse>(UserNotFound);
             }
 
-            var activeRoles = await repository.GetActiveRolesAsync(requestedRoleIds, cancellationToken);
+            var activeRoles = await repository.GetActiveRolesAsync(requestedRoleIds, transaction, cancellationToken);
             if (activeRoles.Count != requestedRoleIds.Count)
             {
                 return Result.Failure<UserRoleAssignmentResponse>(
                     new Error("Role.NotFound", "One or more roles were not found or are inactive."));
             }
 
-            var assignedRoleIds = (await repository.GetAssignedRoleIdsAsync(userId, cancellationToken)).ToHashSet();
-            var newRoleIds = requestedRoleIds.Where(roleId => !assignedRoleIds.Contains(roleId)).ToList();
-
-            if (newRoleIds.Count > 0)
+            await repository.AssignRolesAsync(userId, requestedRoleIds, assignedBy, transaction, cancellationToken);
+            var assignment = await repository.GetUserRoleAssignmentAsync(userId, transaction, cancellationToken);
+            if (assignment is null)
             {
-                await AssignInTransactionAsync(userId, newRoleIds, assignedBy, cancellationToken);
+                return Result.Failure<UserRoleAssignmentResponse>(UserNotFound);
             }
 
-            var assignment = await repository.GetUserRoleAssignmentAsync(userId, cancellationToken);
-            return assignment is null
-                ? Result.Failure<UserRoleAssignmentResponse>(UserNotFound)
-                : Result.Success(assignment);
+            cancellationToken.ThrowIfCancellationRequested();
+            transaction.Commit();
+            return Result.Success(assignment);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -112,25 +114,57 @@ public sealed class UserRoleService(
         }
     }
 
-    private async Task AssignInTransactionAsync(
+    public async Task<Result<UserRoleAssignmentResponse>> UpdateRolesAsync(
         Guid userId,
-        IReadOnlyCollection<Guid> roleIds,
+        UpdateUserRolesRequest request,
         Guid assignedBy,
         CancellationToken cancellationToken)
     {
+        if (userId == Guid.Empty)
+        {
+            return Result.Failure<UserRoleAssignmentResponse>(InvalidUserId);
+        }
+
+        if (assignedBy == Guid.Empty)
+        {
+            return Result.Failure<UserRoleAssignmentResponse>(
+                new Error("USER_ROLE.INVALID_ASSIGNER", "The current user is invalid."));
+        }
+
+        if (request?.RoleIds is null || request.RoleIds.Contains(Guid.Empty))
+        {
+            return Result.Failure<UserRoleAssignmentResponse>(
+                new Error("USER_ROLE.INVALID_ROLES", "A valid role id list is required."));
+        }
+
+        var roleIds = request.RoleIds.Distinct().ToArray();
+
         using var connection = sqlConnectionFactory.CreateConnection();
         connection.Open();
         using var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
 
-        try
+        if (!await repository.LockUserAsync(userId, transaction, cancellationToken))
         {
-            await repository.AssignRolesAsync(userId, roleIds, assignedBy, transaction, cancellationToken);
-            transaction.Commit();
+            return Result.Failure<UserRoleAssignmentResponse>(UserNotFound);
         }
-        catch
+
+        var activeRoles = await repository.GetActiveRolesAsync(roleIds, transaction, cancellationToken);
+        if (activeRoles.Count != roleIds.Length)
         {
-            transaction.Rollback();
-            throw;
+            return Result.Failure<UserRoleAssignmentResponse>(
+                new Error("Role.NotFound", "One or more roles were not found or are inactive."));
         }
+
+        await repository.RemoveOtherRolesAsync(userId, roleIds, transaction, cancellationToken);
+        await repository.AssignRolesAsync(userId, roleIds, assignedBy, transaction, cancellationToken);
+        var assignment = await repository.GetUserRoleAssignmentAsync(userId, transaction, cancellationToken);
+        if (assignment is null)
+        {
+            return Result.Failure<UserRoleAssignmentResponse>(UserNotFound);
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+        transaction.Commit();
+        return Result.Success(assignment);
     }
 }
