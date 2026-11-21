@@ -5,7 +5,7 @@ namespace CourtBookingManagement.Infrastructure.FileStorage;
 
 public sealed class MediaFolderResolver : IMediaFolderResolver
 {
-    public string Resolve(string category)
+    public string Resolve(string category, Guid uploaderUserId)
     {
         var normalizedCategory = category?.Trim();
         if (string.IsNullOrWhiteSpace(normalizedCategory)
@@ -21,7 +21,7 @@ public sealed class MediaFolderResolver : IMediaFolderResolver
         {
             MediaCategory.Branch => FileStorageFolders.Branches,
             MediaCategory.Court => "badminton-booking/courts",
-            MediaCategory.Avatar => "badminton-booking/avatars",
+            MediaCategory.Avatar => $"badminton-booking/avatars/{uploaderUserId:N}",
             MediaCategory.Tournament => "badminton-booking/tournaments",
             MediaCategory.Promotion => "badminton-booking/promotions",
             _ => throw new ValidationException(

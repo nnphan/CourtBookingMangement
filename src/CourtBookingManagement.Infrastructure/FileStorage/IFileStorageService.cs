@@ -7,9 +7,6 @@ public interface IFileStorageService
     Task<UploadFileResponse> UploadAsync(
         IFormFile file,
         string category,
-        CancellationToken cancellationToken);
-
-    Task<UploadFileResponse> UploadAsync(
-        IFormFile file,
+        Guid uploaderUserId,
         CancellationToken cancellationToken);
 }

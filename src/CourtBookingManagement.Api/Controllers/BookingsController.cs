@@ -55,7 +55,7 @@ public sealed class BookingsController(ICourtStatusService courtStatusService, I
     }
 
     [HttpPost("calculate-price")]
-    //[Permission("booking.create")]
+    [Permission("booking.create")]
     [ProducesResponseType(typeof(ApiResponse<CalculateBookingPriceResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]

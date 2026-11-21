@@ -10,6 +10,8 @@ public sealed class CurrentUserResponse
 
     public string? PhoneNumber { get; init; }
 
+    public string? AvatarUrl { get; init; }
+
     public bool IsActive { get; init; }
 
     public bool IsEmailVerified { get; init; }

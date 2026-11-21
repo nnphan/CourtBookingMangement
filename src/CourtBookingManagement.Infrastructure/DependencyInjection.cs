@@ -23,6 +23,8 @@ using CourtBookingManagement.Application.UserRoles.Repositories;
 using CourtBookingManagement.Application.Options;
 using CourtBookingManagement.Application.Payments.Interfaces;
 using CourtBookingManagement.Application.Payments.Services;
+using CourtBookingManagement.Application.Files;
+using CourtBookingManagement.Application.Profiles.Repositories;
 using CourtBookingManagement.Domain.Abstractions;
 using CourtBookingManagement.Domain.Users;
 using CourtBookingManagement.Infrastructure.Auth;
@@ -120,6 +122,8 @@ public static class DependencyInjection
             return new CloudinaryFileUploadClient(new CloudinaryDotNet.Cloudinary(account));
         });
         services.AddScoped<IMediaFolderResolver, MediaFolderResolver>();
+        services.AddScoped<IFileMetadataRepository, FileMetadataRepository>();
+        services.AddScoped<IMyProfileRepository, MyProfileRepository>();
         services.AddScoped<IFileStorageService, CloudinaryFileStorageService>();
 
         services.AddDbContextPool<ApplicationDbContext>((serviceProvider, options) =>

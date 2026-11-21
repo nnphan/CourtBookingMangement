@@ -53,7 +53,7 @@ public sealed class UserRolesController(
             ? Success(result.Value, "Role assigned successfully.")
             : Error(result.Error);
     }
-
+ 
     /// <summary>Replace all global roles assigned to a user.</summary>
     [HttpPut("{userId:guid}/roles")]
     [Permission("role.create")]

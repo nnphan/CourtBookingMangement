@@ -31,7 +31,7 @@ public sealed class RolesController(
     }
 
     [HttpGet("{id:guid}")]
-    //[Permission("permission.view")]
+    [Permission("permission.view")]
     [ProducesResponseType(typeof(ApiResponse<RoleResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -62,7 +62,7 @@ public sealed class RolesController(
     }
 
     [HttpPut("{id:guid}")]
-    //[Permission("role.assign")]
+    [Permission("role.assign")]
     [ProducesResponseType(typeof(ApiResponse<RoleResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]

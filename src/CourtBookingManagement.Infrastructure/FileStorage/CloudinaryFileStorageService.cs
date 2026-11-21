@@ -1,6 +1,7 @@
  using System.Diagnostics;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
+using CourtBookingManagement.Application.Files;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Http;
@@ -48,33 +49,33 @@ public sealed class CloudinaryFileUploadClient(Cloudinary cloudinary) : ICloudin
 public sealed class CloudinaryFileStorageService(
     ICloudinaryFileUploadClient cloudinaryClient,
     IMediaFolderResolver mediaFolderResolver,
+    IFileMetadataRepository fileMetadataRepository,
     ILogger<CloudinaryFileStorageService> logger) : IFileStorageService
 {
     private const long MaximumFileSize = 5 * 1024 * 1024;
 
-    public CloudinaryFileStorageService(
-        ICloudinaryFileUploadClient cloudinaryClient,
-        ILogger<CloudinaryFileStorageService> logger)
-        : this(cloudinaryClient, new MediaFolderResolver(), logger)
-    {
-    }
-
-    public Task<UploadFileResponse> UploadAsync(
-        IFormFile file,
-        CancellationToken cancellationToken) =>
-        UploadAsync(file, "branch", cancellationToken);
-
-    public Task<UploadFileResponse> UploadAsync(
+    public async Task<UploadFileResponse> UploadAsync(
         IFormFile file,
         string category,
+        Guid uploaderUserId,
         CancellationToken cancellationToken)
     {
         var categoryValue = category ?? string.Empty;
         var normalizedCategory = categoryValue.Trim().ToLowerInvariant();
+        if (uploaderUserId == Guid.Empty)
+        {
+            throw ValidationError("An authenticated uploader is required");
+        }
+
         try
         {
-            var folder = mediaFolderResolver.Resolve(categoryValue);
-            return UploadToFolderAsync(file, normalizedCategory, folder, cancellationToken);
+            var folder = mediaFolderResolver.Resolve(categoryValue, uploaderUserId);
+            return await UploadToFolderAsync(
+                file,
+                normalizedCategory,
+                folder,
+                uploaderUserId,
+                cancellationToken);
         }
         catch (ValidationException exception)
         {
@@ -91,49 +92,40 @@ public sealed class CloudinaryFileStorageService(
         IFormFile file,
         string category,
         string folder,
+        Guid uploaderUserId,
         CancellationToken cancellationToken)
     {
-        ValidateFile(file);
+        var contentType = await ValidateFileAsync(file, cancellationToken);
 
-        var extension = GetExtension(file.ContentType);
+        var extension = GetExtension(contentType);
         var generatedFileName = $"{Guid.NewGuid()}{extension}";
         var stopwatch = Stopwatch.StartNew();
 
         logger.LogInformation(
-            "Cloudinary upload started. FileName: {FileName}, ContentType: {ContentType}, Size: {Size}, Category: {Category}",
-            file.FileName,
-            file.ContentType,
+            "Cloudinary upload started. UploaderUserId: {UploaderUserId}, ContentType: {ContentType}, Size: {Size}, Category: {Category}",
+            uploaderUserId,
+            contentType,
             file.Length,
             category);
 
+        CloudinaryUploadResult uploadResult;
         try
         {
-            var result = await cloudinaryClient.UploadAsync(
+            uploadResult = await cloudinaryClient.UploadAsync(
                 file,
                 generatedFileName,
                 folder.Trim('/'),
                 cancellationToken);
 
-            if (!string.IsNullOrWhiteSpace(result.Error) || result.SecureUrl is null)
+            if (!string.IsNullOrWhiteSpace(uploadResult.Error)
+                || uploadResult.SecureUrl is null
+                || !uploadResult.SecureUrl.IsAbsoluteUri
+                || uploadResult.SecureUrl.Scheme != Uri.UriSchemeHttps
+                || string.IsNullOrWhiteSpace(uploadResult.PublicId))
             {
-                throw new InvalidOperationException(result.Error ?? "Cloudinary did not return a secure URL.");
+                throw new InvalidOperationException(
+                    uploadResult.Error ?? "Cloudinary did not return valid secure file metadata.");
             }
-
-            stopwatch.Stop();
-            logger.LogInformation(
-                "Cloudinary upload succeeded. Folder: {Folder}, Url: {Url}, ElapsedMilliseconds: {ElapsedMilliseconds}",
-                folder,
-                result.SecureUrl,
-                stopwatch.ElapsedMilliseconds);
-
-            return new UploadFileResponse
-            {
-                FileName = generatedFileName,
-                Url = result.SecureUrl.ToString(),
-                ContentType = file.ContentType,
-                Size = file.Length,
-                Category = category
-            };
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -148,9 +140,67 @@ public sealed class CloudinaryFileStorageService(
                 exception.Message);
             throw new FileStorageException("Failed to upload file", exception);
         }
+
+        var secureUrl = uploadResult.SecureUrl!.ToString();
+        Guid fileId;
+        try
+        {
+            fileId = await fileMetadataRepository.CreateAsync(
+                new CreateFileMetadataRequest(
+                    uploaderUserId,
+                    category,
+                    uploadResult.PublicId!,
+                    secureUrl,
+                    generatedFileName,
+                    contentType,
+                    file.Length,
+                    string.Equals(category, "avatar", StringComparison.Ordinal)
+                        ? "TEMPORARY"
+                        : "ATTACHED"),
+                cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning(
+                "File metadata persistence was cancelled after Cloudinary upload. UploaderUserId: {UploaderUserId}, Category: {Category}, PublicId: {PublicId}",
+                uploaderUserId,
+                category,
+                uploadResult.PublicId);
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(
+                exception,
+                "File metadata persistence failed after Cloudinary upload. UploaderUserId: {UploaderUserId}, Category: {Category}, PublicId: {PublicId}",
+                uploaderUserId,
+                category,
+                uploadResult.PublicId);
+            throw;
+        }
+
+        stopwatch.Stop();
+        logger.LogInformation(
+            "Cloudinary upload and metadata persistence succeeded. FileId: {FileId}, UploaderUserId: {UploaderUserId}, Category: {Category}, ElapsedMilliseconds: {ElapsedMilliseconds}",
+            fileId,
+            uploaderUserId,
+            category,
+            stopwatch.ElapsedMilliseconds);
+
+        return new UploadFileResponse
+        {
+            FileId = fileId,
+            FileName = generatedFileName,
+            Url = secureUrl,
+            ContentType = contentType,
+            Size = file.Length,
+            Category = category
+        };
     }
 
-    private static void ValidateFile(IFormFile? file)
+    private static async Task<string> ValidateFileAsync(
+        IFormFile? file,
+        CancellationToken cancellationToken)
     {
         if (file is null || file.Length == 0)
         {
@@ -162,20 +212,69 @@ public sealed class CloudinaryFileStorageService(
             throw ValidationError("Maximum file size is 5 MB");
         }
 
-        var contentType = file.ContentType.Trim().ToLowerInvariant();
-        var isAllowedImage = contentType switch
+        var contentType = file.ContentType?.Trim().ToLowerInvariant() ?? string.Empty;
+        var extension = Path.GetExtension(Path.GetFileName(file.FileName)).ToLowerInvariant();
+        var expectedHeaderLength = contentType switch
         {
-            "image/jpeg" or "image/jpg" or "image/png" or "image/webp" => true,
+            "image/jpeg" or "image/jpg" => 3,
+            "image/png" => 8,
+            "image/webp" => 12,
+            _ => 0
+        };
+
+        var extensionMatches = contentType switch
+        {
+            "image/jpeg" or "image/jpg" => extension is ".jpg" or ".jpeg",
+            "image/png" => extension == ".png",
+            "image/webp" => extension == ".webp",
             _ => false
         };
 
-        if (!isAllowedImage)
+        if (expectedHeaderLength == 0 || !extensionMatches)
         {
             throw ValidationError("Only JPG, JPEG, PNG, WEBP are allowed");
         }
+
+        var header = new byte[expectedHeaderLength];
+        await using var stream = file.OpenReadStream();
+        var bytesRead = 0;
+        while (bytesRead < header.Length)
+        {
+            var read = await stream.ReadAsync(
+                header.AsMemory(bytesRead, header.Length - bytesRead),
+                cancellationToken);
+            if (read == 0)
+            {
+                break;
+            }
+
+            bytesRead += read;
+        }
+
+        if (bytesRead != header.Length || !HasExpectedSignature(header, contentType))
+        {
+            throw ValidationError("The file content does not match a supported image format");
+        }
+
+        return contentType;
     }
 
-    private static string GetExtension(string contentType) => contentType.Trim().ToLowerInvariant() switch
+    private static bool HasExpectedSignature(byte[] header, string contentType) =>
+        contentType switch
+        {
+            "image/jpeg" or "image/jpg" =>
+                header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF,
+            "image/png" =>
+                header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47
+                && header[4] == 0x0D && header[5] == 0x0A && header[6] == 0x1A && header[7] == 0x0A,
+            "image/webp" =>
+                header[0] == 0x52 && header[1] == 0x49 && header[2] == 0x46 && header[3] == 0x46
+                && header[8] == 0x57 && header[9] == 0x45 && header[10] == 0x42 && header[11] == 0x50,
+            _ => false
+        };
+
+    private static string GetExtension(string contentType) =>
+        contentType.Trim().ToLowerInvariant() switch
     {
         "image/jpeg" or "image/jpg" => ".jpg",
         "image/png" => ".png",

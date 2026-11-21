@@ -52,6 +52,12 @@ public static class ErrorStatusMapper
         "Owner.AlreadyExists" or "Owner.TaxIdAlreadyExists" or "Owner.HasActiveBranches" => StatusCodes.Status409Conflict,
         "Customer.NotFound" => StatusCodes.Status404NotFound,
         "Customer.ProfileAlreadyExists" => StatusCodes.Status409Conflict,
+        "AVATAR_FILE_NOT_FOUND" => StatusCodes.Status404NotFound,
+        "AVATAR_FILE_NOT_OWNED" => StatusCodes.Status403Forbidden,
+        "AVATAR_FILE_INVALID_TYPE" or "AVATAR_FILE_TOO_LARGE" =>
+            StatusCodes.Status400BadRequest,
+        "AVATAR_FILE_NOT_ATTACHABLE" => StatusCodes.Status409Conflict,
+        "PROFILE_NOT_FOUND" => StatusCodes.Status404NotFound,
         "Auth.CustomerRoleNotConfigured" or "Auth.DefaultMembershipNotConfigured" => StatusCodes.Status500InternalServerError,
         "Court.DuplicateName" or "Court.DuplicateNumber" => StatusCodes.Status409Conflict,
         "CourtBooking.NotFound" => StatusCodes.Status404NotFound,

@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CourtBookingManagement.Api.Controllers;
 
 [ApiController]
-//[Authorize(Policy = Permissions.BranchView)]
+[Authorize(Policy = Permissions.BranchView)]
 [Route("api/admin/branches")]
 public sealed class AdminBranchesController(IAdminBranchService service) : ApiControllerBase
 {

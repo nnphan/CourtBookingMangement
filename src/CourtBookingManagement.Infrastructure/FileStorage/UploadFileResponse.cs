@@ -2,6 +2,8 @@ namespace CourtBookingManagement.Infrastructure.FileStorage;
 
 public sealed class UploadFileResponse
 {
+    public Guid FileId { get; init; }
+
     public required string FileName { get; init; }
 
     public required string Url { get; init; }

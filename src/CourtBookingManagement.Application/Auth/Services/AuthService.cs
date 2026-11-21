@@ -7,6 +7,7 @@ using CourtBookingManagement.Application.Auth.Exceptions;
 using CourtBookingManagement.Application.Auth.Interfaces;
 using CourtBookingManagement.Application.Customers.Models.Requests;
 using CourtBookingManagement.Application.Customers.Repositories;
+using CourtBookingManagement.Application.Profiles.Repositories;
 using CourtBookingManagement.Application.Roles.Repositories;
 using CourtBookingManagement.Application.UserRoles.Repositories;
 using CourtBookingManagement.Domain.Abstractions;
@@ -49,6 +50,7 @@ public sealed class AuthService : IAuthService
     private readonly ICustomerRepository _customerRepository;
     private readonly IMembershipLevelRepository _membershipLevelRepository;
     private readonly ISqlConnectionFactory _sqlConnectionFactory;
+    private readonly IMyProfileRepository _myProfileRepository;
     private readonly ILogger<AuthService> _logger;
     private readonly IValidator<LoginByPhoneNumberRequest> _loginByPhoneNumberRequestValidator;
 
@@ -64,6 +66,7 @@ public sealed class AuthService : IAuthService
         ICustomerRepository customerRepository,
         IMembershipLevelRepository membershipLevelRepository,
         ISqlConnectionFactory sqlConnectionFactory,
+        IMyProfileRepository myProfileRepository,
         ILogger<AuthService> logger,
         IValidator<LoginByPhoneNumberRequest> loginByPhoneNumberRequestValidator)
     {
@@ -78,6 +81,7 @@ public sealed class AuthService : IAuthService
         _customerRepository = customerRepository;
         _membershipLevelRepository = membershipLevelRepository;
         _sqlConnectionFactory = sqlConnectionFactory;
+        _myProfileRepository = myProfileRepository;
         _logger = logger;
         _loginByPhoneNumberRequestValidator = loginByPhoneNumberRequestValidator;
     }
@@ -322,6 +326,7 @@ public sealed class AuthService : IAuthService
 
         var roles = await _permissionService.GetUserRolesAsync(user.Id, cancellationToken);
         var permissions = await _permissionService.GetUserPermissionsAsync(user.Id, cancellationToken);
+        var avatarUrl = await GetAvatarUrlAsync(user.Id, cancellationToken);
 
         var accessToken = _jwtTokenService.GenerateAccessToken(user.Id, user.Email, roles, permissions);
 
@@ -334,7 +339,9 @@ public sealed class AuthService : IAuthService
             {
                 Id = user.Id,
                 Email = user.Email,
+                FullName = user.FullName,
                 PhoneNumber = user.PhoneNumber,
+                AvatarUrl = avatarUrl,
                 IsActive = user.IsActive,
                 IsEmailVerified = user.IsEmailVerified,
                 Roles = roles,
@@ -388,6 +395,7 @@ public sealed class AuthService : IAuthService
 
         var roles = await _permissionService.GetUserRolesAsync(user.Id, cancellationToken);
         var permissions = await _permissionService.GetUserPermissionsAsync(user.Id, cancellationToken);
+        var avatarUrl = await GetAvatarUrlAsync(user.Id, cancellationToken);
 
         return Result.Success(new CurrentUserResponse
         {
@@ -395,6 +403,7 @@ public sealed class AuthService : IAuthService
             Email = user.Email,
             FullName = user.FullName,
             PhoneNumber = user.PhoneNumber,
+            AvatarUrl = avatarUrl,
             IsActive = user.IsActive,
             IsEmailVerified = user.IsEmailVerified,
             Roles = roles,
@@ -406,6 +415,7 @@ public sealed class AuthService : IAuthService
     {
         var roles = await _permissionService.GetUserRolesAsync(user.Id, cancellationToken);
         var permissions = await _permissionService.GetUserPermissionsAsync(user.Id, cancellationToken);
+        var avatarUrl = await GetAvatarUrlAsync(user.Id, cancellationToken);
 
         var accessToken = _jwtTokenService.GenerateAccessToken(user.Id, user.Email, roles, permissions);
         var refreshToken = _jwtTokenService.GenerateRefreshToken();
@@ -436,6 +446,7 @@ public sealed class AuthService : IAuthService
                 Email = user.Email,
                 FullName = user.FullName,
                 PhoneNumber = user.PhoneNumber,
+                AvatarUrl = avatarUrl,
                 IsActive = user.IsActive,
                 IsEmailVerified = user.IsEmailVerified,
                 Roles = roles,
@@ -484,6 +495,7 @@ public sealed class AuthService : IAuthService
 
     private async Task<Result<RegisterResponse>> CreateRegisterResponseAsync(User user, CancellationToken cancellationToken)
     {
+        var avatarUrl = await GetAvatarUrlAsync(user.Id, cancellationToken);
         return Result.Success(new RegisterResponse
         {
             User = new CurrentUserResponse
@@ -492,9 +504,21 @@ public sealed class AuthService : IAuthService
                 Email = user.Email,
                 FullName = user.FullName,
                 PhoneNumber = user.PhoneNumber,
+                AvatarUrl = avatarUrl,
                 IsActive = user.IsActive,
                 IsEmailVerified = user.IsEmailVerified
             }
         });
+    }
+
+    private async Task<string?> GetAvatarUrlAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var profile = await _myProfileRepository.GetByUserIdAsync(
+            userId,
+            null,
+            cancellationToken);
+        return profile?.AvatarUrl;
     }
 }
