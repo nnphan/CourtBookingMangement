@@ -41,7 +41,7 @@ public sealed class PermissionsController(IPermissionService service) : ApiContr
     }
 
     [HttpPost]
-    [Permission("role.assign")]
+    [Permission("permission.create")]
     [ProducesResponseType(typeof(ApiResponse<PermissionResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -58,7 +58,7 @@ public sealed class PermissionsController(IPermissionService service) : ApiContr
     }
 
     [HttpPut("{id:guid}")]
-    [Permission("role.assign")]
+    [Permission("permission.edit")]
     [ProducesResponseType(typeof(ApiResponse<PermissionResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -74,7 +74,7 @@ public sealed class PermissionsController(IPermissionService service) : ApiContr
     }
 
     [HttpDelete("{id:guid}")]
-    [Permission("role.assign")]
+    [Permission("permission.delete")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]

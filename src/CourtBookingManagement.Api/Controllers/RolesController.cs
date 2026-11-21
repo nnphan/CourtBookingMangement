@@ -15,7 +15,7 @@ public sealed class RolesController(
     ICurrentUserService currentUserService) : ApiControllerBase
 {
     [HttpGet]
-    [Permission("permission.view")]
+    [Permission("role.view")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<RoleResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -31,7 +31,7 @@ public sealed class RolesController(
     }
 
     [HttpGet("{id:guid}")]
-    [Permission("permission.view")]
+    [Permission("role.view")]
     [ProducesResponseType(typeof(ApiResponse<RoleResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -44,7 +44,7 @@ public sealed class RolesController(
     }
 
     [HttpPost]
-    [Permission("role.assign")]
+    [Permission("role.update")]
     [ProducesResponseType(typeof(ApiResponse<RoleResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -62,7 +62,7 @@ public sealed class RolesController(
     }
 
     [HttpPut("{id:guid}")]
-    [Permission("role.assign")]
+    [Permission("role.update")]
     [ProducesResponseType(typeof(ApiResponse<RoleResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -79,7 +79,7 @@ public sealed class RolesController(
     }
 
     [HttpDelete("{id:guid}")]
-    [Permission("role.assign")]
+    [Permission("role.update")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
