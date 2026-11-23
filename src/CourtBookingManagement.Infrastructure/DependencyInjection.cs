@@ -9,6 +9,7 @@ using CourtBookingManagement.Application.Courts.Repositories;
 using CourtBookingManagement.Application.Catalog.Repositories;
 using CourtBookingManagement.Application.Inventory.Repositories;
 using CourtBookingManagement.Application.Sales.Repositories;
+using CourtBookingManagement.Application.StaffManagement.Interfaces;
 using CourtBookingManagement.Application.Sales.Services;
 using CourtBookingManagement.Application.Bookings.Services;
 using CourtBookingManagement.Application.Customers.Repositories;
@@ -211,6 +212,8 @@ public static class DependencyInjection
         services.AddScoped<ICatalogRepository, CatalogRepository>();
         services.AddScoped<IInventoryRepository, InventoryRepository>();
         services.AddScoped<ISalesRepository, SalesRepository>();
+        services.AddScoped<IBranchOwnerStaffRepository, BranchOwnerStaffRepository>();
+        services.AddScoped<IStaffInvitationDelivery, SmtpStaffInvitationDelivery>();
         services.AddSingleton<IInvoicePdfGenerator, PdfInvoiceGenerator>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<CourtBookingManagement.Application.Owners.Repositories.IOwnerRepository, OwnerRepository>();

@@ -1,0 +1,49 @@
+@baseUrl = http://localhost:5117
+@accessToken = replace-with-a-Branch-Owner-access-token
+@staffUserId = 00000000-0000-0000-0000-000000000001
+@ownedBranchId = 00000000-0000-0000-0000-000000000002
+
+### List active owned branches available to Staff management
+GET {{baseUrl}}/api/branch-owner/staff/branches
+Authorization: Bearer {{accessToken}}
+
+### List Staff for all owned branches
+GET {{baseUrl}}/api/branch-owner/staff?page=1&pageSize=20&sortBy=createdAt&sortDirection=DESC
+Authorization: Bearer {{accessToken}}
+
+### Search and filter Staff in one owned branch
+GET {{baseUrl}}/api/branch-owner/staff?branchId={{ownedBranchId}}&search=NV001&status=ACTIVE&activationStatus=ACTIVE
+Authorization: Bearer {{accessToken}}
+
+### Read Staff detail in owner scope
+GET {{baseUrl}}/api/branch-owner/staff/{{staffUserId}}
+Authorization: Bearer {{accessToken}}
+
+### A Staff ID outside the caller's owner scope returns not found
+GET {{baseUrl}}/api/branch-owner/staff/00000000-0000-0000-0000-000000000099
+Authorization: Bearer {{accessToken}}
+
+### Create Staff in an owned branch
+POST {{baseUrl}}/api/branch-owner/staff
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "displayName": "Staff Member",
+  "email": "staff@example.com",
+  "phoneNumber": "0901234567",
+  "branchIds": ["{{ownedBranchId}}"]
+}
+
+### Resend a pending invitation
+POST {{baseUrl}}/api/branch-owner/staff/{{staffUserId}}/send-activation
+Authorization: Bearer {{accessToken}}
+
+### Redeem a token from the email URL fragment
+POST {{baseUrl}}/api/auth/staff-activation
+Content-Type: application/json
+
+{
+  "token": "replace-with-the-one-time-token",
+  "newPassword": "replace-with-a-strong-password"
+}

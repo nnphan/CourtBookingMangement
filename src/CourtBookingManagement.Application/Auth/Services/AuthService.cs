@@ -148,7 +148,7 @@ public sealed class AuthService : IAuthService
                 userId = await _userRepository.CreateUserAsync(user, transaction, cancellationToken);
             }
             catch (RegistrationConflictException exception) when (
-                exception.ConstraintName == "ux_users_email")
+                exception.ConstraintName is "ux_users_email" or "ux_users_normalized_email")
             {
                 transaction.Rollback();
                 return Result.Failure<RegisterResponse>(RegistrationEmailAlreadyExists);

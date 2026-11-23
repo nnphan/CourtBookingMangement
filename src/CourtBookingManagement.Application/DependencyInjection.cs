@@ -14,6 +14,8 @@ using CourtBookingManagement.Application.Courts.Services;
 using CourtBookingManagement.Application.Catalog.Services;
 using CourtBookingManagement.Application.Inventory.Services;
 using CourtBookingManagement.Application.Sales.Services;
+using CourtBookingManagement.Application.StaffManagement.Interfaces;
+using CourtBookingManagement.Application.StaffManagement.Services;
 using CourtBookingManagement.Application.Customers.Services;
 using CourtBookingManagement.Application.Files;
 using CourtBookingManagement.Application.CourtStatus.Interfaces;
@@ -58,6 +60,8 @@ public static class DependencyInjection
         services.AddScoped<IBranchProductService, BranchProductService>();
         services.AddScoped<IInventoryService, InventoryService>();
         services.AddScoped<ISalesService, SalesService>();
+        services.AddScoped<IBranchOwnerStaffService, BranchOwnerStaffService>();
+        services.AddScoped<IStaffCreationService, StaffCreationService>();
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IAvatarFilePolicy, AvatarFilePolicy>();
         services.AddScoped<IMyProfileService, MyProfileService>();

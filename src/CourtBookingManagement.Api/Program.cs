@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Text;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,6 +58,19 @@ System.ComponentModel.DataAnnotations.Validator.ValidateObject(
     validateAllProperties: true);
 builder.Services.AddSingleton(bookingOptions);
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("staff-activation", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+});
 
 builder.Services.AddCors(options =>
 {
@@ -78,6 +92,7 @@ builder.Services.AddSwaggerGen(options =>
     options.SchemaFilter<BookingEnumSchemaFilter>();
     options.OperationFilter<UploadFileExamplesOperationFilter>();
     options.OperationFilter<AdminBranchesExamplesOperationFilter>();
+    options.OperationFilter<BranchOwnerStaffOperationFilter>();
     options.OperationFilter<BookingPriceExamplesOperationFilter>();
     options.OperationFilter<PhoneNumberLoginOperationFilter>();
     options.CustomSchemaIds(GetSwaggerSchemaId);
@@ -176,6 +191,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 app.UseCors("CorsPolicy");
+app.UseRateLimiter();
 app.UseSerilogRequestLogging(options =>
 {
     options.MessageTemplate =

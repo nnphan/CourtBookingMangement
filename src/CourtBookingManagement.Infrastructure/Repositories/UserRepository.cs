@@ -277,7 +277,7 @@ public sealed class UserRepository : IUserRepository
         }
         catch (PostgresException exception) when (
             exception.SqlState == PostgresErrorCodes.UniqueViolation
-            && exception.ConstraintName is "ux_users_email" or "ux_users_active_phone_number")
+            && exception.ConstraintName is "ux_users_email" or "ux_users_normalized_email" or "ux_users_active_phone_number")
         {
             throw new RegistrationConflictException(exception.ConstraintName!, exception);
         }

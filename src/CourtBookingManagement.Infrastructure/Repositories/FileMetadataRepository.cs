@@ -19,7 +19,7 @@ public sealed class FileMetadataRepository(ISqlConnectionFactory sqlConnectionFa
                 category,
                 cloudinary_public_id,
                 secure_url,
-                file_name,
+                file_name, 
                 content_type,
                 size_bytes,
                 status,
