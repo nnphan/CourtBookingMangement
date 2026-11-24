@@ -61,6 +61,19 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = (context, _) =>
+    {
+        if (context.Lease.TryGetMetadata(
+                System.Threading.RateLimiting.MetadataName.RetryAfter,
+                out var retryAfter))
+        {
+            context.HttpContext.Response.Headers["Retry-After"] =
+                Math.Max(1, (int)Math.Ceiling(retryAfter.TotalSeconds))
+                    .ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        return ValueTask.CompletedTask;
+    };
     options.AddPolicy("staff-activation", context =>
         RateLimitPartition.GetFixedWindowLimiter(
             context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -68,6 +81,24 @@ builder.Services.AddRateLimiter(options =>
             {
                 PermitLimit = 10,
                 Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+    options.AddPolicy("staff-resend", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+    options.AddPolicy("dev-smtp-smoke", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 3,
+                Window = TimeSpan.FromMinutes(5),
                 QueueLimit = 0
             }));
 });

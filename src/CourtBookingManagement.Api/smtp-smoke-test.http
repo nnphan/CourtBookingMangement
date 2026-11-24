@@ -1,0 +1,12 @@
+@baseUrl = http://localhost:5117
+@adminAccessToken = replace-with-admin-jwt
+@approvedRecipient = replace-with-approved-address@example.com
+
+### Development only; requires SMTP configuration and an ADMIN access token.
+POST {{baseUrl}}/api/dev/smtp-smoke-test
+Authorization: Bearer {{adminAccessToken}}
+Content-Type: application/json
+
+{
+  "recipient": "{{approvedRecipient}}"
+}

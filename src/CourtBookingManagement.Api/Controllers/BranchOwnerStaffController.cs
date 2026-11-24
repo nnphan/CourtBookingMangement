@@ -4,6 +4,7 @@ using CourtBookingManagement.Application.StaffManagement.DTOs;
 using CourtBookingManagement.Application.StaffManagement.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace CourtBookingManagement.Api.Controllers;
 
@@ -38,9 +39,12 @@ public sealed class BranchOwnerStaffController(
 
     /// <summary>Reissues an activation invitation for a pending Staff account.</summary>
     [HttpPost("{userId:guid}/send-activation")]
+    [EnableRateLimiting("staff-resend")]
     [ProducesResponseType(typeof(ApiResponse<CreateStaffResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status429TooManyRequests)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> SendActivation(Guid userId, CancellationToken cancellationToken)
     {

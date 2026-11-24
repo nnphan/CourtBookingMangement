@@ -2,6 +2,8 @@
 
 This is the initial Phase 2 contract for branch-scoped Staff management. Backend DTOs and Swagger become authoritative when endpoints are implemented; update this document and the frontend API types together.
 
+The [Staff invitation and SMTP contract](staff-invitation-smtp-api-contract.md) records the invitation delivery and activation behavior implemented in later phases. The implementation details below reflect the current API.
+
 ## Status and decisions
 
 - Activation mode: secure email invitation through the existing SMTP relay. Delivery uses a provider-neutral application interface; configuration and the frontend activation page are deployment prerequisites. Do not report a message as sent when no sender is configured.
@@ -29,7 +31,7 @@ Use the existing branch authorization mechanism rather than a frontend-only role
 
 The checked-in sources have a role-code mismatch: branch authorization and the POS migration use `BRANCH_ADMIN`, while a branch lookup query also references `BRANCH_MANAGER`. The Phase 3 migration targets `BRANCH_ADMIN`, matching the current owner authorization path, and requires active `BRANCH_ADMIN` and `STAFF` roles. Confirm the role codes against deployed data before applying the migration; reconcile the `BRANCH_MANAGER` lookup discrepancy separately. Do not introduce a new authorization system or assume a global `BRANCH_OWNER` role is authoritative.
 
-The frontend Staff route and navigation share an access query that requests the first Staff list page. The route and dashboard recheck on mount; the sidebar checks when opened. A forbidden response denies access and other failures are surfaced separately. These checks do not replace backend authorization. The current list is read-only; account creation and management actions remain for later phases.
+The frontend Staff route and navigation share an access query that requests the first Staff list page. The route and dashboard recheck on mount; the sidebar checks when opened. A forbidden response denies access and other failures are surfaced separately. These checks do not replace backend authorization. Staff listing, details, account creation, activation resend, and activation are implemented; edit, branch assignment, status management, and password reset remain contract-only.
 
 The migration extends existing branch-role rows in place and leaves their assignments and account states unchanged. It does not infer owners or backfill legacy Staff accounts. Reads include eligible existing Staff assigned to owned branches regardless of who created their accounts.
 
@@ -143,6 +145,7 @@ Sort expressions must be selected from a server-side whitelist. Search values ar
   "staffCode": "NV001",
   "status": "ACTIVE",
   "activationStatus": "ACTIVE",
+  "invitationDeliveryStatus": null,
   "branches": [
     {
       "branchId": "uuid",
@@ -160,6 +163,8 @@ Sort expressions must be selected from a server-side whitelist. Search values ar
 ```
 
 Responses must not include password hashes, invitation/reset tokens, refresh tokens, session IDs, security stamps, or other authentication metadata.
+
+`invitationDeliveryStatus` is `PENDING`, `SENT`, or `FAILED` for an inactive account with an outstanding activation invitation; it is `null` for active accounts or accounts without an outstanding invitation. The same field is returned by the detail endpoint. The Staff UI shows this state only while activation is pending or expired.
 
 ## Create request and result
 

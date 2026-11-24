@@ -4,27 +4,53 @@ using CourtBookingManagement.Application.StaffManagement.DTOs;
 using CourtBookingManagement.Application.StaffManagement.Interfaces;
 using CourtBookingManagement.Application.StaffManagement.Models;
 using Dapper;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 
 namespace CourtBookingManagement.Infrastructure.Repositories;
 
-public sealed class BranchOwnerStaffRepository(ISqlConnectionFactory sqlConnectionFactory)
+public sealed class BranchOwnerStaffRepository(
+    ISqlConnectionFactory sqlConnectionFactory,
+    ILogger<BranchOwnerStaffRepository> logger)
     : IBranchOwnerStaffRepository
 {
-    public async Task<StaffInvitation?> IssueInvitationAsync(
-        Guid ownerId, Guid actorId, Guid userId, Guid invitationId, string tokenHash,
-        DateTimeOffset expiresAt, CancellationToken cancellationToken)
+    public async Task<StaffInvitationIssueResult> IssueInvitationAsync(
+        Guid ownerId,
+        Guid actorId,
+        Guid userId,
+        Guid invitationId,
+        string tokenHash,
+        DateTimeOffset expiresAt,
+        int resendCooldownMinutes,
+        int maxResendsPerWindow,
+        int resendWindowMinutes,
+        CancellationToken cancellationToken)
     {
         using var connection = sqlConnectionFactory.CreateConnection();
         connection.Open();
         using var transaction = connection.BeginTransaction();
-        var email = await connection.QuerySingleOrDefaultAsync<string>(new CommandDefinition("""
-            SELECT u.email
+        var invitation = await connection.QuerySingleOrDefaultAsync<StaffInvitation>(new CommandDefinition("""
+            SELECT @InvitationId AS "InvitationId",
+                   u.email AS "Email",
+                   COALESCE(u.full_name, '') AS "DisplayName",
+                   u.is_active AS "UserIsActive",
+                   u.is_email_verified AS "UserIsEmailVerified",
+                   ARRAY(
+                       SELECT DISTINCT b.name
+                       FROM auth.branch_user_roles bur
+                       JOIN core.branches b ON b.id = bur.branch_id
+                       JOIN auth.roles r ON r.id = bur.role_id
+                       WHERE bur.user_id = u.id
+                         AND bur.is_active AND bur.removed_at IS NULL
+                         AND b.owner_id = o.id AND b.is_active AND b.deleted_at IS NULL
+                         AND r.code = 'STAFF' AND r.is_active AND r.deleted_at IS NULL
+                       ORDER BY b.name
+                   ) AS "BranchNames"
             FROM auth.users u
             JOIN core.owners o ON o.id = @OwnerId
             JOIN auth.users actor ON actor.id = o.user_id
             WHERE u.id = @UserId AND u.created_by = @ActorId
-              AND NOT u.is_active AND NOT u.is_email_verified AND u.deleted_at IS NULL
+              AND u.deleted_at IS NULL
               AND o.user_id = @ActorId AND o.is_active AND o.deleted_at IS NULL
               AND actor.is_active AND actor.deleted_at IS NULL
               AND EXISTS (
@@ -38,7 +64,8 @@ public sealed class BranchOwnerStaffRepository(ISqlConnectionFactory sqlConnecti
               AND NOT EXISTS (
                   SELECT 1 FROM auth.branch_user_roles bur
                   JOIN core.branches b ON b.id = bur.branch_id
-                  WHERE bur.user_id = u.id AND bur.is_active AND b.owner_id <> o.id
+                  WHERE bur.user_id = u.id AND bur.is_active AND bur.removed_at IS NULL
+                    AND b.owner_id <> o.id
               )
               AND NOT EXISTS (
                   SELECT 1 FROM auth.user_roles ur
@@ -49,7 +76,7 @@ public sealed class BranchOwnerStaffRepository(ISqlConnectionFactory sqlConnecti
               AND NOT EXISTS (
                   SELECT 1 FROM auth.branch_user_roles bur
                   JOIN auth.roles r ON r.id = bur.role_id
-                  WHERE bur.user_id = u.id AND bur.is_active AND r.is_active
+                  WHERE bur.user_id = u.id AND bur.is_active AND bur.removed_at IS NULL AND r.is_active
                     AND r.deleted_at IS NULL AND r.code <> 'STAFF'
               )
               AND EXISTS (
@@ -60,62 +87,123 @@ public sealed class BranchOwnerStaffRepository(ISqlConnectionFactory sqlConnecti
                     AND p.code = 'staff.create'
               )
             FOR UPDATE OF u, o, actor;
-            """, new { OwnerId = ownerId, ActorId = actorId, UserId = userId },
+            """, new { OwnerId = ownerId, ActorId = actorId, UserId = userId, InvitationId = invitationId },
             transaction, cancellationToken: cancellationToken));
 
-        if (email is null)
+        if (invitation is null)
         {
             transaction.Rollback();
-            return null;
+            return new StaffInvitationIssueResult(StaffInvitationIssueOutcome.NotFound);
+        }
+
+        if (invitation.UserIsActive)
+        {
+            transaction.Rollback();
+            return new StaffInvitationIssueResult(StaffInvitationIssueOutcome.AlreadyActive);
+        }
+
+        if (invitation.UserIsEmailVerified)
+        {
+            transaction.Rollback();
+            return new StaffInvitationIssueResult(StaffInvitationIssueOutcome.NotFound);
+        }
+
+        var databaseTime = await connection.QuerySingleAsync<DateTimeOffset>(new CommandDefinition(
+            "SELECT clock_timestamp();",
+            transaction: transaction,
+            cancellationToken: cancellationToken));
+        var latestIssuedAt = await connection.QuerySingleOrDefaultAsync<DateTimeOffset?>(
+            new CommandDefinition("""
+                SELECT MAX(created_at)
+                FROM auth.staff_invitations
+                WHERE user_id = @UserId AND purpose = 'STAFF_ACTIVATION';
+                """, new { UserId = userId }, transaction, cancellationToken: cancellationToken));
+
+        if (latestIssuedAt is DateTimeOffset latest &&
+            latest.AddMinutes(resendCooldownMinutes) > databaseTime)
+        {
+            transaction.Rollback();
+            return new StaffInvitationIssueResult(
+                StaffInvitationIssueOutcome.Cooldown,
+                RetryAfterSeconds: GetRetryAfterSeconds(
+                    latest.AddMinutes(resendCooldownMinutes), databaseTime));
+        }
+
+        var resendWindowStart = databaseTime.AddMinutes(-resendWindowMinutes);
+        var resendWindow = await connection.QuerySingleAsync<ResendWindow>(new CommandDefinition("""
+            SELECT COUNT(*)::int AS "ResendCount",
+                   MIN(created_at) AS "OldestResendAt"
+            FROM auth.staff_invitations
+            WHERE user_id = @UserId
+              AND purpose = 'STAFF_ACTIVATION'
+              AND created_at >= @WindowStart
+              AND (issuance_type = 'RESEND' OR issuance_type IS NULL);
+            """, new { UserId = userId, WindowStart = resendWindowStart },
+            transaction, cancellationToken: cancellationToken));
+
+        if (resendWindow.ResendCount >= maxResendsPerWindow)
+        {
+            var oldestResendAt = resendWindow.OldestResendAt
+                ?? throw new InvalidOperationException("The resend window count had no corresponding timestamp.");
+            transaction.Rollback();
+            return new StaffInvitationIssueResult(
+                StaffInvitationIssueOutcome.RateLimited,
+                RetryAfterSeconds: GetRetryAfterSeconds(
+                    oldestResendAt.AddMinutes(resendWindowMinutes), databaseTime));
         }
 
         await connection.ExecuteAsync(new CommandDefinition("""
             UPDATE auth.staff_invitations
-            SET revoked_at = now(), updated_at = now(), updated_by = @ActorId
+            SET revoked_at = @DatabaseTime,
+                updated_at = @DatabaseTime,
+                updated_by = @ActorId
             WHERE user_id = @UserId AND purpose = 'STAFF_ACTIVATION'
               AND used_at IS NULL AND revoked_at IS NULL;
             INSERT INTO auth.staff_invitations
-                (id, user_id, purpose, token_hash, expires_at, created_by, updated_by)
+                (id, user_id, purpose, token_hash, expires_at, link_version, issuance_type,
+                 created_at, created_by, updated_at, updated_by)
             VALUES
-                (@InvitationId, @UserId, 'STAFF_ACTIVATION', @TokenHash, @ExpiresAt, @ActorId, @ActorId);
-            """, new { InvitationId = invitationId, UserId = userId, ActorId = actorId, TokenHash = tokenHash, ExpiresAt = expiresAt },
+                (@InvitationId, @UserId, 'STAFF_ACTIVATION', @TokenHash, @ExpiresAt, 2, 'RESEND',
+                 @DatabaseTime, @ActorId, @DatabaseTime, @ActorId);
+            """, new
+        {
+            InvitationId = invitationId,
+            UserId = userId,
+            ActorId = actorId,
+            TokenHash = tokenHash,
+            ExpiresAt = expiresAt,
+            DatabaseTime = databaseTime
+        },
             transaction, cancellationToken: cancellationToken));
         transaction.Commit();
-        return new StaffInvitation(invitationId, email);
+        return new StaffInvitationIssueResult(StaffInvitationIssueOutcome.Issued, invitation);
     }
 
-    public async Task<bool> ActivateAsync(string tokenHash, string passwordHash, CancellationToken cancellationToken)
+    private static int GetRetryAfterSeconds(DateTimeOffset availableAt, DateTimeOffset databaseTime) =>
+        Math.Max(1, (int)Math.Ceiling((availableAt - databaseTime).TotalSeconds));
+
+    private sealed record ResendWindow(int ResendCount, DateTimeOffset? OldestResendAt);
+
+    public async Task<bool> ActivateAsync(
+        string tokenHash,
+        string passwordHash,
+        short linkVersion,
+        string? normalizedEmail,
+        CancellationToken cancellationToken)
     {
         using var connection = sqlConnectionFactory.CreateConnection();
         connection.Open();
         using var transaction = connection.BeginTransaction();
         var userId = await connection.QuerySingleOrDefaultAsync<Guid?>(new CommandDefinition("""
-            SELECT u.id
-            FROM auth.staff_invitations i
-            JOIN auth.users u ON u.id = i.user_id
-            WHERE i.token_hash = @TokenHash AND i.purpose = 'STAFF_ACTIVATION'
-              AND i.used_at IS NULL AND i.revoked_at IS NULL AND i.expires_at > now()
-              AND NOT u.is_active AND NOT u.is_email_verified AND u.deleted_at IS NULL
-              AND EXISTS (
-                  SELECT 1 FROM auth.branch_user_roles bur
-                  JOIN auth.roles r ON r.id = bur.role_id
-                  JOIN core.branches b ON b.id = bur.branch_id
-                  WHERE bur.user_id = u.id AND bur.is_active AND bur.removed_at IS NULL
-                    AND r.code = 'STAFF' AND r.is_active AND r.deleted_at IS NULL
-                    AND b.is_active AND b.deleted_at IS NULL
-              )
-              AND NOT EXISTS (
-                  SELECT 1 FROM auth.user_roles ur JOIN auth.roles r ON r.id = ur.role_id
-                  WHERE ur.user_id = u.id AND r.is_active AND r.deleted_at IS NULL
-                    AND r.code <> 'STAFF'
-              )
-              AND NOT EXISTS (
-                  SELECT 1 FROM auth.branch_user_roles bur JOIN auth.roles r ON r.id = bur.role_id
-                  WHERE bur.user_id = u.id AND bur.is_active AND r.is_active
-                    AND r.deleted_at IS NULL AND r.code <> 'STAFF'
-              )
-            FOR UPDATE OF u, i;
-            """, new { TokenHash = tokenHash }, transaction, cancellationToken: cancellationToken));
+            SELECT user_id
+            FROM auth.staff_invitations
+            WHERE token_hash = @TokenHash
+              AND purpose = 'STAFF_ACTIVATION'
+              AND link_version = @LinkVersion
+              AND used_at IS NULL
+              AND revoked_at IS NULL;
+            """, new { TokenHash = tokenHash, LinkVersion = linkVersion },
+            transaction, cancellationToken: cancellationToken));
 
         if (userId is null)
         {
@@ -123,39 +211,174 @@ public sealed class BranchOwnerStaffRepository(ISqlConnectionFactory sqlConnecti
             return false;
         }
 
+        var lockedUserId = await connection.QuerySingleOrDefaultAsync<Guid?>(new CommandDefinition("""
+            SELECT id
+            FROM auth.users
+            WHERE id = @UserId AND deleted_at IS NULL
+            FOR UPDATE;
+            """, new { UserId = userId.Value }, transaction, cancellationToken: cancellationToken));
+        if (lockedUserId is null)
+        {
+            transaction.Rollback();
+            return false;
+        }
+
+        var invitationId = await connection.QuerySingleOrDefaultAsync<Guid?>(new CommandDefinition("""
+            SELECT id
+            FROM auth.staff_invitations
+            WHERE token_hash = @TokenHash
+              AND user_id = @UserId
+              AND purpose = 'STAFF_ACTIVATION'
+              AND link_version = @LinkVersion
+              AND used_at IS NULL
+              AND revoked_at IS NULL
+            FOR UPDATE;
+            """, new { TokenHash = tokenHash, UserId = userId.Value, LinkVersion = linkVersion },
+            transaction, cancellationToken: cancellationToken));
+        if (invitationId is null)
+        {
+            transaction.Rollback();
+            return false;
+        }
+
+        var databaseTime = await connection.QuerySingleAsync<DateTimeOffset>(new CommandDefinition(
+            "SELECT clock_timestamp();",
+            transaction: transaction,
+            cancellationToken: cancellationToken));
+        var isEligible = await connection.QuerySingleAsync<bool>(new CommandDefinition("""
+            SELECT EXISTS (
+                SELECT 1
+                FROM auth.staff_invitations invitation
+                JOIN auth.users user_row ON user_row.id = invitation.user_id
+                WHERE invitation.id = @InvitationId
+                  AND invitation.user_id = @UserId
+                  AND invitation.token_hash = @TokenHash
+                  AND invitation.purpose = 'STAFF_ACTIVATION'
+                  AND invitation.link_version = @LinkVersion
+                  AND invitation.used_at IS NULL
+                  AND invitation.revoked_at IS NULL
+                  AND invitation.expires_at > @DatabaseTime
+                  AND (@NormalizedEmail IS NULL OR lower(user_row.email) = @NormalizedEmail)
+                  AND NOT user_row.is_active
+                  AND NOT user_row.is_email_verified
+                  AND user_row.deleted_at IS NULL
+                  AND EXISTS (
+                      SELECT 1 FROM auth.branch_user_roles assignment
+                      JOIN auth.roles role_row ON role_row.id = assignment.role_id
+                      JOIN core.branches branch_row ON branch_row.id = assignment.branch_id
+                      WHERE assignment.user_id = user_row.id
+                        AND assignment.is_active AND assignment.removed_at IS NULL
+                        AND role_row.code = 'STAFF' AND role_row.is_active
+                        AND role_row.deleted_at IS NULL
+                        AND branch_row.is_active AND branch_row.deleted_at IS NULL
+                  )
+                  AND NOT EXISTS (
+                      SELECT 1 FROM auth.user_roles user_role
+                      JOIN auth.roles role_row ON role_row.id = user_role.role_id
+                      WHERE user_role.user_id = user_row.id
+                        AND role_row.is_active AND role_row.deleted_at IS NULL
+                        AND role_row.code <> 'STAFF'
+                  )
+                  AND NOT EXISTS (
+                      SELECT 1 FROM auth.branch_user_roles assignment
+                      JOIN auth.roles role_row ON role_row.id = assignment.role_id
+                      WHERE assignment.user_id = user_row.id
+                        AND assignment.is_active
+                        AND assignment.removed_at IS NULL
+                        AND role_row.is_active AND role_row.deleted_at IS NULL
+                        AND role_row.code <> 'STAFF'
+                  )
+            );
+            """, new
+        {
+            InvitationId = invitationId.Value,
+            UserId = userId.Value,
+            TokenHash = tokenHash,
+            LinkVersion = linkVersion,
+            NormalizedEmail = normalizedEmail,
+            DatabaseTime = databaseTime
+        }, transaction, cancellationToken: cancellationToken));
+
+        if (!isEligible)
+        {
+            transaction.Rollback();
+            return false;
+        }
+
         await connection.ExecuteAsync(new CommandDefinition("""
             UPDATE auth.users SET password_hash = @PasswordHash, is_active = true,
-                is_email_verified = true, updated_at = now(), updated_by = id
+                is_email_verified = true, updated_at = @DatabaseTime, updated_by = id
             WHERE id = @UserId;
-            UPDATE auth.staff_invitations SET used_at = now(), updated_at = now(), updated_by = @UserId
-            WHERE token_hash = @TokenHash;
-            """, new { UserId = userId.Value, TokenHash = tokenHash, PasswordHash = passwordHash },
+            UPDATE auth.staff_invitations
+            SET used_at = @DatabaseTime, updated_at = @DatabaseTime, updated_by = @UserId
+            WHERE id = @InvitationId;
+            UPDATE auth.staff_invitations
+            SET revoked_at = @DatabaseTime, updated_at = @DatabaseTime, updated_by = @UserId
+            WHERE user_id = @UserId
+              AND purpose = 'STAFF_ACTIVATION'
+              AND id <> @InvitationId
+              AND used_at IS NULL
+              AND revoked_at IS NULL;
+            """, new
+        {
+            UserId = userId.Value,
+            InvitationId = invitationId.Value,
+            PasswordHash = passwordHash,
+            DatabaseTime = databaseTime
+        },
             transaction, cancellationToken: cancellationToken));
         transaction.Commit();
         return true;
     }
 
-    public async Task SetInvitationDeliveryAsync(Guid invitationId, bool sent, CancellationToken cancellationToken)
+    public async Task<bool> SetInvitationDeliveryAsync(
+        Guid invitationId, Guid actorId, bool sent, CancellationToken cancellationToken)
     {
-        using var connection = sqlConnectionFactory.CreateConnection();
-        var updated = await connection.ExecuteAsync(new CommandDefinition("""
-            UPDATE auth.staff_invitations
-            SET delivery_status = @Status,
-                delivery_error_code = @ErrorCode,
-                sent_at = CASE WHEN @Sent THEN now() ELSE NULL END,
-                updated_at = now()
-            WHERE id = @InvitationId;
-            """, new
+        int updated;
+        try
         {
-            InvitationId = invitationId,
-            Sent = sent,
-            Status = sent ? "SENT" : "FAILED",
-            ErrorCode = sent ? null : "INVITATION_SEND_FAILED"
-        }, cancellationToken: cancellationToken));
+            using var connection = sqlConnectionFactory.CreateConnection();
+            updated = await connection.ExecuteAsync(new CommandDefinition("""
+                UPDATE auth.staff_invitations
+                SET delivery_status = @Status,
+                    delivery_error_code = @ErrorCode,
+                    sent_at = CASE WHEN @Sent THEN clock_timestamp() ELSE NULL END,
+                    updated_at = clock_timestamp(),
+                    updated_by = @ActorId
+                WHERE id = @InvitationId;
+                """, new
+            {
+                InvitationId = invitationId,
+                ActorId = actorId,
+                Sent = sent,
+                Status = sent ? "SENT" : "FAILED",
+                ErrorCode = sent ? null : "INVITATION_SEND_FAILED"
+            }, cancellationToken: cancellationToken));
+        }
+        catch (NpgsqlException)
+        {
+            logger.LogWarning(
+                "Staff invitation delivery status update failed. InvitationId={InvitationId}",
+                invitationId);
+            return false;
+        }
+        catch (TimeoutException)
+        {
+            logger.LogWarning(
+                "Staff invitation delivery status update timed out. InvitationId={InvitationId}",
+                invitationId);
+            return false;
+        }
+
         if (updated != 1)
         {
-            throw new InvalidOperationException("The staff invitation delivery state could not be updated.");
+            logger.LogWarning(
+                "Staff invitation delivery status update affected an unexpected row count. InvitationId={InvitationId}",
+                invitationId);
+            return false;
         }
+
+        return true;
     }
 
     public async Task<StaffCreationOutcome> CreateAsync(
@@ -237,9 +460,9 @@ public sealed class BranchOwnerStaffRepository(ISqlConnectionFactory sqlConnecti
                        @EmploymentStartDate, @Notes, now(), @ActorId, now(), @ActorId
                 FROM unnest(@BranchIds::uuid[]) AS branch_ids(branch_id);
                 INSERT INTO auth.staff_invitations
-                    (id, user_id, purpose, token_hash, expires_at, created_by, updated_by)
+                    (id, user_id, purpose, token_hash, expires_at, link_version, issuance_type, created_by, updated_by)
                 VALUES
-                    (@InvitationId, @UserId, 'STAFF_ACTIVATION', @TokenHash, @ExpiresAt, @ActorId, @ActorId);
+                    (@InvitationId, @UserId, 'STAFF_ACTIVATION', @TokenHash, @ExpiresAt, 2, 'CREATE', @ActorId, @ActorId);
                 """, new
             {
                 creation.UserId,
@@ -321,6 +544,16 @@ public sealed class BranchOwnerStaffRepository(ISqlConnectionFactory sqlConnecti
                     ) THEN 'EXPIRED'
                     ELSE 'INACTIVE'
                 END AS "ActivationStatus",
+                CASE WHEN u.is_active THEN NULL ELSE (
+                    SELECT invitation.delivery_status
+                    FROM auth.staff_invitations invitation
+                    WHERE invitation.user_id = u.id
+                      AND invitation.purpose = 'STAFF_ACTIVATION'
+                      AND invitation.used_at IS NULL
+                      AND invitation.revoked_at IS NULL
+                    ORDER BY invitation.created_at DESC, invitation.id DESC
+                    LIMIT 1
+                ) END AS "InvitationDeliveryStatus",
                 u.last_login_at AS "LastLoginAt",
                 u.created_at AS "CreatedAt"
             FROM auth.users u
@@ -498,6 +731,7 @@ public sealed class BranchOwnerStaffRepository(ISqlConnectionFactory sqlConnecti
                 staff."StaffCode",
                 staff."Status",
                 staff."ActivationStatus",
+                staff."InvitationDeliveryStatus",
                 staff."LastLoginAt",
                 staff."CreatedAt"
             FROM eligible_staff staff
@@ -572,6 +806,7 @@ public sealed class BranchOwnerStaffRepository(ISqlConnectionFactory sqlConnecti
                 row.StaffCode,
                 row.Status,
                 row.ActivationStatus,
+                row.InvitationDeliveryStatus,
                 branchesByUser.GetValueOrDefault(row.UserId, Array.Empty<StaffBranchResponse>()),
                 row.LastLoginAt,
                 row.CreatedAt))
@@ -595,6 +830,7 @@ public sealed class BranchOwnerStaffRepository(ISqlConnectionFactory sqlConnecti
                 staff."PhoneNumber",
                 staff."Status",
                 staff."ActivationStatus",
+                staff."InvitationDeliveryStatus",
                 staff."LastLoginAt",
                 staff."CreatedAt"
             FROM eligible_staff staff;
@@ -649,6 +885,7 @@ public sealed class BranchOwnerStaffRepository(ISqlConnectionFactory sqlConnecti
                 staff.PhoneNumber,
                 staff.Status,
                 staff.ActivationStatus,
+                staff.InvitationDeliveryStatus,
                 branches,
                 staff.LastLoginAt,
                 staff.CreatedAt);
@@ -698,6 +935,7 @@ public sealed class BranchOwnerStaffRepository(ISqlConnectionFactory sqlConnecti
         public string? StaffCode { get; init; }
         public string Status { get; init; } = string.Empty;
         public string ActivationStatus { get; init; } = string.Empty;
+        public string? InvitationDeliveryStatus { get; init; }
         public DateTimeOffset? LastLoginAt { get; init; }
         public DateTimeOffset CreatedAt { get; init; }
     }
@@ -710,6 +948,7 @@ public sealed class BranchOwnerStaffRepository(ISqlConnectionFactory sqlConnecti
         public string? PhoneNumber { get; init; }
         public string Status { get; init; } = string.Empty;
         public string ActivationStatus { get; init; } = string.Empty;
+        public string? InvitationDeliveryStatus { get; init; }
         public DateTimeOffset? LastLoginAt { get; init; }
         public DateTimeOffset CreatedAt { get; init; }
     }

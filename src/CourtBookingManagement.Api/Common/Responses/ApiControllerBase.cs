@@ -26,6 +26,12 @@ public abstract class ApiControllerBase : ControllerBase
     protected IActionResult Error(Error error)
     {
         var statusCode = ErrorStatusMapper.ToStatusCode(error.Code);
+        if (error.RetryAfterSeconds is > 0)
+        {
+            Response.Headers["Retry-After"] =
+                error.RetryAfterSeconds.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
         var response = new ApiErrorResponse(
             false,
             error.Code,

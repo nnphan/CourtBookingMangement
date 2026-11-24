@@ -1,0 +1,29 @@
+@baseUrl = http://localhost:5117
+@invitationToken = replace-with-token-from-invitation-email
+@invitationEmail = staff@example.com
+@branchOwnerToken = replace-with-branch-owner-jwt
+@staffUserId = replace-with-staff-user-id
+
+### Validate an email-bound Staff invitation.
+POST {{baseUrl}}/api/auth/staff-invitations/validate
+Content-Type: application/json
+
+{
+  "token": "{{invitationToken}}",
+  "email": "{{invitationEmail}}"
+}
+
+### Activate an email-bound Staff invitation.
+POST {{baseUrl}}/api/auth/staff-invitations/activate
+Content-Type: application/json
+
+{
+  "token": "{{invitationToken}}",
+  "email": "{{invitationEmail}}",
+  "password": "replace-with-a-strong-password",
+  "confirmPassword": "replace-with-a-strong-password"
+}
+
+### Resend for a pending Staff account; cooldown/window limits may return 429.
+POST {{baseUrl}}/api/branch-owner/staff/{{staffUserId}}/send-activation
+Authorization: Bearer {{branchOwnerToken}}

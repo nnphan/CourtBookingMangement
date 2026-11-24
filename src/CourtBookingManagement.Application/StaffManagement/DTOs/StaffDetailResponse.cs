@@ -8,6 +8,7 @@ public sealed record StaffDetailResponse(
     string? PhoneNumber,
     string Status,
     string ActivationStatus,
+    string? InvitationDeliveryStatus,
     IReadOnlyList<StaffBranchResponse> Branches,
     DateTimeOffset? LastLoginAt,
     DateTimeOffset CreatedAt);

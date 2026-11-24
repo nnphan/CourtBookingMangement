@@ -84,10 +84,16 @@ public static class ErrorStatusMapper
         "Sales.InvalidRequest" or "Sales.InvalidPagination" or "Sales.InvalidFilter" =>
             StatusCodes.Status400BadRequest,
         "STAFF_INVALID_REQUEST" or "STAFF_INVALID_SORT" or "STAFF_INVITATION_INVALID" or
-        "STAFF_PASSWORD_INVALID" => StatusCodes.Status400BadRequest,
+        "STAFF_INVITATION_EXPIRED" or "STAFF_INVITATION_ALREADY_USED" or
+        "STAFF_INVITATION_REVOKED" or "STAFF_PASSWORD_INVALID" or
+        "PASSWORD_POLICY_FAILED" or "PASSWORD_CONFIRMATION_MISMATCH" =>
+            StatusCodes.Status400BadRequest,
+        "INVITATION_RESEND_TOO_SOON" or "INVITATION_RATE_LIMITED" =>
+            StatusCodes.Status429TooManyRequests,
         "STAFF_OWNER_NOT_FOUND" or "STAFF_BRANCH_ACCESS_DENIED" => StatusCodes.Status403Forbidden,
         "STAFF_NOT_FOUND" => StatusCodes.Status404NotFound,
-        "STAFF_ALREADY_EXISTS" or "STAFF_CODE_ALREADY_USED" => StatusCodes.Status409Conflict,
+        "STAFF_ALREADY_EXISTS" or "STAFF_CODE_ALREADY_USED" or "STAFF_ALREADY_ACTIVE" =>
+            StatusCodes.Status409Conflict,
         "STAFF_DELIVERY_NOT_CONFIGURED" => StatusCodes.Status503ServiceUnavailable,
         "STAFF_ROLE_NOT_CONFIGURED" => StatusCodes.Status500InternalServerError,
         "Error.Exception" => StatusCodes.Status500InternalServerError,

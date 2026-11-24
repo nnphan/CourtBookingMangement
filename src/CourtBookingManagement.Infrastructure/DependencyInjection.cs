@@ -25,6 +25,7 @@ using CourtBookingManagement.Application.Options;
 using CourtBookingManagement.Application.Payments.Interfaces;
 using CourtBookingManagement.Application.Payments.Services;
 using CourtBookingManagement.Application.Files;
+using CourtBookingManagement.Application.Email;
 using CourtBookingManagement.Application.Profiles.Repositories;
 using CourtBookingManagement.Domain.Abstractions;
 using CourtBookingManagement.Domain.Users;
@@ -32,6 +33,7 @@ using CourtBookingManagement.Infrastructure.Auth;
 using CourtBookingManagement.Infrastructure.BackgroundServices;
 using CourtBookingManagement.Infrastructure.Clock;
 using CourtBookingManagement.Infrastructure.Data;
+using CourtBookingManagement.Infrastructure.Email;
 using CourtBookingManagement.Infrastructure.FileStorage;
 using CourtBookingManagement.Infrastructure.Persistence;
 using CourtBookingManagement.Infrastructure.Persistence.DapperHandlers;
@@ -59,6 +61,11 @@ public static class DependencyInjection
     {
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddHttpContextAccessor();
+
+        services.AddSingleton<IValidateOptions<StaffInvitationOptions>, StaffInvitationOptionsValidator>();
+        services.AddOptions<StaffInvitationOptions>()
+            .Bind(configuration.GetSection(StaffInvitationOptions.SectionName))
+            .ValidateOnStart();
 
         var connectionString = configuration.GetConnectionString("Database")
             ?? configuration[$"{DatabaseOptions.SectionName}:ConnectionString"]
@@ -213,6 +220,12 @@ public static class DependencyInjection
         services.AddScoped<IInventoryRepository, InventoryRepository>();
         services.AddScoped<ISalesRepository, SalesRepository>();
         services.AddScoped<IBranchOwnerStaffRepository, BranchOwnerStaffRepository>();
+        services.AddScoped<IStaffInvitationRepository, StaffInvitationRepository>();
+        services.AddSingleton<IStaffInvitationTokenService, StaffInvitationTokenService>();
+        services.AddSingleton<IStaffInvitationPolicy, StaffInvitationPolicy>();
+        services.AddSingleton<StaffInvitationActivationUrlBuilder>();
+        services.AddSingleton<IStaffInvitationEmailComposer, StaffInvitationEmailComposer>();
+        services.AddSingleton<IEmailSender, MailKitEmailSender>();
         services.AddScoped<IStaffInvitationDelivery, SmtpStaffInvitationDelivery>();
         services.AddSingleton<IInvoicePdfGenerator, PdfInvoiceGenerator>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();

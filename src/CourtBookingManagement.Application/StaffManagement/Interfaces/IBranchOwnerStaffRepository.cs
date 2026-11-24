@@ -22,11 +22,25 @@ public interface IBranchOwnerStaffRepository
 
     Task<StaffCreationOutcome> CreateAsync(StaffCreation creation, CancellationToken cancellationToken);
 
-    Task SetInvitationDeliveryAsync(Guid invitationId, bool sent, CancellationToken cancellationToken);
+    Task<bool> SetInvitationDeliveryAsync(
+        Guid invitationId, Guid actorId, bool sent, CancellationToken cancellationToken);
 
-    Task<StaffInvitation?> IssueInvitationAsync(
-        Guid ownerId, Guid actorId, Guid userId, Guid invitationId, string tokenHash,
-        DateTimeOffset expiresAt, CancellationToken cancellationToken);
+    Task<StaffInvitationIssueResult> IssueInvitationAsync(
+        Guid ownerId,
+        Guid actorId,
+        Guid userId,
+        Guid invitationId,
+        string tokenHash,
+        DateTimeOffset expiresAt,
+        int resendCooldownMinutes,
+        int maxResendsPerWindow,
+        int resendWindowMinutes,
+        CancellationToken cancellationToken);
 
-    Task<bool> ActivateAsync(string tokenHash, string passwordHash, CancellationToken cancellationToken);
+    Task<bool> ActivateAsync(
+        string tokenHash,
+        string passwordHash,
+        short linkVersion,
+        string? normalizedEmail,
+        CancellationToken cancellationToken);
 }

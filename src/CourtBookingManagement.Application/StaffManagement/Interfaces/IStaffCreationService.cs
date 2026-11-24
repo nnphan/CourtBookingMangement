@@ -10,4 +10,12 @@ public interface IStaffCreationService
     Task<Result<CreateStaffResponse>> ResendAsync(Guid actorId, Guid userId, CancellationToken cancellationToken);
 
     Task<Result> ActivateAsync(ActivateStaffRequest request, CancellationToken cancellationToken);
+
+    Task<Result<StaffInvitationValidationResponse>> ValidateInvitationAsync(
+        ValidateStaffInvitationRequest request,
+        CancellationToken cancellationToken);
+
+    Task<Result> ActivateInvitationAsync(
+        ActivateStaffInvitationRequest request,
+        CancellationToken cancellationToken);
 }

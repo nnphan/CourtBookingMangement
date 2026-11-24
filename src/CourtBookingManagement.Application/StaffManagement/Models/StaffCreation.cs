@@ -10,7 +10,7 @@ public sealed record StaffCreation(
     CreateStaffRequest Request,
     string PasswordHash,
     string TokenHash,
-    DateTimeOffset ExpiresAt);
+    DateTime ExpiresAt);
 
 public enum StaffCreationOutcome
 {

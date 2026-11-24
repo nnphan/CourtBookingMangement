@@ -11,7 +11,7 @@ namespace CourtBookingManagement.Api.Controllers;
 [Route("api/auth/staff-activation")]
 public sealed class StaffActivationController(IStaffCreationService service) : ApiControllerBase
 {
-    /// <summary>Redeems a single-use invitation and sets the Staff account password.</summary>
+    /// <summary>Redeems a legacy version-1 invitation and sets the Staff account password.</summary>
     [AllowAnonymous]
     [EnableRateLimiting("staff-activation")]
     [HttpPost]
