@@ -241,7 +241,7 @@ public sealed class BranchOwnerStaffRepository(
             return false;
         }
 
-        var databaseTime = await connection.QuerySingleAsync<DateTimeOffset>(new CommandDefinition(
+        var databaseTime = await connection.QuerySingleAsync<DateTime>(new CommandDefinition(
             "SELECT clock_timestamp();",
             transaction: transaction,
             cancellationToken: cancellationToken));
@@ -459,6 +459,20 @@ public sealed class BranchOwnerStaffRepository(
                 SELECT branch_id, @UserId, @RoleId, true, @StaffCode, @JobTitle,
                        @EmploymentStartDate, @Notes, now(), @ActorId, now(), @ActorId
                 FROM unnest(@BranchIds::uuid[]) AS branch_ids(branch_id);
+                INSERT INTO auth.user_roles
+                (
+                    user_id,
+                    role_id,
+                    assigned_at,
+                    assigned_by
+                )
+                VALUES
+                (
+                    @UserId,
+                    @RoleId,
+                    now(),
+                    @ActorId
+                );
                 INSERT INTO auth.staff_invitations
                     (id, user_id, purpose, token_hash, expires_at, link_version, issuance_type, created_by, updated_by)
                 VALUES
