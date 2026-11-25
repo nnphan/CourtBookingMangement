@@ -19,6 +19,7 @@ public interface IBookingRepository
         byte[]? holdTokenHash,
         Guid? idempotencyKey,
         byte[]? idempotencyRequestHash,
+        Guid? selectionSubjectId,
         CancellationToken cancellationToken);
     Task<IdempotentBookingLookup?> GetIdempotentBookingAsync(
         Guid idempotencyKey,

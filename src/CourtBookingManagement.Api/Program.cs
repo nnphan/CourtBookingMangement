@@ -3,15 +3,19 @@ using CourtBookingManagement.Api.Common.Responses;
 using CourtBookingManagement.Api.Common.Constants;
 using CourtBookingManagement.Api.Files;
 using CourtBookingManagement.Api.Swagger;
+using CourtBookingManagement.Api.Realtime;
 using CourtBookingManagement.Application;
+using CourtBookingManagement.Application.Bookings.DTOs;
 using CourtBookingManagement.Application.Options;
 using CourtBookingManagement.Infrastructure;
 using CourtBookingManagement.Infrastructure.Auth;
+using CourtBookingManagement.Infrastructure.Repositories;
 using Dapper;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
@@ -26,6 +30,18 @@ builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration));
 
 builder.Services.AddProblemDetails();
+builder.Services.AddSignalR();
+var dataProtection = builder.Services.AddDataProtection();
+if (builder.Configuration["DataProtection:KeyDirectory"] is { Length: > 0 } keyDirectory)
+    dataProtection.PersistKeysToFileSystem(new DirectoryInfo(keyDirectory));
+builder.Services.AddScoped<CourtSelectionRepository>();
+builder.Services.AddScoped<CourtSelectionIdentity>();
+builder.Services.AddSingleton<CourtSelectionPublisher>();
+builder.Services.AddHostedService<CourtSelectionWorker>();
+builder.Services.AddOptions<CourtSelectionOptions>().BindConfiguration("BookingHolds")
+    .Validate(o => o.SelectionHoldMinutes > 0 && o.CleanupIntervalSeconds > 0
+        && o.MaximumSlotsPerHold > 0 && o.MaximumActiveHoldsPerUser > 0 && o.IdempotencyRetentionMinutes >= 10)
+    .ValidateOnStart();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
@@ -83,6 +99,16 @@ builder.Services.AddRateLimiter(options =>
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0
             }));
+    options.AddPolicy("court-selection", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 40,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
     options.AddPolicy("staff-resend", context =>
         RateLimitPartition.GetFixedWindowLimiter(
             context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -107,11 +133,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
     {
+        var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+            ?? ["http://localhost:5173", "https://localhost:5173"];
         policy
-            .WithOrigins(
-                "http://localhost:5173",
-                "https://localhost:5173"
-            )
+            .WithOrigins(origins)
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
@@ -187,6 +212,11 @@ builder.Services.AddAuthorization(options =>
         Permissions.BranchUpdate,
         policy => policy.RequireAuthenticatedUser()
             .AddRequirements(new PermissionRequirement(Permissions.BranchUpdate)));
+    options.AddPolicy(
+        Permissions.BranchView,
+        policy => policy.RequireAuthenticatedUser()
+            .AddRequirements(new PermissionRequirement(Permissions.BranchView)));
+    
     //options.AddPolicy(
     //    Permissions.FileUpload,
     //    policy => policy.RequireAuthenticatedUser()
@@ -222,7 +252,6 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 app.UseCors("CorsPolicy");
-app.UseRateLimiter();
 app.UseSerilogRequestLogging(options =>
 {
     options.MessageTemplate =
@@ -236,9 +265,11 @@ app.UseSerilogRequestLogging(options =>
 });
 
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<CourtStatusHub>("/hubs/court-status").AllowAnonymous();
 app.MapHealthChecks("health", new HealthCheckOptions
 {
     Predicate = _ => false,

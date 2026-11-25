@@ -1,5 +1,6 @@
 using CourtBookingManagement.Api.Common.Responses;
 using CourtBookingManagement.Api.Common.Constants;
+using CourtBookingManagement.Api.Realtime;
 using CourtBookingManagement.Application.Bookings.DTOs;
 using CourtBookingManagement.Application.Bookings.Interfaces;
 using CourtBookingManagement.Application.CourtStatus.DTOs;
@@ -14,7 +15,8 @@ namespace CourtBookingManagement.Api.Controllers;
 
 [ApiController]
 [Route("api/bookings")]
-public sealed class BookingsController(ICourtStatusService courtStatusService, IBookingService bookingService) : ApiControllerBase
+public sealed class BookingsController(ICourtStatusService courtStatusService, IBookingService bookingService,
+    CourtSelectionPublisher publisher, CourtSelectionIdentity selectionIdentity) : ApiControllerBase
 {
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(ApiResponse<BookingDetailResponseDto>), StatusCodes.Status200OK)]
@@ -46,9 +48,19 @@ public sealed class BookingsController(ICourtStatusService courtStatusService, I
     public async Task<IActionResult> Create(
         [FromBody] BookingCreateRequest request,
         [FromHeader(Name = "Idempotency-Key")] Guid? idempotencyKey,
+        [FromHeader(Name = CourtSelectionIdentity.GuestHeader)] string? guestToken,
         CancellationToken ct)
     {
-        var result = await bookingService.CreateAsync(request, idempotencyKey, ct);
+        var owner = request.SelectionHoldId is null ? null : selectionIdentity.Resolve(request.OwnerSessionId, guestToken);
+        if (request.SelectionHoldId is not null && owner is null) return Unauthorized();
+        var result = await bookingService.CreateAsync(request, idempotencyKey, ct, owner?.SubjectId);
+        if (result.IsSuccess)
+        {
+            var eventName = string.Equals(result.Value.Status, "CONFIRMED", StringComparison.OrdinalIgnoreCase)
+                ? CourtSelectionPublisher.SlotsBooked : CourtSelectionPublisher.Invalidated;
+            await Task.WhenAll(request.Details.Select(detail => detail.BookingDate).Distinct()
+                .Select(date => publisher.PublishAsync(new(request.BranchId, date), eventName)));
+        }
         return result.IsSuccess
             ? Created(result.Value, nameof(Get), new { id = result.Value.BookingId }, "Booking created successfully.")
             : Error(result.Error);

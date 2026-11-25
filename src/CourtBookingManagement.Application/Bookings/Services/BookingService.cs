@@ -244,7 +244,8 @@ public sealed class BookingService(
     public async Task<Result<CreateBookingResponse>> CreateAsync(
         CreateBookingRequest request,
         Guid? idempotencyKey,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Guid? guestSelectionSubject = null)
     {
         var validation = await validator.ValidateAsync(request, cancellationToken);
         if (!validation.IsValid)
@@ -304,13 +305,13 @@ public sealed class BookingService(
         var resources = slots
             .Select(slot => new BookingSlotResource(slot.CourtId, slot.BookingDate, slot.Start, slot.End))
             .ToArray();
+        var selectionSubject = currentUserService.UserId ?? guestSelectionSubject;
         var idempotencyRequestHash = idempotencyKey is null
             ? null
-            : SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new
-            {
-                Request = request,
-                CustomerId = knownCustomerId
-            }));
+            : SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(
+                request.SelectionHoldId is null
+                    ? (object)new { Request = request, CustomerId = knownCustomerId }
+                    : new { Request = request, CustomerId = knownCustomerId, SelectionSubject = selectionSubject }));
         var requiresOnlinePayment = string.Equals(
             request.PaymentMethod,
             PaymentMethod.Momo.ToString(),
@@ -430,6 +431,7 @@ public sealed class BookingService(
                     holdTokenHash,
                     idempotencyKey,
                     idempotencyRequestHash,
+                    selectionSubject,
                     cancellationToken);
             }
             catch (BookingIdempotencyKeyReusedException)

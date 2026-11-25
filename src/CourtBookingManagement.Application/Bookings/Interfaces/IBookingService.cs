@@ -17,7 +17,8 @@ public interface IBookingService
     Task<Result<CreateBookingResponse>> CreateAsync(
         CreateBookingRequest request,
         Guid? idempotencyKey,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        Guid? guestSelectionSubject = null);
     Task<Result<CalculateBookingPriceResponse>> CalculatePriceAsync(CalculateBookingPriceRequest request, CancellationToken cancellationToken);
     Task<Result<IReadOnlyList<MyBookingResponse>>> GetMyBookingsAsync(CancellationToken cancellationToken);
     Task<Result<UpdateBookingStatusResponse>> UpdateStatusAsync(

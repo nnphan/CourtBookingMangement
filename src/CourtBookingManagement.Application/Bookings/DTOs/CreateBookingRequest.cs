@@ -8,6 +8,11 @@ public sealed class CreateBookingRequest
     public string? Notes { get; set; }
     public List<CreateBookingDetailRequest> Details { get; set; } = [];
 
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public Guid? SelectionHoldId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public Guid? OwnerSessionId { get; set; }
+
     // Guest contact info. Ignored when the caller is a logged-in user with a customer profile.
     public string? CustomerName { get; set; }
     public string? PhoneNumber { get; set; }

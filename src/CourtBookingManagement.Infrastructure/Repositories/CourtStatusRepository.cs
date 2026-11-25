@@ -249,11 +249,8 @@ public sealed class CourtStatusRepository(ApplicationDbContext db, ISqlConnectio
     {
         const string sql = "SELECT * FROM booking.fn_get_court_status(@BranchId, CAST(@Date AS DATE));";
         using var connection = sqlConnectionFactory.CreateConnection();
-        var d = date.ToString("yyyy-MM-dd");
         var command = new CommandDefinition(sql, new { BranchId = branchId, Date = date.ToString("yyyy-MM-dd") }, cancellationToken: ct);
         var rows = (await connection.QueryAsync<CourtStatusRow>(command)).ToList();
-
-        var rows1 = (await connection.QueryAsync<dynamic>(command)).ToList();
 
         if (rows.Count == 0) return null;
 

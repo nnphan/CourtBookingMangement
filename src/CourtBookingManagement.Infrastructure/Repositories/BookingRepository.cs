@@ -141,6 +141,7 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
         byte[]? holdTokenHash,
         Guid? idempotencyKey,
         byte[]? idempotencyRequestHash,
+        Guid? selectionSubjectId,
         CancellationToken cancellationToken)
     {
         using var connection = connectionFactory.CreateConnection();
@@ -195,7 +196,7 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
 
         // Lock in a stable order so concurrent multi-court requests cannot deadlock.
         var lockKeys = request.Details
-            .Select(detail => $"{detail.CourtId}:{detail.BookingDate:yyyy-MM-dd}")
+            .Select(detail => FormattableString.Invariant($"{detail.CourtId:D}:{detail.BookingDate:yyyy-MM-dd}"))
             .Distinct()
             .OrderBy(key => key, StringComparer.Ordinal);
         foreach (var lockKey in lockKeys)
@@ -224,6 +225,48 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
             {
                 return null;
             }
+        }
+
+        if (request.SelectionHoldId is Guid selectionId)
+        {
+            if (selectionSubjectId is null || request.OwnerSessionId is null ||
+                request.Details.Any(detail => detail.BookingDate != request.Details[0].BookingDate))
+                return null;
+
+            var selection = await connection.ExecuteScalarAsync<Guid?>(new CommandDefinition("""
+                SELECT id FROM booking.court_selection_holds
+                WHERE id = @selectionId AND subject_id = @selectionSubjectId AND session_id = @OwnerSessionId
+                  AND branch_id = @BranchId AND business_date = @BusinessDate AND closed_at IS NULL
+                FOR UPDATE
+                """, new { selectionId, selectionSubjectId, request.OwnerSessionId, request.BranchId,
+                             BusinessDate = request.Details[0].BookingDate },
+                transaction, cancellationToken: cancellationToken));
+            if (selection is null) return null;
+
+            var requested = System.Text.Json.JsonSerializer.Serialize(request.Details);
+            var converted = await connection.ExecuteAsync(new CommandDefinition("""
+                WITH instant AS MATERIALIZED (SELECT clock_timestamp() AS now),
+                requested AS (
+                    SELECT "CourtId" AS court_id, range_agg(tstzrange(
+                        ("BookingDate" + "StartTime") AT TIME ZONE @branchTimeZone,
+                        ("BookingDate" + "EndTime") AT TIME ZONE @branchTimeZone, '[)')) AS spans,
+                        min(("BookingDate" + "StartTime") AT TIME ZONE @branchTimeZone) AS first_start
+                    FROM jsonb_to_recordset(CAST(@requested AS jsonb))
+                        AS d("CourtId" uuid, "BookingDate" date, "StartTime" time, "EndTime" time)
+                    GROUP BY "CourtId"
+                ),
+                held AS (
+                    SELECT court_id, range_agg(slot_range) AS spans
+                    FROM booking.court_selection_slots WHERE hold_id = @selectionId GROUP BY court_id
+                )
+                UPDATE booking.court_selection_holds SET closed_at = instant.now
+                FROM instant WHERE id = @selectionId AND expires_at > instant.now
+                  AND NOT EXISTS (
+                    SELECT 1 FROM requested FULL JOIN held USING (court_id)
+                    WHERE requested.spans IS DISTINCT FROM held.spans OR requested.first_start <= instant.now
+                  )
+                """, new { selectionId, requested, branchTimeZone }, transaction, cancellationToken: cancellationToken));
+            if (converted != 1) return null;
         }
 
         var customerId = knownCustomerId
@@ -272,6 +315,11 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
             IdempotencyKey = idempotencyKey,
             IdempotencyRequestHash = idempotencyRequestHash
         }, transaction, cancellationToken: cancellationToken));
+
+        if (request.SelectionHoldId is Guid convertedHoldId)
+            await connection.ExecuteAsync(new CommandDefinition("""
+                UPDATE booking.court_selection_holds SET booking_id = @bookingId WHERE id = @convertedHoldId
+                """, new { bookingId, convertedHoldId }, transaction, cancellationToken: cancellationToken));
 
         const string insertDetailSql = """
             INSERT INTO booking.booking_details
