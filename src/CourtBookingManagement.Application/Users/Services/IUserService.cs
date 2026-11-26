@@ -6,6 +6,11 @@ namespace CourtBookingManagement.Application.Users.Services;
 
 public interface IUserService
 {
+    Task<Result<UserResponseDto>> ProvisionUserAsync(
+        ProvisionUserRequest request,
+        Guid actorId,
+        CancellationToken cancellationToken);
+
     Task<Result<UserResponseDto>> CreateUserAsync(
         CreateUserRequestDto request,
         CancellationToken cancellationToken = default);

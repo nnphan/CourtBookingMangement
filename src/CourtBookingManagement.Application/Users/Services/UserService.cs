@@ -1,9 +1,16 @@
 using CourtBookingManagement.Application.Abstractions.Clock;
+using CourtBookingManagement.Application.Abstractions.Data;
+using CourtBookingManagement.Application.Auth.Exceptions;
+using CourtBookingManagement.Application.Customers.Models.Requests;
+using CourtBookingManagement.Application.Customers.Repositories;
+using CourtBookingManagement.Application.UserRoles.Repositories;
 using CourtBookingManagement.Application.Matching.Models;
 using CourtBookingManagement.Application.Users.DTOs;
 using CourtBookingManagement.Domain.Abstractions;
 using CourtBookingManagement.Domain.Users;
 using FluentValidation;
+using System.Data.Common;
+using System.Text;
 
 namespace CourtBookingManagement.Application.Users.Services;
 
@@ -13,17 +20,106 @@ public sealed class UserService : IUserService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IDateTimeProvider _dateTimeProvider;
     private readonly IValidator<CreateUserRequestDto> _validator;
+    private readonly ISqlConnectionFactory _connectionFactory;
+    private readonly IUserRoleRepository _roleRepository;
+    private readonly ICustomerRepository _customerRepository;
+    private readonly IMembershipLevelRepository _membershipLevels;
 
     public UserService(
         IUserRepository userRepository,
         IUnitOfWork unitOfWork,
         IDateTimeProvider dateTimeProvider,
-        IValidator<CreateUserRequestDto> validator)
+        IValidator<CreateUserRequestDto> validator,
+        ISqlConnectionFactory connectionFactory,
+        IUserRoleRepository roleRepository,
+        ICustomerRepository customerRepository,
+        IMembershipLevelRepository membershipLevels)
     {
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
         _dateTimeProvider = dateTimeProvider;
         _validator = validator;
+        _connectionFactory = connectionFactory;
+        _roleRepository = roleRepository;
+        _customerRepository = customerRepository;
+        _membershipLevels = membershipLevels;
+    }
+
+    public async Task<Result<UserResponseDto>> ProvisionUserAsync(
+        ProvisionUserRequest request,
+        Guid actorId,
+        CancellationToken cancellationToken)
+    {
+        if (actorId == Guid.Empty || string.IsNullOrWhiteSpace(request.FullName)
+            || request.RoleIds.Contains(Guid.Empty) || Encoding.UTF8.GetByteCount(request.Password) > 72)
+        {
+            return Result.Failure<UserResponseDto>(new Error("Error.Validation", "Invalid account information."));
+        }
+
+        var email = request.Email.Trim().ToLowerInvariant();
+        var fullName = request.FullName.Trim();
+        var phone = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim();
+        var roleIds = request.RoleIds.Distinct().ToArray();
+        var userResult = User.Create(email, fullName, BCrypt.Net.BCrypt.HashPassword(request.Password),
+            _dateTimeProvider.UtcNow, phone, actorId);
+        if (userResult.IsFailure)
+        {
+            return Result.Failure<UserResponseDto>(userResult.Error);
+        }
+
+        var user = userResult.Value;
+        if (!request.IsActive)
+        {
+            user.Deactivate(_dateTimeProvider.UtcNow, actorId);
+        }
+
+        await using var connection = (DbConnection)_connectionFactory.CreateConnection();
+        await connection.OpenAsync(cancellationToken);
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+        var roles = await _roleRepository.GetActiveRolesAsync(roleIds, transaction, cancellationToken);
+        if (roles.Count != roleIds.Length)
+        {
+            return Result.Failure<UserResponseDto>(new Error("Role.NotFound", "One or more selected roles are unavailable."));
+        }
+
+        var isCustomer = roles.Any(role => role.RoleCode == "CUSTOMER");
+        if (isCustomer && phone is null)
+        {
+            return Result.Failure<UserResponseDto>(new Error("User.CustomerPhoneRequired", "A customer account needs a phone number."));
+        }
+
+        try
+        {
+            var userId = await _userRepository.CreateUserAsync(user, transaction, cancellationToken);
+            if (roleIds.Length > 0)
+            {
+                await _roleRepository.AssignRolesAsync(userId, roleIds, actorId, transaction, cancellationToken);
+            }
+
+            if (isCustomer)
+            {
+                await _customerRepository.CreateCustomerAsync(new CreateCustomerInternalRequest
+                {
+                    UserId = userId,
+                    MembershipLevelId = await _membershipLevels.GetDefaultMembershipLevelIdAsync(cancellationToken),
+                    FullName = fullName,
+                    Email = email,
+                    PhoneNumber = phone!,
+                    IsActive = request.IsActive,
+                    CreatedBy = actorId
+                }, transaction, cancellationToken);
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+            return ToResponse(user);
+        }
+        catch (RegistrationConflictException exception)
+        {
+            var error = exception.ConstraintName == "ux_users_active_phone_number"
+                ? new Error("AUTH_PHONE_ALREADY_EXISTS", "Phone number is already registered.")
+                : new Error("AUTH_EMAIL_ALREADY_EXISTS", "Email address is already registered.");
+            return Result.Failure<UserResponseDto>(error);
+        }
     }
 
     public async Task<Result<UserResponseDto>> CreateUserAsync(

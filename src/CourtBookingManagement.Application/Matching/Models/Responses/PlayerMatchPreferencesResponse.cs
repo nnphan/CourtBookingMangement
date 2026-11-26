@@ -6,8 +6,8 @@ public sealed class PlayerMatchPreferencesResponse
 {
     public PlayerMatchPreferenceWeights Preferences { get; set; } = new()
     {
-        SkillWeight = 50,
-        TimeWeight = 20,
+        SkillWeight = 40,
+        TimeWeight = 30,
         BranchWeight = 20,
         GenderWeight = 10
     };

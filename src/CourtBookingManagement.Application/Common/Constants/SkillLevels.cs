@@ -10,6 +10,14 @@ public static class SkillLevels
 
     public const string Professional = "PROFESSIONAL";
 
+    public static string FromRating(int rating) => rating switch
+    {
+        < 400 => Beginner,
+        < 600 => Intermediate,
+        < 900 => Advanced,
+        _ => Professional
+    };
+
     public static readonly string[] All =
     [
         Beginner,

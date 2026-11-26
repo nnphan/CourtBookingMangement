@@ -191,6 +191,8 @@ public sealed class SalesService(
         SalesOperationStatus.InvalidState => Result.Failure<T>(OrderNotCompletable),
         SalesOperationStatus.ProductNotConfigured => Result.Failure<T>(ProductNotAvailable),
         SalesOperationStatus.InsufficientStock => Result.Failure<T>(InsufficientStock),
+        SalesOperationStatus.InsufficientCash => Result.Failure<T>(
+            new Error("Sales.InsufficientCash", "The cash received is less than the final order total.")),
         SalesOperationStatus.QuantityLimitExceeded => Result.Failure<T>(QuantityLimitExceeded),
         SalesOperationStatus.RelatedEntityNotFound => Result.Failure<T>(RelatedEntityNotFound),
         _ => Result.Failure<T>(InvalidRequest)

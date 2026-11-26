@@ -1,15 +1,14 @@
 using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.Bookings.Interfaces;
+using CourtBookingManagement.Application.Common.Constants;
 using CourtBookingManagement.Application.Common.Enums;
 using CourtBookingManagement.Application.Matching.Models;
 using CourtBookingManagement.Application.Matching.Models.Requests;
 using CourtBookingManagement.Application.Matching.Models.Responses;
-using CourtBookingManagement.Application.Matching.Options;
 using CourtBookingManagement.Application.Matching.Repositories;
 using CourtBookingManagement.Domain.Abstractions;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System.Data.Common;
 using System.Data;
 
@@ -23,7 +22,6 @@ public sealed class PlayerMatchService(
     IValidator<PlayerMatchSearchRequest> searchRequestValidator,
     IValidator<PlayerMatchScoringCriteriaRequest> scoringCriteriaValidator,
     IPlayerMatchingProfileService profileService,
-    IOptions<PlayerMatchScoringOptions> scoringOptions,
     ISqlConnectionFactory sqlConnectionFactory,
     ILogger<PlayerMatchService> logger) : IPlayerMatchService
 {
@@ -57,6 +55,7 @@ public sealed class PlayerMatchService(
             EndTime = request.EndTime,
             SkillLevel = NormalizeText(request.SkillLevel),
             GenderPreference = NormalizeText(request.GenderPreference),
+            BranchId = request.BranchId,
             City = NormalizeText(request.City),
             District = NormalizeText(request.District),
             SortBy = NormalizeSort(request.SortBy),
@@ -99,8 +98,8 @@ public sealed class PlayerMatchService(
         var resolved = criteriaResult.Value;
         var candidates = await repository.SearchPersonalizedCandidatesAsync(
             currentUserId,
-            resolved.Profile.CurrentRating,
-            resolved.Profile.Gender,
+            resolved.Profile?.CurrentRating,
+            resolved.Profile?.Gender,
             resolved.Criteria,
             null,
             candidateLimit: 301,
@@ -114,7 +113,6 @@ public sealed class PlayerMatchService(
                 Candidate = candidate,
                 Scored = ScoreCandidate(candidate, resolved.Profile, resolved.Weights, resolved.Criteria)
             })
-            .Where(item => MeetsQualityGates(item.Scored))
             .OrderByDescending(item => item.Scored.RawMatchScore)
             .ThenByDescending(item => item.Scored.Response.CourtReservationStatus == "COURT_RESERVED")
             .ThenBy(item => item.Scored.Response.AvailableSlots)
@@ -141,9 +139,12 @@ public sealed class PlayerMatchService(
                 {
                     Preferences = CopyWeights(resolved.Weights),
                     BranchIds = resolved.Criteria.BranchIds,
-                    PreferredStartTime = resolved.Criteria.PreferredStartTime,
-                    PreferredEndTime = resolved.Criteria.PreferredEndTime,
-                    MinimumTimeOverlapMinutes = resolved.Criteria.MinimumTimeOverlapMinutes,
+                    PreferredStartTime = resolved.Criteria.PreferredStartTime
+                        ?? (resolved.Criteria.EndTime.HasValue ? resolved.Criteria.StartTime : null),
+                    PreferredEndTime = resolved.Criteria.PreferredEndTime
+                        ?? (resolved.Criteria.StartTime.HasValue ? resolved.Criteria.EndTime : null),
+                    MinimumTimeOverlapMinutes = resolved.Criteria.PreferredStartTime.HasValue
+                        ? resolved.Criteria.MinimumTimeOverlapMinutes : 1,
                     MaximumParticipationFee = resolved.Criteria.MaximumParticipationFee
                 },
                 currentUserId,
@@ -192,8 +193,8 @@ public sealed class PlayerMatchService(
         var resolved = criteriaResult.Value;
         var candidates = await repository.SearchPersonalizedCandidatesAsync(
             currentUserId,
-            resolved.Profile.CurrentRating,
-            resolved.Profile.Gender,
+            resolved.Profile?.CurrentRating,
+            resolved.Profile?.Gender,
             resolved.Criteria,
             matchId,
             candidateLimit: 1,
@@ -205,11 +206,7 @@ public sealed class PlayerMatchService(
                 new Error("PLAYER_NOT_ELIGIBLE", "The player is not eligible for this room."));
         }
 
-        var scoredCandidate = ScoreCandidate(candidates[0], resolved.Profile, resolved.Weights, resolved.Criteria);
-        return MeetsQualityGates(scoredCandidate)
-            ? Result.Success(scoredCandidate.Response)
-            : Result.Failure<PersonalizedPlayerMatchResponse>(
-                new Error("PLAYER_NOT_ELIGIBLE", "The player is not eligible for this room."));
+        return Result.Success(ScoreCandidate(candidates[0], resolved.Profile, resolved.Weights, resolved.Criteria).Response);
     }
 
     public async Task<Result<PagedResult<HostedPlayerMatchResponse>>> GetHostedMatchesAsync(
@@ -945,6 +942,12 @@ public sealed class PlayerMatchService(
                 new Error("MATCH_ROOM_NOT_FOUND", "Player match not found."));
         }
 
+        if (match.HostUserId != currentUserId)
+        {
+            return Result.Failure<ApproveJoinRequestResponse>(
+                new Error("MATCH_ROOM_NOT_OWNED", "Only the host can approve join requests."));
+        }
+
         var joinRequest = await repository.LockJoinRequestForApprovalAsync(
             matchId, requestId, transaction, cancellationToken);
         if (joinRequest is null)
@@ -953,10 +956,11 @@ public sealed class PlayerMatchService(
                 new Error("JOIN_REQUEST_NOT_FOUND", "Join request was not found."));
         }
 
-        if (match.HostUserId != currentUserId)
+        if (string.Equals(match.Status, PlayerMatchStatus.Full, StringComparison.OrdinalIgnoreCase)
+            && joinRequest.Status is JoinRequestStatus.Pending or JoinRequestStatus.Expired)
         {
             return Result.Failure<ApproveJoinRequestResponse>(
-                new Error("MATCH_ROOM_NOT_OWNED", "Only the host can approve join requests."));
+                new Error("MATCH_ROOM_FULL", "Match is already full."));
         }
 
         if (IsUncompletedPublishedStatus(match.Status)
@@ -1188,46 +1192,63 @@ public sealed class PlayerMatchService(
                 new Error("SEARCH_CRITERIA_INVALID", string.Join("; ", validation.Errors.Select(error => error.ErrorMessage))));
         }
 
-        if (criteria.Preferences is not null && GetWeightTotal(criteria.Preferences) != 100m)
+        if (criteria.Preferences is not null && MatchScoreCalculator.GetWeightTotal(criteria.Preferences) != 100m)
         {
             return Result.Failure<ResolvedScoringCriteria>(
                 new Error("PREFERENCE_WEIGHT_TOTAL_INVALID", "Preference weights must total exactly 100."));
         }
 
-        if (!await repository.BranchesExistAsync(criteria.BranchIds, cancellationToken))
+        if (criteria.BranchIds.Count > 0 && !await repository.BranchesExistAsync(criteria.BranchIds, cancellationToken))
         {
             return Result.Failure<ResolvedScoringCriteria>(
                 new Error("SEARCH_CRITERIA_INVALID", "One or more selected branches are unavailable."));
         }
 
         var profileResult = await profileService.GetProfileAsync(currentUserId, cancellationToken);
-        if (profileResult.IsFailure)
+        if (profileResult.IsFailure && profileResult.Error.Code != "PLAYER_MATCHING_PROFILE_REQUIRED")
         {
             return Result.Failure<ResolvedScoringCriteria>(profileResult.Error);
         }
 
-        if (!profileResult.Value.IsMatchingEnabled)
+        var profile = profileResult.IsSuccess ? profileResult.Value : null;
+        if (profile is { IsMatchingEnabled: false })
         {
             return Result.Failure<ResolvedScoringCriteria>(
                 new Error("PLAYER_MATCHING_DISABLED", "Enable player matching before searching."));
         }
 
-        var preferencesResult = await profileService.GetPreferencesAsync(currentUserId, cancellationToken);
-        if (preferencesResult.IsFailure)
+        var weights = criteria.Preferences ?? new PlayerMatchPreferencesResponse().Preferences;
+        if (criteria.Preferences is null && profile is not null)
         {
-            return Result.Failure<ResolvedScoringCriteria>(preferencesResult.Error);
+            var preferencesResult = await profileService.GetPreferencesAsync(currentUserId, cancellationToken);
+            if (preferencesResult.IsFailure)
+            {
+                return Result.Failure<ResolvedScoringCriteria>(preferencesResult.Error);
+            }
+
+            weights = preferencesResult.Value.Preferences;
         }
 
-        var weights = CopyWeights(criteria.Preferences ?? preferencesResult.Value.Preferences);
-        if (GetWeightTotal(weights) != 100m)
+        if (MatchScoreCalculator.GetWeightTotal(weights) != 100m)
         {
             return Result.Failure<ResolvedScoringCriteria>(
                 new Error("PREFERENCE_WEIGHT_TOTAL_INVALID", "Preference weights must total exactly 100."));
         }
 
+        if (!MatchScoreCalculator.AreWeightsValid(weights))
+        {
+            return Result.Failure<ResolvedScoringCriteria>(
+                new Error("SEARCH_CRITERIA_INVALID", "Preference weights must be between 0 and 100."));
+        }
+
         var effectiveCriteria = new PlayerMatchScoringCriteriaRequest
         {
             BranchIds = criteria.BranchIds,
+            Keyword = criteria.Keyword,
+            SkillLevel = criteria.SkillLevel,
+            GenderPreference = criteria.GenderPreference,
+            StartTime = criteria.StartTime,
+            EndTime = criteria.EndTime,
             MatchDate = criteria.MatchDate,
             PreferredStartTime = criteria.PreferredStartTime,
             PreferredEndTime = criteria.PreferredEndTime,
@@ -1237,7 +1258,7 @@ public sealed class PlayerMatchService(
             Preferences = weights
         };
 
-        return Result.Success(new ResolvedScoringCriteria(effectiveCriteria, profileResult.Value, weights));
+        return Result.Success(new ResolvedScoringCriteria(effectiveCriteria, profile, weights));
     }
 
     private static PlayerMatchScoringCriteriaRequest NormalizeScoringCriteria(
@@ -1245,6 +1266,11 @@ public sealed class PlayerMatchService(
         new()
         {
             BranchIds = request.BranchIds?.ToArray() ?? [],
+            Keyword = NormalizeText(request.Keyword),
+            SkillLevel = NormalizeText(request.SkillLevel)?.ToUpperInvariant(),
+            GenderPreference = NormalizeText(request.GenderPreference)?.ToUpperInvariant(),
+            StartTime = request.StartTime,
+            EndTime = request.EndTime,
             MatchDate = request.MatchDate,
             PreferredStartTime = request.PreferredStartTime,
             PreferredEndTime = request.PreferredEndTime,
@@ -1256,55 +1282,51 @@ public sealed class PlayerMatchService(
             Preferences = request.Preferences is null ? null : CopyWeights(request.Preferences)
         };
 
-    private ScoredPlayerMatch ScoreCandidate(
+    private static ScoredPlayerMatch ScoreCandidate(
         PersonalizedMatchCandidate candidate,
-        PlayerMatchingProfileResponse profile,
+        PlayerMatchingProfileResponse? profile,
         PlayerMatchPreferenceWeights weights,
         PlayerMatchScoringCriteriaRequest criteria)
     {
-        var effectiveRating = profile.CurrentRating * profile.RatingConfidence
-            + 500m * (1m - profile.RatingConfidence);
-        var targetRating = (candidate.MinimumRating + candidate.MaximumRating) / 2m;
-        var tolerance = Math.Max(
-            (candidate.MaximumRating - candidate.MinimumRating) / 2m,
-            scoringOptions.Value.MinimumSkillTolerance);
-        var rawSkillScore = Math.Clamp(
-            100m - Math.Abs(effectiveRating - targetRating) / tolerance * 100m,
-            0m,
-            100m);
+        var userLevel = criteria.SkillLevel ?? (profile is null ? null : SkillLevels.FromRating(profile.CurrentRating));
+        var searchStart = criteria.StartTime ?? criteria.PreferredStartTime;
+        var searchEnd = criteria.EndTime ?? criteria.PreferredEndTime;
+        var roomGender = candidate.GenderPolicy switch
+        {
+            "ANY" => "ANY",
+            "SPECIFIC" => candidate.RequiredGender,
+            _ => candidate.GenderPreference
+        };
 
-        var preferredStart = criteria.PreferredStartTime!.Value.Ticks / (decimal)TimeSpan.TicksPerMinute;
-        var preferredEnd = criteria.PreferredEndTime!.Value.Ticks / (decimal)TimeSpan.TicksPerMinute;
-        var roomStart = candidate.StartTime.Ticks / (decimal)TimeSpan.TicksPerMinute;
-        var roomEnd = candidate.EndTime.Ticks / (decimal)TimeSpan.TicksPerMinute;
-        var overlap = Math.Max(0m, Math.Min(preferredEnd, roomEnd) - Math.Max(preferredStart, roomStart));
-        var rawTimeScore = Math.Clamp(100m * overlap / (roomEnd - roomStart), 0m, 100m);
-        var rawBranchScore = candidate.BranchPreferenceOrder == 1 ? 100m : 70m;
-        const decimal rawGenderScore = 100m;
-        var rawMatchScore = Math.Clamp(
-            (rawSkillScore * weights.SkillWeight
-                + rawTimeScore * weights.TimeWeight
-                + rawBranchScore * weights.BranchWeight
-                + rawGenderScore * weights.GenderWeight) / 100m,
-            0m,
-            100m);
+        var skillScore = MatchScoreCalculator.CalculateSkillScore(userLevel, candidate.SkillLevel);
+        var timeScore = MatchScoreCalculator.CalculateTimeScore(searchStart, searchEnd, candidate.StartTime, candidate.EndTime);
+        var branchScore = MatchScoreCalculator.CalculateBranchScore(criteria.BranchIds.FirstOrDefault(), candidate.BranchId);
+        var genderScore = MatchScoreCalculator.CalculateGenderScore(profile?.Gender ?? criteria.GenderPreference, roomGender);
+        var rawMatchScore = MatchScoreCalculator.CalculateMatchScore(skillScore, timeScore, branchScore, genderScore, weights);
 
-        var reasons = new List<string>(4);
+        var reasons = new List<string>(3);
         var warnings = new List<string>(1);
-        if (rawSkillScore >= 80m)
+        if (skillScore == 100m)
         {
             reasons.Add("SKILL_MATCH");
         }
 
-        if (rawTimeScore == 100m)
+        if (timeScore == 100m)
         {
             reasons.Add("FULL_TIME_OVERLAP");
         }
-
-        reasons.Add(candidate.BranchPreferenceOrder == 1 ? "PRIMARY_BRANCH" : "ACCEPTED_BRANCH");
-        if (rawTimeScore < 100m)
+        else if (timeScore > 0m)
         {
             warnings.Add("PARTIAL_TIME_OVERLAP");
+        }
+        else if (searchStart.HasValue && searchEnd.HasValue)
+        {
+            warnings.Add("NO_TIME_OVERLAP");
+        }
+
+        if (branchScore == 100m)
+        {
+            reasons.Add("PRIMARY_BRANCH");
         }
 
         var displayedMatchScore = RoundScore(rawMatchScore);
@@ -1333,31 +1355,28 @@ public sealed class PlayerMatchService(
                 : displayedMatchScore >= 70m
                     ? "GOOD"
                     : "POSSIBLE",
+            Weights = CopyWeights(weights),
             ScoreBreakdown = new PlayerMatchScoreBreakdown
             {
-                SkillScore = RoundScore(rawSkillScore),
-                TimeScore = RoundScore(rawTimeScore),
-                BranchScore = RoundScore(rawBranchScore),
-                GenderScore = RoundScore(rawGenderScore)
+                SkillScore = RoundScore(skillScore),
+                TimeScore = timeScore < 100m ? Math.Min(RoundScore(timeScore), 99.9m) : 100m,
+                BranchScore = RoundScore(branchScore),
+                GenderScore = RoundScore(genderScore),
+                SkillContribution = RoundScore(MatchScoreCalculator.CalculateContribution(skillScore, weights.SkillWeight)),
+                TimeContribution = RoundScore(MatchScoreCalculator.CalculateContribution(timeScore, weights.TimeWeight)),
+                BranchContribution = RoundScore(MatchScoreCalculator.CalculateContribution(branchScore, weights.BranchWeight)),
+                GenderContribution = RoundScore(MatchScoreCalculator.CalculateContribution(genderScore, weights.GenderWeight))
             },
             Reasons = reasons,
             Warnings = warnings,
             JoinRequestStatus = null
         };
 
-        return new ScoredPlayerMatch(response, rawMatchScore, rawSkillScore, rawTimeScore);
+        return new ScoredPlayerMatch(response, rawMatchScore);
     }
-
-    private bool MeetsQualityGates(ScoredPlayerMatch candidate) =>
-        candidate.RawMatchScore >= scoringOptions.Value.MinimumMatchScore
-        && candidate.RawSkillScore >= scoringOptions.Value.MinimumSkillScore
-        && candidate.RawTimeScore >= scoringOptions.Value.MinimumTimeScore;
 
     private static decimal RoundScore(decimal score) =>
         decimal.Round(score, 1, MidpointRounding.AwayFromZero);
-
-    private static decimal GetWeightTotal(PlayerMatchPreferenceWeights weights) =>
-        weights.SkillWeight + weights.TimeWeight + weights.BranchWeight + weights.GenderWeight;
 
     private static PlayerMatchPreferenceWeights CopyWeights(PlayerMatchPreferenceWeights weights) =>
         new()
@@ -1370,14 +1389,12 @@ public sealed class PlayerMatchService(
 
     private sealed record ResolvedScoringCriteria(
         PlayerMatchScoringCriteriaRequest Criteria,
-        PlayerMatchingProfileResponse Profile,
+        PlayerMatchingProfileResponse? Profile,
         PlayerMatchPreferenceWeights Weights);
 
     private sealed record ScoredPlayerMatch(
         PersonalizedPlayerMatchResponse Response,
-        decimal RawMatchScore,
-        decimal RawSkillScore,
-        decimal RawTimeScore);
+        decimal RawMatchScore);
 
     private async Task<bool> CancelInvalidBookingRoomAsync(
         Guid matchId,

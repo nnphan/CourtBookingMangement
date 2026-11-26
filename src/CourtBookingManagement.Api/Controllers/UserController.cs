@@ -4,13 +4,39 @@ using CourtBookingManagement.Application.Matching.Models;
 using CourtBookingManagement.Api.Common.Responses;
 using CourtBookingManagement.Infrastructure.Auth;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using CourtBookingManagement.Application.Auth.Interfaces;
 
 namespace CourtBookingManagement.Api.Controllers;
 
 [ApiController]
 [Route("api/users")]
-public sealed class UserController(IUserService userService) : ApiControllerBase
+public sealed class UserController(
+    IUserService userService,
+    ICurrentUserService currentUser,
+    IAuthorizationService authorization) : ApiControllerBase
 {
+    [HttpPost("provision")]
+    [Permission("user.create")]
+    public async Task<IActionResult> Provision(ProvisionUserRequest request, CancellationToken cancellationToken)
+    {
+        if (currentUser.UserId is not Guid actorId)
+        {
+            return Unauthorized();
+        }
+
+        if (request.RoleIds.Count > 0 &&
+            !(await authorization.AuthorizeAsync(User, $"{PermissionAuthorizationPolicyProvider.PolicyPrefix}role.create")).Succeeded)
+        {
+            return Forbid();
+        }
+
+        var result = await userService.ProvisionUserAsync(request, actorId, cancellationToken);
+        return result.IsSuccess
+            ? Created(result.Value, nameof(GetById), new { id = result.Value.Id })
+            : Error(result.Error);
+    }
+
     [HttpPost]
     [Permission("user.create")]
     public async Task<IActionResult> Create(

@@ -6,6 +6,11 @@ namespace CourtBookingManagement.Application.Inventory.Repositories;
 
 public interface IInventoryRepository
 {
+    Task<bool> UpdatePostedReceiptSupplierAsync(Guid branchId, Guid receiptId, string? supplierName,
+        Guid actorId, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<InventoryCategoryResponse>> GetCategoriesAsync(Guid branchId, CancellationToken cancellationToken);
+
     Task<PagedResult<InventoryBalanceResponse>> SearchBalancesAsync(
         Guid branchId,
         InventoryBalanceSearchRequest request,

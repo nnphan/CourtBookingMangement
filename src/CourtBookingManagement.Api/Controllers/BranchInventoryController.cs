@@ -16,6 +16,18 @@ public sealed class BranchInventoryController(
     IInventoryService service,
     ICurrentUserService currentUserService) : ApiControllerBase
 {
+    [HttpGet("categories")]
+    [Permission("inventory.view")]
+    public async Task<IActionResult> GetCategories(Guid branchId, CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid userId)
+        {
+            return Unauthorized();
+        }
+
+        return FromResult(await service.GetCategoriesAsync(userId, branchId, cancellationToken));
+    }
+
     [HttpGet]
     [Permission("inventory.view")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<InventoryBalanceResponse>>), StatusCodes.Status200OK)]
@@ -147,6 +159,22 @@ public sealed class BranchInventoryController(
             cancellationToken);
         return FromResult(result, "Goods receipt draft updated successfully.");
     }
+
+    [HttpPatch("goods-receipts/{receiptId:guid}/supplier")]
+    [Permission("inventory.receive")]
+    public async Task<IActionResult> UpdateReceiptSupplier(Guid branchId, Guid receiptId,
+        [FromBody] UpdateReceiptSupplierRequest request, CancellationToken cancellationToken)
+    {
+        if (currentUserService.UserId is not Guid userId)
+        {
+            return Unauthorized();
+        }
+
+        return FromResult(await service.UpdatePostedReceiptSupplierAsync(
+            userId, branchId, receiptId, request.SupplierName, cancellationToken));
+    }
+
+    public sealed record UpdateReceiptSupplierRequest(string? SupplierName);
 
     [HttpPost("goods-receipts/{receiptId:guid}/post")]
     [Permission("inventory.post_receipt")]

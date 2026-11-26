@@ -1,5 +1,6 @@
 using CourtBookingManagement.Api.Common.Responses;
 using CourtBookingManagement.Application.Auth.Interfaces;
+using CourtBookingManagement.Application.Matching.Models;
 using CourtBookingManagement.Application.StaffManagement.DTOs;
 using CourtBookingManagement.Application.StaffManagement.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -73,6 +74,12 @@ public sealed class BranchOwnerStaffController(
         }
 
         var result = await service.GetListAsync(ownerUserId, request, cancellationToken);
+        if (result.IsFailure && request.BranchId is null && IsUnassignedOwner(result.Error.Code))
+        {
+            var empty = PagedResult<StaffListItemResponse>.Create([], request.Page, request.PageSize, 0);
+            return Success(empty.Items, "No owned branches are configured.", empty.Metadata);
+        }
+
         return result.IsSuccess
             ? Success(result.Value.Items, "Staff retrieved successfully.", result.Value.Metadata)
             : Error(result.Error);
@@ -91,10 +98,17 @@ public sealed class BranchOwnerStaffController(
         }
 
         var result = await service.GetBranchesAsync(ownerUserId, cancellationToken);
+        if (result.IsFailure && IsUnassignedOwner(result.Error.Code))
+            return Success(Array.Empty<StaffOwnedBranchResponse>(), "No owned branches are configured.");
+
         return result.IsSuccess
             ? Success(result.Value, "Staff branches retrieved successfully.")
             : Error(result.Error);
     }
+
+    private bool IsUnassignedOwner(string errorCode) =>
+        (errorCode is "STAFF_OWNER_NOT_FOUND" or "STAFF_BRANCH_ACCESS_DENIED") &&
+        currentUserService.Roles.Contains("BRANCH_OWNER", StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Returns one Staff member and assignments visible to the caller.</summary>
     [HttpGet("{userId:guid}")]

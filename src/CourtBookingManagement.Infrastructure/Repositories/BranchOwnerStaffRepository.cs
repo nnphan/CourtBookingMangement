@@ -83,7 +83,7 @@ public sealed class BranchOwnerStaffRepository(
                   SELECT 1 FROM auth.roles r
                   JOIN auth.role_permissions rp ON rp.role_id = r.id
                   JOIN auth.permissions p ON p.id = rp.permission_id
-                  WHERE r.code = 'BRANCH_ADMIN' AND r.is_active AND r.deleted_at IS NULL
+                  WHERE r.code = 'BRANCH_OWNER' AND r.is_active AND r.deleted_at IS NULL
                     AND p.code = 'staff.create'
               )
             FOR UPDATE OF u, o, actor;
@@ -404,7 +404,7 @@ public sealed class BranchOwnerStaffRepository(
                       SELECT 1 FROM auth.roles role
                       JOIN auth.role_permissions rp ON rp.role_id = role.id
                       JOIN auth.permissions p ON p.id = rp.permission_id
-                      WHERE role.code = 'BRANCH_ADMIN' AND role.is_active
+                      WHERE role.code = 'BRANCH_OWNER' AND role.is_active
                         AND role.deleted_at IS NULL AND p.code = 'staff.create'
                   )
                 ORDER BY b.id

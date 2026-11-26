@@ -13,4 +13,9 @@ public sealed record StockMovementResponse(
     Guid? ReferenceId,
     string? Notes,
     DateTime CreatedAt,
-    Guid? CreatedBy);
+    Guid? CreatedBy,
+    string CategoryName,
+    decimal? UnitCost,
+    string Unit,
+    bool IsDraft,
+    string? SupplierName);

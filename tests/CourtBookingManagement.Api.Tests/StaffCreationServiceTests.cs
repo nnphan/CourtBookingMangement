@@ -467,22 +467,21 @@ public sealed class StaffCreationServiceTests
         DateTimeOffset? expiresAt = null,
         DateTimeOffset? usedAt = null,
         DateTimeOffset? revokedAt = null) =>
-        new(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            "staff@example.com",
-            "Staff Member",
-            expiresAt ?? _databaseNow.AddHours(24),
-            _databaseNow,
-            usedAt,
-            revokedAt,
-            2,
-            "CREATE",
-            false,
-            false,
-            true,
-            false,
-            ["A"]);
+        new()
+        {
+            InvitationId = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            Email = "staff@example.com",
+            DisplayName = "Staff Member",
+            ExpiresAt = (expiresAt ?? _databaseNow.AddHours(24)).UtcDateTime,
+            DatabaseTime = _databaseNow.UtcDateTime,
+            UsedAt = usedAt?.UtcDateTime,
+            RevokedAt = revokedAt?.UtcDateTime,
+            LinkVersion = 2,
+            IssuanceType = "CREATE",
+            HasActiveStaffAssignment = true,
+            BranchNames = ["A"]
+        };
 
     [Fact]
     public async Task StaffBranchLookupChecksEveryOwnedBranch()

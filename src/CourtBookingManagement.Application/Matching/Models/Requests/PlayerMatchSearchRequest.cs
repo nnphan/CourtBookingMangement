@@ -14,6 +14,8 @@ public sealed class PlayerMatchSearchRequest
 
     public string? GenderPreference { get; set; }
 
+    public Guid? BranchId { get; set; }
+
     public string? City { get; set; }
 
     public string? District { get; set; }

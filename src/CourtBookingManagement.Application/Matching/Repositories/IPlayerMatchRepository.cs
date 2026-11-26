@@ -13,7 +13,7 @@ public interface IPlayerMatchRepository
 
     Task<IReadOnlyList<PersonalizedMatchCandidate>> SearchPersonalizedCandidatesAsync(
         Guid viewerUserId,
-        int currentRating,
+        int? currentRating,
         string? viewerGender,
         PlayerMatchScoringCriteriaRequest criteria,
         Guid? matchId,

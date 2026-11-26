@@ -7,6 +7,7 @@ using CourtBookingManagement.Domain.Abstractions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace CourtBookingManagement.Api.Controllers;
 
@@ -143,6 +144,7 @@ public sealed class PlayerMatchesController(IPlayerMatchService service, ICurren
 
     [Authorize]
     [HttpPost("drafts")]
+    [EnableRateLimiting("matching-write")]
     [ProducesResponseType(typeof(ApiResponse<PlayerMatchLifecycleResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -229,6 +231,7 @@ public sealed class PlayerMatchesController(IPlayerMatchService service, ICurren
 
     [Authorize]
     [HttpPost]
+    [EnableRateLimiting("matching-write")]
     [ProducesResponseType(typeof(ApiResponse<CreatePlayerMatchResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -249,6 +252,7 @@ public sealed class PlayerMatchesController(IPlayerMatchService service, ICurren
 
     [Authorize]
     [HttpPost("{id:guid}/join")]
+    [EnableRateLimiting("matching-write")]
     [ProducesResponseType(typeof(ApiResponse<JoinMatchResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -269,6 +273,7 @@ public sealed class PlayerMatchesController(IPlayerMatchService service, ICurren
 
     [Authorize]
     [HttpPost("{id:guid}/join-requests")]
+    [EnableRateLimiting("matching-write")]
     [ProducesResponseType(typeof(ApiResponse<JoinMatchResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]

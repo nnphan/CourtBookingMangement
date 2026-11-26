@@ -2,6 +2,7 @@ using System.Data;
 using System.Text;
 using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.Matching.Models;
+using CourtBookingManagement.Application.Roles;
 using CourtBookingManagement.Application.Roles.Models.Requests;
 using CourtBookingManagement.Application.Roles.Models.Responses;
 using CourtBookingManagement.Application.Roles.Repositories;
@@ -59,12 +60,13 @@ public sealed class RoleRepository(ISqlConnectionFactory sqlConnectionFactory) :
                 r.updated_at AS UpdatedAt
             FROM auth.roles r
             WHERE r.id = @Id
+              AND r.code = ANY(@ManagedCodes)
               AND r.deleted_at IS NULL;
             """;
 
         using var connection = sqlConnectionFactory.CreateConnection();
         var role = await connection.QuerySingleOrDefaultAsync<RoleResponse>(
-            new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
+            new CommandDefinition(sql, new { Id = id, ManagedCodes = ManagedRoles.Codes }, cancellationToken: cancellationToken));
         if (role is null)
         {
             return null;
@@ -373,6 +375,7 @@ public sealed class RoleRepository(ISqlConnectionFactory sqlConnectionFactory) :
     private static DynamicParameters CreateParameters(RoleSearchRequest request)
     {
         var parameters = new DynamicParameters();
+        parameters.Add("ManagedCodes", ManagedRoles.Codes);
         if (!string.IsNullOrWhiteSpace(request.Keyword))
         {
             parameters.Add("Keyword", $"%{request.Keyword}%");
@@ -405,6 +408,7 @@ public sealed class RoleRepository(ISqlConnectionFactory sqlConnectionFactory) :
                 LEFT JOIN auth.user_roles ur ON ur.role_id = r.id
                 LEFT JOIN auth.role_permissions rp ON rp.role_id = r.id
                 WHERE r.deleted_at IS NULL
+                  AND r.code = ANY(@ManagedCodes)
                 GROUP BY
                     r.id,
                     r.code,

@@ -1,5 +1,6 @@
 using System.Data;
 using CourtBookingManagement.Application.Abstractions.Data;
+using CourtBookingManagement.Application.Roles;
 using CourtBookingManagement.Application.UserRoles.Models.Responses;
 using CourtBookingManagement.Application.UserRoles.Repositories;
 using Dapper;
@@ -78,13 +79,14 @@ public sealed class UserRoleRepository(ISqlConnectionFactory sqlConnectionFactor
                 r.name AS RoleName
             FROM auth.roles r
             WHERE r.id = ANY(@RoleIds)
+              AND r.code = ANY(@ManagedCodes)
               AND r.deleted_at IS NULL
               AND r.is_active = TRUE;
             """;
 
         using var connection = sqlConnectionFactory.CreateConnection();
         var items = await connection.QueryAsync<RoleItemResponse>(
-            new CommandDefinition(sql, new { RoleIds = roleIds.ToArray() }, cancellationToken: cancellationToken));
+            new CommandDefinition(sql, new { RoleIds = roleIds.ToArray(), ManagedCodes = ManagedRoles.Codes }, cancellationToken: cancellationToken));
 
         return items.AsList();
     }
@@ -223,11 +225,12 @@ public sealed class UserRoleRepository(ISqlConnectionFactory sqlConnectionFactor
             SELECT r.id AS RoleId, r.code AS RoleCode, r.name AS RoleName
             FROM auth.roles r
             WHERE r.id = ANY(@RoleIds) AND r.deleted_at IS NULL AND r.is_active = TRUE
+              AND r.code = ANY(@ManagedCodes)
             FOR SHARE;
             """;
 
         var roles = await transaction.Connection!.QueryAsync<RoleItemResponse>(
-            new CommandDefinition(sql, new { RoleIds = roleIds.ToArray() }, transaction, cancellationToken: cancellationToken));
+            new CommandDefinition(sql, new { RoleIds = roleIds.ToArray(), ManagedCodes = ManagedRoles.Codes }, transaction, cancellationToken: cancellationToken));
         return roles.AsList();
     }
 

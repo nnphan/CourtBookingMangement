@@ -182,7 +182,7 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
 
     public async Task<IReadOnlyList<PersonalizedMatchCandidate>> SearchPersonalizedCandidatesAsync(
         Guid viewerUserId,
-        int currentRating,
+        int? currentRating,
         string? viewerGender,
         PlayerMatchScoringCriteriaRequest criteria,
         Guid? matchId,
@@ -212,7 +212,10 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
                 COALESCE(active.current_player_count, 0) AS CurrentPlayerCount,
                 pm.max_players AS RequiredPlayerCount,
                 COALESCE(pm.fee_per_player, 0)::numeric AS ParticipationFee,
-                array_position(@BranchIds, pm.branch_id)::integer AS BranchPreferenceOrder,
+                pm.skill_level AS SkillLevel,
+                pm.gender_preference AS GenderPreference,
+                pm.gender_policy AS GenderPolicy,
+                pm.required_gender AS RequiredGender,
                 pm.created_at AS CreatedAt
             FROM matching.player_matches pm
             INNER JOIN core.branches br ON br.id = pm.branch_id
@@ -220,25 +223,32 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
             INNER JOIN booking.bookings bk ON bk.id = pm.booking_id
             INNER JOIN customer.customers cu ON cu.id = bk.customer_id
             LEFT JOIN active_player_counts active ON active.match_id = pm.id
-            WHERE (@MatchId IS NULL OR pm.id = @MatchId)
+            WHERE (CAST(@MatchId AS uuid) IS NULL OR pm.id = @MatchId)
               AND pm.status = 'OPEN'
               AND pm.visibility = 'PUBLIC'
               AND pm.created_by <> @ViewerUserId
-              AND pm.branch_id = ANY(@BranchIds)
+              AND (cardinality(CAST(@BranchIds AS uuid[])) = 0 OR pm.branch_id = ANY(@BranchIds))
+              AND (CAST(@Keyword AS text) IS NULL OR pm.title ILIKE @Keyword OR br.name ILIKE @Keyword
+                   OR COALESCE(NULLIF(court.name, ''), court.court_number::text) ILIKE @Keyword)
+              AND (CAST(@GenderPreference AS text) IS NULL
+                   OR UPPER(pm.gender_preference) = @GenderPreference
+                   OR (UPPER(pm.gender_preference) = 'BOTH' AND @GenderPreference IN ('MALE', 'FEMALE')))
+              AND pm.start_time < pm.end_time
               AND pm.game_type = ANY(@GameTypes)
-              AND pm.minimum_rating <= @CurrentRating
-              AND pm.maximum_rating >= @CurrentRating
+              AND pm.minimum_rating IS NOT NULL AND pm.maximum_rating IS NOT NULL
+              AND (CAST(@CurrentRating AS integer) IS NULL OR @CurrentRating BETWEEN pm.minimum_rating AND pm.maximum_rating)
               AND (
                   pm.gender_policy = 'ANY'
                   OR (
                       pm.gender_policy = 'SPECIFIC'
-                      AND @ViewerGender IS NOT NULL
+                      AND CAST(@ViewerGender AS text) IS NOT NULL
                       AND pm.required_gender = @ViewerGender
                   )
               )
-              AND (@MaximumParticipationFee IS NULL
+              AND (CAST(@MaximumParticipationFee AS numeric) IS NULL
                    OR COALESCE(pm.fee_per_player, 0) <= @MaximumParticipationFee)
               AND COALESCE(active.current_player_count, 0) < pm.max_players
+              AND active.current_player_count = pm.current_players
               AND br.is_active
               AND br.deleted_at IS NULL
               AND court.branch_id = pm.branch_id
@@ -263,15 +273,9 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
                     AND bd.end_time >= pm.end_time
                     AND UPPER(bd.status) = 'CONFIRMED'
               )
-              AND EXTRACT(EPOCH FROM (
-                    LEAST(@PreferredEndTime, pm.end_time)
-                    - GREATEST(@PreferredStartTime, pm.start_time)
-                  )) / 60 >= @MinimumTimeOverlapMinutes
-              AND EXISTS (
-                  SELECT 1
-                  FROM matching.player_profiles profile
-                  WHERE profile.user_id = @ViewerUserId
-                    AND profile.is_matching_enabled
+              AND NOT EXISTS (
+                  SELECT 1 FROM matching.player_profiles profile
+                  WHERE profile.user_id = @ViewerUserId AND NOT profile.is_matching_enabled
               )
               AND NOT EXISTS (
                   SELECT 1
@@ -287,7 +291,7 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
                     AND join_request.requester_id = @ViewerUserId
                     AND join_request.status = 'PENDING'
               )
-              AND (@MatchDate IS NULL OR pm.match_date = @MatchDate)
+              AND (CAST(@MatchDate AS date) IS NULL OR pm.match_date = @MatchDate)
             ORDER BY pm.match_date ASC, pm.start_time ASC, pm.id ASC
             LIMIT @CandidateLimit;
             """;
@@ -300,10 +304,9 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
                 CurrentRating = currentRating,
                 ViewerGender = viewerGender,
                 BranchIds = criteria.BranchIds.ToArray(),
+                Keyword = criteria.Keyword is null ? null : $"%{criteria.Keyword}%",
+                criteria.GenderPreference,
                 MatchDate = criteria.MatchDate,
-                PreferredStartTime = criteria.PreferredStartTime,
-                PreferredEndTime = criteria.PreferredEndTime,
-                MinimumTimeOverlapMinutes = criteria.MinimumTimeOverlapMinutes,
                 GameTypes = criteria.GameTypes.ToArray(),
                 MaximumParticipationFee = criteria.MaximumParticipationFee,
                 MatchId = matchId,
@@ -939,8 +942,6 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
               AND c.deleted_at IS NULL
               AND br.is_active
               AND br.deleted_at IS NULL
-              AND ((@MatchDate + @StartTime)
-                    AT TIME ZONE COALESCE(NULLIF(br.time_zone, ''), 'Asia/Ho_Chi_Minh')) > NOW()
             LIMIT 1
             FOR UPDATE OF b, cu, bd, c, br;
             """;
@@ -1603,17 +1604,8 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
             RequiredGender = request.RequiredGender
         };
 
-    private static string ToLegacySkillLevel(int minimumRating, int maximumRating)
-    {
-        var midpoint = (minimumRating + maximumRating) / 2;
-        return midpoint switch
-        {
-            < 400 => SkillLevels.Beginner,
-            < 600 => SkillLevels.Intermediate,
-            < 900 => SkillLevels.Advanced,
-            _ => SkillLevels.Professional
-        };
-    }
+    private static string ToLegacySkillLevel(int minimumRating, int maximumRating) =>
+        SkillLevels.FromRating((minimumRating + maximumRating) / 2);
 
     private static void AppendBaseQuery(StringBuilder sql, DynamicParameters parameters)
     {
@@ -1647,13 +1639,8 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
                 INNER JOIN auth.users u ON u.id = pm.created_by
                 WHERE pm.status = @Status
                   AND pm.current_players < pm.max_players
-                  AND (
-                      pm.match_date > (NOW() AT TIME ZONE 'UTC')::date
-                      OR (
-                          pm.match_date = (NOW() AT TIME ZONE 'UTC')::date
-                          AND pm.start_time > (NOW() AT TIME ZONE 'UTC')::time
-                      )
-                  )
+                  AND ((pm.match_date + pm.start_time)
+                        AT TIME ZONE COALESCE(NULLIF(b.time_zone, ''), 'Asia/Ho_Chi_Minh')) > NOW()
             )
             """);
 
@@ -1703,8 +1690,17 @@ public sealed class PlayerMatchRepository(ISqlConnectionFactory sqlConnectionFac
 
         if (!string.IsNullOrWhiteSpace(request.GenderPreference))
         {
-            sql.AppendLine("AND GenderPreference = @GenderPreference");
-            parameters.Add("GenderPreference", request.GenderPreference.Trim());
+            sql.AppendLine("""
+                AND (UPPER(GenderPreference) = @GenderPreference
+                     OR (UPPER(GenderPreference) = 'BOTH' AND @GenderPreference IN ('MALE', 'FEMALE')))
+                """);
+            parameters.Add("GenderPreference", request.GenderPreference.Trim().ToUpperInvariant());
+        }
+
+        if (request.BranchId is Guid branchId)
+        {
+            sql.AppendLine("AND BranchId = @BranchId");
+            parameters.Add("BranchId", branchId);
         }
 
         if (!string.IsNullOrWhiteSpace(request.City))

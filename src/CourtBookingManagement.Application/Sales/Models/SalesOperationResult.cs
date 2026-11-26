@@ -10,5 +10,6 @@ public enum SalesOperationStatus
     ProductNotConfigured,
     InsufficientStock,
     QuantityLimitExceeded,
-    RelatedEntityNotFound
+    RelatedEntityNotFound,
+    InsufficientCash
 }

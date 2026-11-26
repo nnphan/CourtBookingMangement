@@ -1,3 +1,5 @@
+using CourtBookingManagement.Application.Matching.Models;
+
 namespace CourtBookingManagement.Application.Matching.Models.Responses;
 
 public sealed class PersonalizedPlayerMatchResponse
@@ -41,6 +43,8 @@ public sealed class PersonalizedPlayerMatchResponse
     public string MatchLevel { get; set; } = string.Empty;
 
     public PlayerMatchScoreBreakdown ScoreBreakdown { get; set; } = new();
+
+    public required PlayerMatchPreferenceWeights Weights { get; set; }
 
     public IReadOnlyList<string> Reasons { get; set; } = [];
 

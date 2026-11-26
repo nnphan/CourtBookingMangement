@@ -16,7 +16,6 @@ using CourtBookingManagement.Application.Customers.Repositories;
 using CourtBookingManagement.Application.CourtStatus.Interfaces;
 using CourtBookingManagement.Application.CourtBookings.Interfaces;
 using CourtBookingManagement.Application.Matching.Repositories;
-using CourtBookingManagement.Application.Matching.Options;
 using CourtBookingManagement.Application.Notifications.Repositories;
 using CourtBookingManagement.Application.Roles.Repositories;
 using CourtBookingManagement.Application.Permissions.Repositories;
@@ -86,16 +85,6 @@ public static class DependencyInjection
         services.AddOptions<BookingHoldOptions>()
             .Bind(configuration.GetSection(BookingHoldOptions.SectionName))
             .ValidateDataAnnotations()
-            .ValidateOnStart();
-
-        services.AddOptions<PlayerMatchScoringOptions>()
-            .Bind(configuration.GetSection(PlayerMatchScoringOptions.SectionName))
-            .Validate(options =>
-                options.MinimumSkillTolerance > 0
-                && options.MinimumMatchScore is >= 0 and <= 100
-                && options.MinimumSkillScore is >= 0 and <= 100
-                && options.MinimumTimeScore is >= 0 and <= 100,
-                "Player-match scoring tolerance and quality gates must be within valid ranges.")
             .ValidateOnStart();
 
         services.AddOptions<MomoOptions>()
@@ -219,6 +208,7 @@ public static class DependencyInjection
         services.AddScoped<ICatalogRepository, CatalogRepository>();
         services.AddScoped<IInventoryRepository, InventoryRepository>();
         services.AddScoped<ISalesRepository, SalesRepository>();
+        services.AddScoped<IBusinessStatisticsRepository, BusinessStatisticsRepository>();
         services.AddScoped<IBranchOwnerStaffRepository, BranchOwnerStaffRepository>();
         services.AddScoped<IStaffInvitationRepository, StaffInvitationRepository>();
         services.AddSingleton<IStaffInvitationTokenService, StaffInvitationTokenService>();

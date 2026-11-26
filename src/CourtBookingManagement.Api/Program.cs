@@ -38,6 +38,7 @@ builder.Services.AddScoped<CourtSelectionRepository>();
 builder.Services.AddScoped<CourtSelectionIdentity>();
 builder.Services.AddSingleton<CourtSelectionPublisher>();
 builder.Services.AddHostedService<CourtSelectionWorker>();
+builder.Services.AddHostedService<PlayerMatchConsistencyWorker>();
 builder.Services.AddOptions<CourtSelectionOptions>().BindConfiguration("BookingHolds")
     .Validate(o => o.SelectionHoldMinutes > 0 && o.CleanupIntervalSeconds > 0
         && o.MaximumSlotsPerHold > 0 && o.MaximumActiveHoldsPerUser > 0 && o.IdempotencyRetentionMinutes >= 10)
@@ -106,6 +107,16 @@ builder.Services.AddRateLimiter(options =>
             _ => new FixedWindowRateLimiterOptions
             {
                 PermitLimit = 40,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+    options.AddPolicy("matching-write", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 15,
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0
             }));

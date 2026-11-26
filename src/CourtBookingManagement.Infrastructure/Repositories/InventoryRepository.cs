@@ -10,6 +10,36 @@ namespace CourtBookingManagement.Infrastructure.Repositories;
 
 public sealed class InventoryRepository(ISqlConnectionFactory connectionFactory) : IInventoryRepository
 {
+    public async Task<bool> UpdatePostedReceiptSupplierAsync(Guid branchId, Guid receiptId, string? supplierName,
+        Guid actorId, CancellationToken cancellationToken)
+    {
+        using var connection = connectionFactory.CreateConnection();
+        return await connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE inventory.goods_receipts
+            SET supplier_name = @SupplierName, updated_at = now(), updated_by = @ActorId
+            WHERE branch_id = @BranchId AND id = @ReceiptId AND status = 'POSTED';
+            """, new { BranchId = branchId, ReceiptId = receiptId, SupplierName = supplierName, ActorId = actorId },
+            cancellationToken: cancellationToken)) == 1;
+    }
+
+    public async Task<IReadOnlyList<InventoryCategoryResponse>> GetCategoriesAsync(
+        Guid branchId, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            SELECT DISTINCT c.id AS Id, c.name AS Name
+            FROM catalog.branch_products bp
+            JOIN catalog.products p ON p.id = bp.product_id
+            JOIN catalog.product_categories c ON c.id = p.category_id
+            WHERE bp.branch_id = @BranchId AND p.track_inventory
+              AND p.is_active AND p.deleted_at IS NULL
+              AND c.is_active AND c.deleted_at IS NULL
+            ORDER BY c.name, c.id;
+            """;
+        using var connection = connectionFactory.CreateConnection();
+        return (await connection.QueryAsync<InventoryCategoryResponse>(
+            new CommandDefinition(sql, new { BranchId = branchId }, cancellationToken: cancellationToken))).AsList();
+    }
+
     public async Task<PagedResult<InventoryBalanceResponse>> SearchBalancesAsync(
         Guid branchId,
         InventoryBalanceSearchRequest request,
@@ -29,12 +59,20 @@ public sealed class InventoryRepository(ISqlConnectionFactory connectionFactory)
               AND c.deleted_at IS NULL
               AND (@Search IS NULL OR p.name ILIKE @Search OR p.sku ILIKE @Search OR p.barcode ILIKE @Search)
               AND (NOT @LowStockOnly OR COALESCE(bi.quantity_on_hand, 0) <= COALESCE(bi.reorder_level, 0))
+              AND (@CategoryId::uuid IS NULL OR p.category_id = @CategoryId)
+              AND (@StockStatus::text IS NULL OR @StockStatus = CASE
+                    WHEN COALESCE(bi.quantity_on_hand, 0) <= 0 THEN 'OUT_OF_STOCK'
+                    WHEN bi.quantity_on_hand <= bi.reorder_level THEN 'LOW_STOCK'
+                    ELSE 'IN_STOCK'
+                  END)
             """;
         var parameters = new
         {
             BranchId = branchId,
             Search = string.IsNullOrWhiteSpace(request.Search) ? null : $"%{request.Search}%",
             request.LowStockOnly,
+            request.CategoryId,
+            request.StockStatus,
             request.PageSize,
             Offset = (long)(request.Page - 1) * request.PageSize
         };
@@ -80,6 +118,11 @@ public sealed class InventoryRepository(ISqlConnectionFactory connectionFactory)
         const string filterSql = """
             FROM inventory.stock_movements sm
             JOIN catalog.products p ON p.id = sm.product_id
+            JOIN catalog.product_categories c ON c.id = p.category_id
+            LEFT JOIN inventory.goods_receipts gr
+                ON sm.movement_type = 'GOODS_RECEIPT' AND sm.reference_id = gr.id AND gr.branch_id = sm.branch_id
+            LEFT JOIN inventory.goods_receipt_items gri
+                ON gri.goods_receipt_id = gr.id AND gri.product_id = sm.product_id
             WHERE sm.branch_id = @BranchId
               AND (@ProductId::uuid IS NULL OR sm.product_id = @ProductId)
               AND (@MovementType IS NULL OR sm.movement_type = @MovementType)
@@ -91,12 +134,13 @@ public sealed class InventoryRepository(ISqlConnectionFactory connectionFactory)
             BranchId = branchId,
             request.ProductId,
             request.MovementType,
+            request.IncludeDraftReceipts,
             request.From,
             request.To,
             request.PageSize,
             Offset = (long)(request.Page - 1) * request.PageSize
         };
-        const string dataSql = $"""
+        const string rowsSql = $"""
             SELECT
                 sm.id AS Id,
                 sm.product_id AS ProductId,
@@ -110,21 +154,37 @@ public sealed class InventoryRepository(ISqlConnectionFactory connectionFactory)
                 sm.reference_id AS ReferenceId,
                 sm.notes AS Notes,
                 sm.created_at AS CreatedAt,
-                sm.created_by AS CreatedBy
+                sm.created_by AS CreatedBy,
+                c.name AS CategoryName,
+                gri.unit_cost AS UnitCost,
+                p.unit AS Unit,
+                FALSE AS IsDraft,
+                gr.supplier_name AS SupplierName
                 {filterSql}
-                ORDER BY sm.created_at DESC, 
-                sm.id DESC 
-                LIMIT @PageSize
-                OFFSET @Offset;
+            UNION ALL
+            SELECT
+                item.id, item.product_id, product.sku, product.name, 'GOODS_RECEIPT',
+                item.quantity, 0, 0, 'GOODS_RECEIPT', receipt.id, receipt.notes,
+                receipt.created_at, receipt.created_by, category.name, item.unit_cost,
+                product.unit, TRUE, receipt.supplier_name
+            FROM inventory.goods_receipts receipt
+            JOIN inventory.goods_receipt_items item ON item.goods_receipt_id = receipt.id
+            JOIN catalog.products product ON product.id = item.product_id
+            JOIN catalog.product_categories category ON category.id = product.category_id
+            WHERE @IncludeDraftReceipts AND @MovementType = 'GOODS_RECEIPT'
+              AND receipt.branch_id = @BranchId AND receipt.status = 'DRAFT'
+              AND (@ProductId::uuid IS NULL OR item.product_id = @ProductId)
+              AND (@From::timestamptz IS NULL OR receipt.created_at >= @From)
+              AND (@To::timestamptz IS NULL OR receipt.created_at <= @To)
             """;
 
         using var connection = connectionFactory.CreateConnection();
         var items = (await connection.QueryAsync<StockMovementResponse>(new CommandDefinition(
-            dataSql,
+            $"SELECT * FROM ({rowsSql}) AS rows ORDER BY CreatedAt DESC, Id DESC LIMIT @PageSize OFFSET @Offset;",
             parameters,
             cancellationToken: cancellationToken))).AsList();
         var count = await connection.ExecuteScalarAsync<long>(new CommandDefinition(
-            "SELECT COUNT(*) " + filterSql,
+            $"SELECT COUNT(*) FROM ({rowsSql}) AS rows;",
             parameters,
             cancellationToken: cancellationToken));
         return PagedResult<StockMovementResponse>.Create(items, request.Page, request.PageSize, count);

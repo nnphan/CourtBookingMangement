@@ -32,7 +32,13 @@ public sealed class PersonalizedMatchCandidate
 
     public decimal ParticipationFee { get; set; }
 
-    public int BranchPreferenceOrder { get; set; }
+    public string? SkillLevel { get; set; }
+
+    public string? GenderPreference { get; set; }
+
+    public string? GenderPolicy { get; set; }
+
+    public string? RequiredGender { get; set; }
 
     public DateTime CreatedAt { get; set; }
 }

@@ -8,6 +8,8 @@ public sealed record CheckoutRequest
 
     public required string PaymentMethodCode { get; init; }
 
+    public decimal? CashTendered { get; init; }
+
     public string? Notes { get; init; }
 
     public required IReadOnlyList<CheckoutItemRequest> Items { get; init; }

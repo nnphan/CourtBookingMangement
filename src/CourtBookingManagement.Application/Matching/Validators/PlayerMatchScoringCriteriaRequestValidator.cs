@@ -12,16 +12,21 @@ public sealed class PlayerMatchScoringCriteriaRequestValidator : AbstractValidat
         RuleFor(request => request.BranchIds)
             .Cascade(CascadeMode.Stop)
             .NotNull()
-            .NotEmpty()
             .Must(branchIds => branchIds.All(branchId => branchId != Guid.Empty))
             .Must(branchIds => branchIds.Distinct().Count() == branchIds.Count)
             .WithMessage("Branch IDs must be non-empty, valid, and distinct.");
-        RuleFor(request => request.PreferredStartTime)
-            .NotNull()
-            .WithMessage("Preferred start time is required.");
-        RuleFor(request => request.PreferredEndTime)
-            .NotNull()
-            .WithMessage("Preferred end time is required.");
+        RuleFor(request => request.Keyword).MaximumLength(150);
+        RuleFor(request => request.SkillLevel)
+            .Must(value => value is null or "BEGINNER" or "INTERMEDIATE" or "ADVANCED" or "PROFESSIONAL");
+        RuleFor(request => request.GenderPreference)
+            .Must(value => value is null or "MALE" or "FEMALE" or "BOTH");
+        RuleFor(request => request)
+            .Must(request => request.StartTime.HasValue == request.EndTime.HasValue
+                && (!request.StartTime.HasValue || request.StartTime < request.EndTime))
+            .WithMessage("Start and end must be supplied together, with start earlier than end.");
+        RuleFor(request => request)
+            .Must(request => request.PreferredStartTime.HasValue == request.PreferredEndTime.HasValue)
+            .WithMessage("Preferred start and end times must be supplied together.");
         RuleFor(request => request.MinimumTimeOverlapMinutes)
             .GreaterThan(0);
         RuleFor(request => request)

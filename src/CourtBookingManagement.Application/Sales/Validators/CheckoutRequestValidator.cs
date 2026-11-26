@@ -15,6 +15,12 @@ public sealed class CheckoutRequestValidator : AbstractValidator<CheckoutRequest
         RuleFor(request => request.CustomerId).Must(id => id is null || id != Guid.Empty);
         RuleFor(request => request.BookingId).Must(id => id is null || id != Guid.Empty);
         RuleFor(request => request.Notes).MaximumLength(2000);
+        RuleFor(request => request.CashTendered)
+            .Must((request, cash) => cash is null ||
+                (string.Equals(request.PaymentMethodCode?.Trim(), "CASH", StringComparison.OrdinalIgnoreCase)
+                 && cash.Value is >= 0m and <= 9_999_999_999.99m
+                 && decimal.Round(cash.Value, 2) == cash.Value))
+            .WithMessage("CashTendered must be a valid amount for cash payments.");
         RuleFor(request => request.Items)
             .NotEmpty()
             .Must(items => items is not null && items.Count <= 100);

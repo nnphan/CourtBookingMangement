@@ -78,8 +78,8 @@ public sealed class PlayerMatchingProfileRepository(ISqlConnectionFactory sqlCon
     {
         const string sql = """
             SELECT
-                COALESCE(preferences.skill_weight, 50) AS SkillWeight,
-                COALESCE(preferences.time_weight, 20) AS TimeWeight,
+                COALESCE(preferences.skill_weight, 40) AS SkillWeight,
+                COALESCE(preferences.time_weight, 30) AS TimeWeight,
                 COALESCE(preferences.branch_weight, 20) AS BranchWeight,
                 COALESCE(preferences.gender_weight, 10) AS GenderWeight,
                 preferences.preferred_start_time AS PreferredStartTime,
@@ -147,6 +147,7 @@ public sealed class PlayerMatchingProfileRepository(ISqlConnectionFactory sqlCon
         CancellationToken cancellationToken)
     {
         using var connection = sqlConnectionFactory.CreateConnection();
+        connection.Open();
         using var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
 
         const string profileSql = """

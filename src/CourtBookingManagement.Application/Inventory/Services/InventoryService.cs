@@ -24,6 +24,33 @@ public sealed class InventoryService(
     private static readonly Error InsufficientStock = new("Inventory.InsufficientStock", "The adjustment would make branch inventory negative.");
     private static readonly Error QuantityLimitExceeded = new("Inventory.QuantityLimitExceeded", "The resulting inventory quantity exceeds the supported limit.");
 
+    public async Task<Result> UpdatePostedReceiptSupplierAsync(Guid userId, Guid branchId, Guid receiptId,
+        string? supplierName, CancellationToken cancellationToken)
+    {
+        var normalizedName = NormalizeOptional(supplierName);
+        if (!IsValidIdentity(userId, branchId) || receiptId == Guid.Empty || normalizedName is { Length: > 200 })
+        {
+            return Result.Failure(InvalidRequest);
+        }
+
+        await branchAuthorizationService.EnsureCanAccessAsync(userId, branchId, "inventory.receive", cancellationToken);
+        return await repository.UpdatePostedReceiptSupplierAsync(branchId, receiptId, normalizedName, userId, cancellationToken)
+            ? Result.Success()
+            : Result.Failure(ReceiptNotFound);
+    }
+
+    public async Task<Result<IReadOnlyList<InventoryCategoryResponse>>> GetCategoriesAsync(
+        Guid userId, Guid branchId, CancellationToken cancellationToken)
+    {
+        if (!IsValidIdentity(userId, branchId))
+        {
+            return InvalidRequest;
+        }
+
+        await branchAuthorizationService.EnsureCanAccessAsync(userId, branchId, "inventory.view", cancellationToken);
+        return Result.Success(await repository.GetCategoriesAsync(branchId, cancellationToken));
+    }
+
     public async Task<Result<PagedResult<InventoryBalanceResponse>>> SearchBalancesAsync(
         Guid userId,
         Guid branchId,
@@ -40,8 +67,15 @@ public sealed class InventoryService(
             return InvalidPagination;
         }
 
+        var criteria = Normalize(request);
+        if (criteria.CategoryId == Guid.Empty
+            || criteria.StockStatus is not (null or "IN_STOCK" or "LOW_STOCK" or "OUT_OF_STOCK"))
+        {
+            return InvalidFilter;
+        }
+
         await branchAuthorizationService.EnsureCanAccessAsync(userId, branchId, "inventory.view", cancellationToken);
-        return Result.Success(await repository.SearchBalancesAsync(branchId, Normalize(request), cancellationToken));
+        return Result.Success(await repository.SearchBalancesAsync(branchId, criteria, cancellationToken));
     }
 
     public async Task<Result<PagedResult<StockMovementResponse>>> SearchMovementsAsync(
@@ -285,7 +319,11 @@ public sealed class InventoryService(
         page >= 1 && pageSize is >= 1 and <= 100;
 
     private static InventoryBalanceSearchRequest Normalize(InventoryBalanceSearchRequest request) =>
-        request with { Search = NormalizeOptional(request.Search) };
+        request with
+        {
+            Search = NormalizeOptional(request.Search),
+            StockStatus = NormalizeOptional(request.StockStatus)?.ToUpperInvariant()
+        };
 
     private static GoodsReceiptDraftRequest Normalize(GoodsReceiptDraftRequest request) =>
         request with

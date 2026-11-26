@@ -6,6 +6,16 @@ public class PlayerMatchScoringCriteriaRequest
 {
     public IReadOnlyList<Guid> BranchIds { get; set; } = [];
 
+    public string? Keyword { get; set; }
+
+    public string? SkillLevel { get; set; }
+
+    public string? GenderPreference { get; set; }
+
+    public TimeOnly? StartTime { get; set; }
+
+    public TimeOnly? EndTime { get; set; }
+
     public DateOnly? MatchDate { get; set; }
 
     public TimeOnly? PreferredStartTime { get; set; }

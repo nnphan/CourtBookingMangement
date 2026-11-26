@@ -290,6 +290,12 @@ public sealed class SalesRepository(ISqlConnectionFactory connectionFactory) : I
                 })
                 .ToArray();
             var total = lines.Sum(line => line.LineTotal);
+            if (request.CashTendered is decimal cashTendered && cashTendered < total)
+            {
+                transaction.Rollback();
+                return new(SalesOperationStatus.InsufficientCash);
+            }
+
             if (total > 9_999_999_999.99m)
             {
                 transaction.Rollback();

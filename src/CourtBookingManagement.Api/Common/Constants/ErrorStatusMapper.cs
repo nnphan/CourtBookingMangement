@@ -23,7 +23,7 @@ public static class ErrorStatusMapper
         "PLAYER_MATCH.NOT_HOST" or "MATCH_ROOM_NOT_OWNED" => StatusCodes.Status403Forbidden,
         "User.EmailAlreadyExists" or "AUTH_EMAIL_ALREADY_EXISTS" or "AUTH_PHONE_ALREADY_EXISTS" or
         "Permission.CodeAlreadyExists" or "Permission.InUse" or
-        "Role.CodeAlreadyExists" or "Role.InUse" or
+        "Role.CodeAlreadyExists" or "Role.InUse" or "Role.FixedCatalog" or
         "PLAYER_MATCH.ALREADY_JOINED" or "PLAYER_MATCH.REQUEST_EXISTS" or "PLAYER_MATCH.DUPLICATE" or
         "PLAYER_MATCH.COURT_CONFLICT" or "PLAYER_MATCH.MATCH_FULL" or "PLAYER_MATCH.NOT_OPEN" or
         "Booking.StatusConflict" or "Booking.HoldExpired" or "Booking.IdempotencyKeyReused" or "Payment.StatusConflict" or
@@ -78,7 +78,7 @@ public static class ErrorStatusMapper
             StatusCodes.Status400BadRequest,
         "Sales.OrderNotFound" or "Sales.InvoiceNotFound" =>
             StatusCodes.Status404NotFound,
-        "Sales.OrderNotCompletable" or "Sales.ProductNotAvailable" or "Sales.InsufficientStock" or
+        "Sales.OrderNotCompletable" or "Sales.ProductNotAvailable" or "Sales.InsufficientStock" or "Sales.InsufficientCash" or
         "Sales.QuantityLimitExceeded" or "Sales.RelatedEntityNotFound" =>
             StatusCodes.Status409Conflict,
         "Sales.InvalidRequest" or "Sales.InvalidPagination" or "Sales.InvalidFilter" =>
