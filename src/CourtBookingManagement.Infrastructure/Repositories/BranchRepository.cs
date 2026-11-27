@@ -173,7 +173,6 @@ public sealed class BranchRepository(
             .Include(item => item.Amenities)
             .Include(item => item.BranchImages)
             .Include(item => item.OperatingHours)
-            .Include(item => item.Courts)
             .Include(item => item.BranchPricings)
             .SingleOrDefaultAsync(item => item.Id == branchId && item.DeletedAt == null, cancellationToken);
 
@@ -201,7 +200,6 @@ public sealed class BranchRepository(
         dbContext.BranchImages.RemoveRange(branch.BranchImages);
         dbContext.OperatingHours.RemoveRange(branch.OperatingHours);
         dbContext.BranchPricings.RemoveRange(branch.BranchPricings);
-        dbContext.Courts.RemoveRange(branch.Courts);
 
         await SaveChangesAsync(cancellationToken);
 
@@ -239,16 +237,49 @@ public sealed class BranchRepository(
         }));
         await SaveChangesAsync(cancellationToken);
 
-        dbContext.Courts.AddRange(data.Courts.Select(court => new Court
+        var existingCourts = await dbContext.Courts
+            .Where(court => court.BranchId == branchId)
+            .ToDictionaryAsync(court => court.CourtNumber, cancellationToken);
+        var requestedNumbers = data.Courts.Select(court => court.CourtNumber).ToHashSet();
+
+        foreach (var requested in data.Courts)
         {
-            BranchId = branchId,
-            CourtNumber = court.CourtNumber,
-            Name = court.Name,
-            Status = "active",
-            IsActive = court.IsActive,
-            CreatedBy = updatedBy,
-            UpdatedBy = updatedBy
-        }));
+            if (!existingCourts.TryGetValue(requested.CourtNumber, out var court))
+            {
+                dbContext.Courts.Add(new Court
+                {
+                    BranchId = branchId,
+                    CourtNumber = requested.CourtNumber,
+                    Name = requested.Name,
+                    Status = "active",
+                    IsActive = requested.IsActive,
+                    CreatedBy = updatedBy,
+                    UpdatedBy = updatedBy
+                });
+                continue;
+            }
+
+            if (court.Name == requested.Name && court.IsActive == requested.IsActive && court.DeletedAt is null)
+                continue;
+
+            court.Name = requested.Name;
+            court.IsActive = requested.IsActive;
+            court.DeletedAt = null;
+            court.DeletedBy = null;
+            court.UpdatedAt = branch.UpdatedAt;
+            court.UpdatedBy = updatedBy;
+        }
+
+        foreach (var court in existingCourts.Values.Where(court =>
+            court.DeletedAt is null && !requestedNumbers.Contains(court.CourtNumber)))
+        {
+            court.IsActive = false;
+            court.DeletedAt = branch.UpdatedAt;
+            court.DeletedBy = updatedBy;
+            court.UpdatedAt = branch.UpdatedAt;
+            court.UpdatedBy = updatedBy;
+        }
+
         await SaveChangesAsync(cancellationToken);
         return true;
     }

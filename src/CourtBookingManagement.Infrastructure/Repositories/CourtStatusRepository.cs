@@ -1,6 +1,7 @@
 using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.CourtStatus.DTOs;
 using CourtBookingManagement.Application.CourtStatus.Interfaces;
+using CourtBookingManagement.Domain.Bookings;
 using CourtBookingManagement.Infrastructure.Persistence;
 using CourtBookingManagement.Infrastructure.Persistence.Entities;
 using Dapper;
@@ -265,7 +266,9 @@ public sealed class CourtStatusRepository(ApplicationDbContext db, ISqlConnectio
             .ToList();
 
         var scheduleItems = rows
-            .Where(x => x.BookingId != null)
+            .Where(x => x.BookingId != null &&
+                        !string.Equals(x.BookingStatus, BookingStatuses.Cancelled, StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(x.BookingStatus, BookingStatuses.Expired, StringComparison.OrdinalIgnoreCase))
             .Select(x => new ScheduleItemDto(
                 x.BookingId!.Value,
                 x.CourtId,
