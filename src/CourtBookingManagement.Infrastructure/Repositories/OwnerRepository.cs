@@ -30,8 +30,18 @@ public sealed class OwnerRepository(ISqlConnectionFactory sqlConnectionFactory) 
     {
         using var connection = sqlConnectionFactory.CreateConnection();
 
-        var where = new StringBuilder("WHERE o.deleted_at IS NULL");
+        var where = new StringBuilder("""
+            WHERE u.deleted_at IS NULL AND (o.id IS NOT NULL OR (
+                @IncludeUnlinked AND EXISTS (
+                    SELECT 1 FROM auth.user_roles assignment
+                    JOIN auth.roles role ON role.id = assignment.role_id
+                    WHERE assignment.user_id = u.id AND role.code = 'BRANCH_OWNER'
+                      AND role.is_active AND role.deleted_at IS NULL
+                )
+            ))
+            """);
         var parameters = new DynamicParameters();
+        parameters.Add("IncludeUnlinked", request.IncludeUnlinked);
         if (!string.IsNullOrWhiteSpace(request.Keyword))
         {
             where.Append(" AND (o.business_name ILIKE @Keyword ESCAPE '\\' OR o.tax_id ILIKE @Keyword ESCAPE '\\'"
@@ -42,19 +52,25 @@ public sealed class OwnerRepository(ISqlConnectionFactory sqlConnectionFactory) 
 
         if (request.IsActive.HasValue)
         {
-            where.Append(" AND o.is_active = @IsActive");
+            where.Append(" AND COALESCE(o.is_active, u.is_active) = @IsActive");
             parameters.Add("IsActive", request.IsActive.Value);
         }
 
         var orderBy = request.SortBy switch
         {
-            "oldest" => "ORDER BY o.created_at ASC, o.id ASC",
-            "name_asc" => "ORDER BY o.business_name ASC, o.id ASC",
-            "name_desc" => "ORDER BY o.business_name DESC, o.id DESC",
-            _ => "ORDER BY o.created_at DESC, o.id DESC"
+            "oldest" => "ORDER BY CreatedAt ASC, UserId ASC",
+            "name_asc" => "ORDER BY BusinessName ASC, UserId ASC",
+            "name_desc" => "ORDER BY BusinessName DESC, UserId DESC",
+            _ => "ORDER BY CreatedAt DESC, UserId DESC"
         };
 
-        var from = "FROM core.owners o JOIN auth.users u ON u.id = o.user_id";
+        const string from = "FROM auth.users u LEFT JOIN core.owners o ON o.user_id = u.id AND o.deleted_at IS NULL";
+        const string listColumns = """
+            o.id AS Id, u.id AS UserId, u.full_name AS FullName, u.email AS Email, u.phone_number AS PhoneNumber,
+            COALESCE(o.business_name, '') AS BusinessName, o.tax_id AS TaxId,
+            COALESCE(o.is_active, u.is_active) AS IsActive, COALESCE(o.created_at, u.created_at) AS CreatedAt,
+            COALESCE(o.updated_at, u.updated_at) AS UpdatedAt
+            """;
 
         var totalCount = await connection.ExecuteScalarAsync<long>(new CommandDefinition(
             $"SELECT COUNT(*) {from} {where};", parameters, cancellationToken: cancellationToken));
@@ -63,7 +79,7 @@ public sealed class OwnerRepository(ISqlConnectionFactory sqlConnectionFactory) 
         parameters.Add("Offset", ((long)request.PageNumber - 1) * request.PageSize);
 
         var items = (await connection.QueryAsync<OwnerResponse>(new CommandDefinition(
-            $"SELECT {SelectColumns} {from} {where} {orderBy} LIMIT @PageSize OFFSET @Offset;",
+            $"SELECT {listColumns} {from} {where} {orderBy} LIMIT @PageSize OFFSET @Offset;",
             parameters,
             cancellationToken: cancellationToken))).AsList();
 

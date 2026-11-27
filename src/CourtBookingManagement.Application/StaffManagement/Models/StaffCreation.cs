@@ -4,13 +4,12 @@ namespace CourtBookingManagement.Application.StaffManagement.Models;
 
 public sealed record StaffCreation(
     Guid UserId,
-    Guid InvitationId,
     Guid OwnerId,
     Guid ActorId,
     CreateStaffRequest Request,
-    string PasswordHash,
-    string TokenHash,
-    DateTime ExpiresAt);
+    string PasswordHash);
+
+public sealed record StaffCreationResult(StaffCreationOutcome Outcome, string? StaffCode = null);
 
 public enum StaffCreationOutcome
 {

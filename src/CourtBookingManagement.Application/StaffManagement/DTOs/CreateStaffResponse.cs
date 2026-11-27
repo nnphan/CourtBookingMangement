@@ -1,7 +1,8 @@
 namespace CourtBookingManagement.Application.StaffManagement.DTOs;
 
-/// <summary>Creation result and the outcome of activation email delivery.</summary>
+/// <summary>New staff account details or the delivery outcome for a legacy invitation.</summary>
 public sealed record CreateStaffResponse(
     Guid UserId,
-    string InvitationDeliveryStatus,
-    string? WarningCode);
+    string? InvitationDeliveryStatus = null,
+    string? WarningCode = null,
+    string? StaffCode = null);

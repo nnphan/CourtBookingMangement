@@ -6,8 +6,7 @@ public sealed record CreateStaffRequest
     public string DisplayName { get; init; } = string.Empty;
     public string Email { get; init; } = string.Empty;
     public string PhoneNumber { get; init; } = string.Empty;
-    public string? StaffCode { get; init; }
-    public string? JobTitle { get; init; }
+    public string Password { get; init; } = string.Empty;
     public Guid[] BranchIds { get; init; } = [];
     public DateOnly? EmploymentStartDate { get; init; }
     public string? Notes { get; init; }

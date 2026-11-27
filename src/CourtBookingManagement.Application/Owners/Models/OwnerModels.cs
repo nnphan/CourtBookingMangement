@@ -6,6 +6,8 @@ public sealed class OwnerSearchRequest
 
     public bool? IsActive { get; set; }
 
+    public bool IncludeUnlinked { get; set; }
+
     public string SortBy { get; set; } = "latest";
 
     public int PageNumber { get; set; } = 1;
@@ -35,7 +37,7 @@ public sealed class UpdateOwnerRequest
 
 public sealed class OwnerResponse
 {
-    public Guid Id { get; set; }
+    public Guid? Id { get; set; }
 
     public Guid UserId { get; set; }
 

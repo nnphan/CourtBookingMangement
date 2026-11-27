@@ -17,4 +17,5 @@ public sealed record GetPaymentStatusResponse(
     decimal? ReceivedAmount = null,
     DateTimeOffset? ExpiresAt = null,
     DateTimeOffset? ServerTime = null,
-    int? RemainingSeconds = null);
+    int? RemainingSeconds = null,
+    string? Provider = null);

@@ -331,7 +331,8 @@ public sealed class PaymentService(
             payment.ReceivedAmount,
             payment.ExpiresAt,
             payment.ServerTime,
-            payment.RemainingSeconds);
+            payment.RemainingSeconds,
+            payment.Provider);
 
     private static string BuildReturnUrl(string configuredUrl, Guid bookingId)
     {

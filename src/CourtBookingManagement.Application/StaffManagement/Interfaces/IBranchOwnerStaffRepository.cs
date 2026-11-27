@@ -20,7 +20,7 @@ public interface IBranchOwnerStaffRepository
         IReadOnlyCollection<Guid> branchIds,
         CancellationToken cancellationToken);
 
-    Task<StaffCreationOutcome> CreateAsync(StaffCreation creation, CancellationToken cancellationToken);
+    Task<StaffCreationResult> CreateAsync(StaffCreation creation, CancellationToken cancellationToken);
 
     Task<bool> SetInvitationDeliveryAsync(
         Guid invitationId, Guid actorId, bool sent, CancellationToken cancellationToken);

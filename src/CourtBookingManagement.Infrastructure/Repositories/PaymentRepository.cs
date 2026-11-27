@@ -1,5 +1,4 @@
 using System.Data;
-using System.Globalization;
 using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.Payments.Contracts;
 using CourtBookingManagement.Application.Payments.Interfaces;
@@ -96,7 +95,6 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
             FROM payment.payment_transactions
             WHERE booking_id = @BookingId
               AND provider = 'SEPAY'
-              AND status IN ('PENDING', 'PROCESSING')
             ORDER BY created_at DESC
             LIMIT 1
             FOR UPDATE;
@@ -159,22 +157,30 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
         connection.Open();
         using var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
 
-        var callbackLogId = await connection.QuerySingleOrDefaultAsync<Guid?>(new CommandDefinition("""
-            INSERT INTO payment.payment_callback_logs
-                (id, provider, sepay_transaction_id, gateway, transaction_date,
+        var identityColumn = request.ApiTransactionId.HasValue ? "sepay_api_transaction_id" : "sepay_transaction_id";
+        var callbackLogId = await connection.QuerySingleOrDefaultAsync<Guid?>(new CommandDefinition($"""
+            INSERT INTO payment.payment_callback_logs AS callback
+                (id, provider, sepay_transaction_id, sepay_api_transaction_id, gateway, transaction_date,
                  account_number, sub_account, payment_code, transfer_type,
                  transfer_amount, reference_code, payload, processing_status, received_at)
             VALUES
-                (uuid_generate_v7(), 'SEPAY', @TransactionId, @Gateway, @TransactionDate,
+                (uuid_generate_v7(), 'SEPAY', @TransactionId, @ApiTransactionId, @Gateway, @TransactionDate,
                  @AccountNumber, @SubAccount, @PaymentCode, @TransferType,
                  @TransferAmount, @ReferenceCode, CAST(@Payload AS jsonb), 'RECEIVED', clock_timestamp())
-            ON CONFLICT (sepay_transaction_id)
-                WHERE provider = 'SEPAY' AND sepay_transaction_id IS NOT NULL
-            DO NOTHING
+            ON CONFLICT ({identityColumn})
+                WHERE provider = 'SEPAY' AND {identityColumn} IS NOT NULL
+            DO UPDATE SET payment_code = EXCLUDED.payment_code,
+                          processing_status = 'RECEIVED'
+            WHERE callback.processing_status = 'REQUIRES_REVIEW'
+              AND callback.processing_message = 'No valid payment code was found.'
+              AND callback.payment_code IS NULL
+              AND EXCLUDED.payment_code IS NOT NULL
+              AND callback.payload = EXCLUDED.payload
             RETURNING id;
             """, new
         {
-            TransactionId = request.Id,
+            TransactionId = request.ApiTransactionId.HasValue ? (long?)null : request.Id,
+            request.ApiTransactionId,
             request.Gateway,
             TransactionDate = transactionDate,
             request.AccountNumber,
@@ -267,6 +273,8 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
             SELECT payment.id AS PaymentId,
                    payment.booking_id AS BookingId,
                    payment.amount AS Amount,
+                   payment.bank_account_number AS BankAccountNumber,
+                   (date_trunc('second', payment.created_at) <= @TransactionDate) AS TransferAfterCreation,
                    payment.status AS PaymentStatus,
                    payment.provider_transaction_id AS ProviderTransactionId,
                    booking.booking_code AS BookingCode,
@@ -280,7 +288,7 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
               AND payment.provider = 'SEPAY'
               AND payment.payment_code = @PaymentCode
             FOR UPDATE OF payment;
-            """, new { paymentReference.PaymentId, PaymentCode = paymentCode },
+            """, new { paymentReference.PaymentId, PaymentCode = paymentCode, TransactionDate = transactionDate },
             transaction, cancellationToken: cancellationToken));
 
         if (payment is null)
@@ -290,6 +298,41 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
                 "No payment attempt matched the payment code.", cancellationToken);
             transaction.Commit();
             return new SePayWebhookProcessingOutcome(false, null, Array.Empty<BookingSlotResource>());
+        }
+
+        if (!payment.TransferAfterCreation || !string.Equals(payment.BankAccountNumber, request.AccountNumber, StringComparison.Ordinal))
+        {
+            await FinishCallbackAsync(
+                connection, transaction, callbackLogId.Value, "REQUIRES_REVIEW",
+                "The transfer predates the attempt or the persisted receiving account does not match.", cancellationToken);
+            transaction.Commit();
+            return new SePayWebhookProcessingOutcome(false, payment.BookingId, Array.Empty<BookingSlotResource>());
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.ReferenceCode) && payment.ProviderTransactionId is not null)
+        {
+            var alreadyApplied = await connection.ExecuteScalarAsync<bool>(new CommandDefinition("""
+                SELECT EXISTS (
+                    SELECT 1 FROM payment.payment_callback_logs
+                    WHERE provider = 'SEPAY'
+                      AND payment_code = @PaymentCode AND account_number = @AccountNumber
+                      AND reference_code = @ReferenceCode AND transfer_amount = @TransferAmount
+                      AND transaction_date = @TransactionDate AND id <> @CallbackId
+                      AND COALESCE(sepay_api_transaction_id::text, sepay_transaction_id::text) = @AppliedIdentity
+                );
+                """, new
+            {
+                PaymentCode = paymentCode, request.AccountNumber, request.ReferenceCode, request.TransferAmount,
+                TransactionDate = transactionDate, CallbackId = callbackLogId.Value,
+                AppliedIdentity = payment.ProviderTransactionId
+            }, transaction, cancellationToken: cancellationToken));
+            if (alreadyApplied)
+            {
+                await FinishCallbackAsync(connection, transaction, callbackLogId.Value, "PROCESSED",
+                    "Transfer already applied through another SePay delivery.", cancellationToken);
+                transaction.Commit();
+                return new SePayWebhookProcessingOutcome(true, payment.BookingId, Array.Empty<BookingSlotResource>());
+            }
         }
 
         if (payment.PaymentStatus == PaymentStatuses.Paid)
@@ -361,7 +404,7 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
                 """, new
             {
                 Status = paymentStatus,
-                TransactionId = request.Id.ToString(CultureInfo.InvariantCulture),
+                TransactionId = request.TransactionIdentity,
                 request.ReferenceCode,
                 ReceivedAmount = request.TransferAmount,
                 Message = message,
@@ -424,7 +467,7 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
               AND status = 'PENDING';
             """, new
         {
-            TransactionId = request.Id.ToString(CultureInfo.InvariantCulture),
+            TransactionId = request.TransactionIdentity,
             request.ReferenceCode,
             ReceivedAmount = request.TransferAmount,
             payment.PaymentId
@@ -1002,7 +1045,7 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
               AND status IN ('PENDING', 'PROCESSING', 'EXPIRED');
             """, new
         {
-            TransactionId = request.Id.ToString(CultureInfo.InvariantCulture),
+            TransactionId = request.TransactionIdentity,
             request.ReferenceCode,
             ReceivedAmount = request.TransferAmount,
             PaymentId = paymentId
@@ -1068,6 +1111,8 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
         public Guid PaymentId { get; init; }
         public Guid BookingId { get; init; }
         public decimal Amount { get; init; }
+        public string? BankAccountNumber { get; init; }
+        public bool TransferAfterCreation { get; init; }
         public string PaymentStatus { get; init; } = string.Empty;
         public string? ProviderTransactionId { get; init; }
         public string BookingCode { get; init; } = string.Empty;

@@ -82,8 +82,15 @@ public sealed class BookingRepository(ISqlConnectionFactory connectionFactory) :
             WHERE b.customer_id = @CustomerId
               AND b.is_active = TRUE
               AND b.deleted_at IS NULL
-              AND UPPER(b.status) IN ('PENDING', 'PENDING_PAYMENT', 'CONFIRMED')
-              AND (LOWER(b.status) <> 'pending_payment' OR b.expires_at > NOW())
+              AND (
+                  (UPPER(b.status) IN ('PENDING', 'PENDING_PAYMENT', 'CONFIRMED')
+                    AND (LOWER(b.status) <> 'pending_payment' OR b.expires_at > NOW()))
+                  OR (UPPER(b.payment_method) = 'SEPAY' AND UPPER(b.status) IN ('PENDING_PAYMENT', 'EXPIRED')
+                    AND EXISTS (
+                        SELECT 1 FROM payment.payment_transactions p
+                        WHERE p.booking_id = b.id AND p.provider = 'SEPAY'
+                    ))
+              )
             ORDER BY bd.booking_date DESC, bd.start_time DESC;
             """, new { CustomerId = customerId }, cancellationToken: cancellationToken));
 

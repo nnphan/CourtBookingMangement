@@ -166,7 +166,11 @@ public static class DependencyInjection
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IPaymentService, PaymentService>();
         services.AddScoped<ISePayPaymentService, SePayPaymentService>();
-        services.AddScoped<ISePayWebhookService, SePayWebhookService>();
+        services.AddScoped<SePayWebhookService>();
+        services.AddScoped<ISePayWebhookService>(provider => provider.GetRequiredService<SePayWebhookService>());
+        services.AddHttpClient(SePayReconciliationWorker.ClientName)
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+        services.AddHostedService<SePayReconciliationWorker>();
         services.AddSingleton<ISePayPaymentCodeGenerator, SePayPaymentCodeGenerator>();
         services.AddSingleton<ISePayQrUrlBuilder, SePayQrUrlBuilder>();
         services.AddSingleton<ISePayWebhookAuthenticator, SePayWebhookAuthenticator>();

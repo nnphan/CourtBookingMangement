@@ -1,6 +1,6 @@
 # SePay Court Booking Payment Contract
 
-This contract describes the SePay booking-payment and webhook endpoints implemented so far. Reconciliation remains deferred.
+This contract covers SePay QR creation, payment status, authenticated webhook processing, and server-side reconciliation with SePay API v2.
 
 ## Create or reuse a payment
 
@@ -38,7 +38,7 @@ The successful response uses the standard API envelope. Its `data` fields are:
 
 ## Read payment status
 
-`GET /api/payments/{paymentId}`
+`GET /api/bookings/{bookingId}/payment-status` or `GET /api/payments/{paymentId}`
 
 For guests, send `X-Booking-Hold-Token`; authenticated customers are checked against booking ownership. The response retains the existing payment fields and includes booking/payment state, payment code, QR URL, receiving-bank details, received amount, expiry, server time, and remaining seconds when available. It never treats a browser return or local countdown as proof of payment.
 
@@ -51,11 +51,11 @@ For guests, send `X-Booking-Hold-Token`; authenticated customers are checked aga
 
 ## Current payment states
 
-The schema retains the existing `PAYMENT_REVIEW` state for compatibility. It also permits `UNDERPAID` and `OVERPAID`. At this phase, create returns `PENDING`; webhook transitions and the final amount-mismatch policy are not implemented yet.
+New attempts return `PENDING`. Exact transfers confirm an active booking. Amount mismatches are shown as `UNDERPAID` or `OVERPAID`. Expired or otherwise ineligible bookings may require `PAYMENT_REVIEW`. Customers can reopen payment status from the QR dialog or My Bookings. Guest status links use the original session's booking hold token.
 
 ## Configuration
 
-Configure the `SePay` section through environment variables or an approved secret store. The receiving bank code, account number, account holder, and selected webhook credential are required before payment creation is enabled. `ApiToken` is optional because the Phase 3 flow does not call SePay API v2.
+Configure the `SePay` section through environment variables or a secret store. Set the receiving bank code, account number, account holder, and selected webhook credential. In SePay, point the incoming-transfer webhook at the public HTTPS URL ending in `/api/payments/sepay/webhook` and select JSON. If using SePay's payment-code filter, configure the same prefix and a ten-character alphanumeric suffix.
 
 Supported secret environment keys include:
 
@@ -86,11 +86,11 @@ Configure SePay to send JSON. The endpoint is anonymous at the ASP.NET authoriza
 - **API Key:** SePay sends `Authorization: Apikey <key>`. The configured key is compared without logging either value.
 - **HMAC-SHA256:** Verify `X-SePay-Signature: sha256=<hex>` and `X-SePay-Timestamp` against `HMAC-SHA256(secret, timestamp + "." + exact raw request body)`. The timestamp must be within five minutes of server time. Do not parse and reserialize the body before verification.
 
-The payload uses SePay's documented JSON fields: `id`, `gateway`, `transactionDate`, `accountNumber`, `subAccount`, `code`, `content`, `transferType`, `description`, `transferAmount`, `accumulated`, and `referenceCode`. `id` is the deduplication key. If `code` is `null`, the backend accepts exactly one payment code matching the configured prefix plus ten hexadecimal characters from `content`; a present but invalid `code` does not fall back to content parsing.
+The payload uses SePay's documented JSON fields: `id`, `gateway`, `transactionDate`, `accountNumber`, `subAccount`, `code`, `content`, `transferType`, `description`, `transferAmount`, `accumulated`, and `referenceCode`. `id` is the deduplication key. A payment code must match the configured prefix followed by ten hexadecimal characters. When SePay returns a blank, truncated, or invalid `code`, the backend accepts one distinct full code from `content`. Conflicting full codes require review.
 
 SePay's dashboard "Send test" request can use transaction ID `0`. In Sandbox only, an authenticated request with an explicit ID of `0` is acknowledged as a connectivity check without recording or processing a payment. Missing or negative IDs, and ID `0` outside Sandbox, are rejected. Use a simulated transaction with a positive ID to verify payment processing and deduplication.
 
-For an authenticated request, the backend stores the JSON payload and transaction metadata in the existing callback audit table. Duplicate transaction IDs are acknowledged without applying payment changes. Unmatched codes, non-incoming transfers, invalid amounts, and receiving-account mismatches are audited and acknowledged without confirming a booking.
+For an authenticated request, the backend stores the JSON payload and transaction metadata in the existing callback audit table. Duplicate transaction IDs are acknowledged without applying payment changes. An authenticated replay with the original payload can be processed again if the first delivery stopped before finding any valid payment code and the replay can now resolve it. Unmatched codes, non-incoming transfers, invalid amounts, and receiving-account mismatches are audited and acknowledged without confirming a booking.
 
 The success response is HTTP 200 with exactly:
 
@@ -102,6 +102,10 @@ For an exact transfer to a live, pending booking, the payment becomes `PAID`, th
 
 Invalid authentication returns 401; malformed payloads return 400. Transient database failures are allowed to fail the request so SePay can retry according to its configured policy.
 
-## Migration compatibility and deferred contract
+## Reconciliation
 
-Historical MoMo payment rows remain readable and are not backfilled with SePay payment codes. New SePay attempts use the existing `payment.payment_transactions` table. Reconciliation is not implemented. Webhook payload and authentication formats follow the [SePay webhook integration guide](https://developer.sepay.vn/en/sepay-webhooks/tich-hop-webhook) and [authentication guide](https://developer.sepay.vn/en/sepay-webhooks/xac-thuc).
+Apply `20261127_AddSePayReconciliation.sql` before deploying the updated payment backend. Configure `SePay__ApiToken` and `SePay__ApiBankAccountId` (the SePay bank-account UUID) to enable the worker. Set `SePay__ApiBaseUrl` to `https://userapi.sepay.vn/v2` for Production or `https://userapi-sandbox.sepay.vn/v2` for Sandbox with the matching token. The worker checks incoming transfers every 30 seconds over the last 24 hours by default. The interval and lookback are configurable. Each sweep reviews at most 20 pages of 100 transactions and logs when it reaches that limit.
+
+The worker validates the configured bank account, exact payment code, provider transaction UUID, transaction time, and amount. Both delivery paths use the same database transaction and booking lock. A transfer observed via both paths is matched using bank reference, account, amount, timestamp, and payment code. Transfers for expired holds remain available for manual review. This flow neither reopens expired holds nor initiates bank refunds.
+
+Use [SePay sandbox transactions](https://developer.sepay.vn/vi/tien-ich-khac/test-mode/mo-phong-giao-dich) to verify payment confirmation, amount mismatch, and webhook replay. See the [SePay transaction API](https://developer.sepay.vn/vi/sepay-api/v2/giao-dich/danh-sach) for API configuration.

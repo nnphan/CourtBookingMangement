@@ -42,6 +42,7 @@ public sealed class OwnerService(
         {
             Keyword = string.IsNullOrWhiteSpace(request.Keyword) ? null : request.Keyword.Trim(),
             IsActive = request.IsActive,
+            IncludeUnlinked = request.IncludeUnlinked,
             SortBy = sortBy,
             PageNumber = request.PageNumber,
             PageSize = request.PageSize

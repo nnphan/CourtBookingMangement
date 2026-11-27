@@ -73,14 +73,32 @@ public sealed class SePayWebhookService(
             return Result.Success(new SePayWebhookResponse(true));
         }
 
+        await ApplyTransactionAsync(request, Encoding.UTF8.GetString(rawBody.Span), cancellationToken);
+        return Result.Success(new SePayWebhookResponse(true));
+    }
+
+    public async Task ApplyReconciledTransactionAsync(
+        SePayWebhookRequest request, string rawPayload, CancellationToken cancellationToken)
+    {
+        if (request.ApiTransactionId is Guid id && id != Guid.Empty
+            && !string.IsNullOrWhiteSpace(request.ReferenceCode)
+            && ResolvePaymentCode(request, options.Value.PaymentCodePrefix) is not null
+            && string.Equals(request.AccountNumber, options.Value.BankAccountNumber, StringComparison.Ordinal))
+        {
+            await ApplyTransactionAsync(request, rawPayload, cancellationToken);
+        }
+    }
+
+    private async Task ApplyTransactionAsync(
+        SePayWebhookRequest request, string rawPayload, CancellationToken cancellationToken)
+    {
+        var settings = options.Value;
         var paymentCode = ResolvePaymentCode(request, settings.PaymentCodePrefix);
         var transactionDate = ParseTransactionDate(request.TransactionDate);
         var accountMatches = string.Equals(
             request.AccountNumber,
             settings.BankAccountNumber,
             StringComparison.Ordinal);
-        var rawPayload = Encoding.UTF8.GetString(rawBody.Span);
-
         var outcome = await paymentRepository.ProcessSePayWebhookAsync(
             request,
             paymentCode,
@@ -93,8 +111,8 @@ public sealed class SePayWebhookService(
         {
             logger.LogInformation(
                 "Duplicate SePay webhook acknowledged. SePayTransactionId: {SePayTransactionId}",
-                request.Id);
-            return Result.Success(new SePayWebhookResponse(true));
+                request.TransactionIdentity);
+            return;
         }
 
         if (outcome.BookingId is Guid bookingId && outcome.Resources.Count > 0)
@@ -114,33 +132,31 @@ public sealed class SePayWebhookService(
 
         logger.LogInformation(
             "SePay webhook processed. SePayTransactionId: {SePayTransactionId}, BookingId: {BookingId}",
-            request.Id,
+            request.TransactionIdentity,
             outcome.BookingId);
-        return Result.Success(new SePayWebhookResponse(true));
     }
 
     private static string? ResolvePaymentCode(SePayWebhookRequest request, string prefix)
     {
-        if (request.Code is not null)
-        {
-            return IsValidPaymentCode(request.Code, prefix)
-                ? request.Code.ToUpperInvariant()
-                : null;
-        }
-
-        if (string.IsNullOrEmpty(request.Content))
-        {
-            return null;
-        }
+        var code = request.Code?.Trim();
+        var providerCode = code is not null && IsValidPaymentCode(code, prefix)
+            ? code.ToUpperInvariant()
+            : null;
 
         var pattern = $@"(?<![A-Z0-9]){Regex.Escape(prefix)}[A-F0-9]{{10}}(?![A-Z0-9])";
-        var matches = Regex.Matches(
-            request.Content,
+        var contentCodes = Regex.Matches(
+            request.Content ?? string.Empty,
             pattern,
-            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-        return matches.Count == 1
-            ? matches[0].Value.ToUpperInvariant()
-            : null;
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
+            .Select(match => match.Value.ToUpperInvariant())
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        if (contentCodes.Length == 0)
+            return providerCode;
+
+        return contentCodes.Length == 1 && (providerCode is null || providerCode == contentCodes[0])
+            ? contentCodes[0] : null;
     }
 
     private static bool IsValidPaymentCode(string code, string prefix) =>

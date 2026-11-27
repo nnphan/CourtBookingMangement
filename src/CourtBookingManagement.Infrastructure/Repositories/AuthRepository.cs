@@ -22,9 +22,16 @@ public sealed class AuthRepository(ApplicationDbContext dbContext) : IAuthReposi
 
     public async Task<CourtBookingManagement.Domain.Users.User?> GetByPhoneNumberAsync(string phoneNumber, CancellationToken cancellationToken = default)
     {
+        var localNumber = phoneNumber.StartsWith("+84", StringComparison.Ordinal) && phoneNumber.Length == 12
+            ? "0" + phoneNumber[3..]
+            : phoneNumber;
+        var internationalNumber = localNumber.StartsWith('0') && localNumber.Length == 10
+            ? "+84" + localNumber[1..]
+            : phoneNumber;
         var entities = await _dbContext.Set<CourtBookingManagement.Infrastructure.Persistence.Entities.User>()
             .AsNoTracking()
-            .Where(user => user.PhoneNumber == phoneNumber && user.DeletedAt == null)
+            .Where(user => (user.PhoneNumber == localNumber || user.PhoneNumber == internationalNumber) &&
+                user.DeletedAt == null)
             .Take(2)
             .ToListAsync(cancellationToken);
 

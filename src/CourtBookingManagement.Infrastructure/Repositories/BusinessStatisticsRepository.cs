@@ -1,5 +1,6 @@
 using System.Data;
 using CourtBookingManagement.Application.Abstractions.Data;
+using CourtBookingManagement.Application.Sales.Models.Requests;
 using CourtBookingManagement.Application.Sales.Models.Responses;
 using CourtBookingManagement.Application.Sales.Repositories;
 using Dapper;
@@ -69,8 +70,7 @@ public sealed class BusinessStatisticsRepository(ISqlConnectionFactory connectio
             SELECT so.id, so.branch_id, so.completed_at,
                    (so.completed_at AT TIME ZONE b.time_zone)::date AS sale_date,
                    GREATEST(so.paid_amount - COALESCE(refunds.amount, 0), 0) AS revenue,
-                   so.subtotal_amount,
-                   so.status
+                   so.status, so.order_code
             FROM sales.sales_orders so
             JOIN core.branches b ON b.id = so.branch_id
             LEFT JOIN LATERAL (
@@ -101,7 +101,8 @@ public sealed class BusinessStatisticsRepository(ISqlConnectionFactory connectio
                    COUNT(*) FILTER (WHERE slot_number = 1 AND status = 'cancelled') AS CancelledCount,
                    COALESCE(SUM(hours) FILTER (WHERE booked), 0) AS BookedHours,
                    COALESCE(SUM(hours) FILTER (WHERE booked AND status = 'completed'), 0) AS UsedHours,
-                   ROUND(SUM(revenue), 2) AS Revenue
+                   ROUND(SUM(revenue), 2) AS Revenue,
+                   COUNT(DISTINCT id) FILTER (WHERE status NOT IN ('expired', 'refunded')) AS DailyBookingCount
             FROM report_slots
             GROUP BY branch_id, booking_date
             ORDER BY booking_date;
@@ -125,19 +126,19 @@ public sealed class BusinessStatisticsRepository(ISqlConnectionFactory connectio
             FROM core.courts c
             JOIN core.branches b ON b.id = c.branch_id
             LEFT JOIN used ON used.court_id = c.id
-            LEFT JOIN core.operating_hours oh ON oh.branch_id = c.branch_id AND NOT oh.is_closed
             LEFT JOIN LATERAL (
                 SELECT SUM(GREATEST(EXTRACT(EPOCH FROM (
                     LEAST(operating_day.value::date + oh.close_time, (NOW() AT TIME ZONE b.time_zone))
                     - (operating_day.value::date + oh.open_time)
                 )) / 3600, 0)) AS hours
-                FROM generate_series(
+                FROM core.operating_hours oh
+                CROSS JOIN generate_series(
                     GREATEST(@From::date, (c.created_at AT TIME ZONE b.time_zone)::date)::timestamp,
                     LEAST(@To::date, (NOW() AT TIME ZONE b.time_zone)::date,
                           COALESCE((c.deleted_at AT TIME ZONE b.time_zone)::date, @To::date))::timestamp,
                     interval '1 day'
                 ) AS operating_day(value)
-                WHERE oh.id IS NOT NULL
+                WHERE oh.branch_id = c.branch_id AND NOT oh.is_closed
             ) schedule ON true
             WHERE c.branch_id = ANY(@BranchIds)
               AND ((c.is_active AND c.deleted_at IS NULL) OR used.court_id IS NOT NULL)
@@ -153,9 +154,11 @@ public sealed class BusinessStatisticsRepository(ISqlConnectionFactory connectio
             LIMIT 10;
 
             """ + SalesOrders + """
-            SELECT i.product_name_snapshot AS ProductName, COALESCE(category.name, '—') AS Category,
+            SELECT o.branch_id AS BranchId, o.sale_date AS Date, i.product_id AS ProductId,
+                   MAX(COALESCE(p.name, i.product_name_snapshot)) AS ProductName,
+                   COALESCE(category.name, '—') AS Category, MAX(i.unit_snapshot) AS Unit,
                    SUM(i.quantity) AS Quantity,
-                   ROUND(SUM(COALESCE(i.line_total * o.revenue / NULLIF(o.subtotal_amount, 0), 0)), 2) AS Revenue,
+                   ROUND(SUM(i.quantity * i.unit_price), 2) AS Revenue,
                    CASE WHEN BOOL_AND(cost.unit_cost IS NOT NULL AND o.status = 'COMPLETED')
                         THEN SUM(cost.unit_cost * i.quantity) END AS Cost
             FROM report_orders o
@@ -171,8 +174,14 @@ public sealed class BusinessStatisticsRepository(ISqlConnectionFactory connectio
                 ORDER BY r.posted_at DESC, r.id DESC
                 LIMIT 1
             ) cost ON true
-            GROUP BY i.product_id, i.product_name_snapshot, category.name
-            ORDER BY SUM(i.quantity) DESC, i.product_name_snapshot;
+            GROUP BY o.branch_id, o.sale_date, i.product_id, category.name
+            ORDER BY o.sale_date, ProductName, i.product_id;
+
+            SELECT id AS Id, branch_id AS BranchId, expense_date AS Date, category AS Category,
+                   title AS Title, amount AS Amount, notes AS Notes
+            FROM sales.operating_expenses
+            WHERE branch_id = ANY(@BranchIds) AND expense_date BETWEEN @From AND @To
+            ORDER BY expense_date DESC, created_at DESC, id;
             """, new { BranchIds = branchIds, From = from, To = to }, transaction,
             cancellationToken: cancellationToken));
         var response = new BusinessStatisticsResponse(
@@ -180,8 +189,81 @@ public sealed class BusinessStatisticsRepository(ISqlConnectionFactory connectio
             (await results.ReadAsync<SalesStatisticsDay>()).AsList(),
             (await results.ReadAsync<CourtUsageStatistics>()).AsList(),
             (await results.ReadAsync<PeakSlotStatistics>()).AsList(),
-            (await results.ReadAsync<ProductStatistics>()).AsList());
+            (await results.ReadAsync<ProductStatistics>()).AsList(),
+            (await results.ReadAsync<BusinessExpense>()).AsList());
         transaction.Commit();
         return response;
+    }
+
+    public async Task<IReadOnlyList<BookingStatisticsDetail>> GetBookingDetailsAsync(
+        Guid[] branchIds, DateOnly date, CancellationToken cancellationToken)
+    {
+        using var connection = connectionFactory.CreateConnection();
+        var rows = await connection.QueryAsync<BookingStatisticsDetail>(new CommandDefinition("""
+            SELECT d.id AS Id, d.booking_date AS Date, b.booking_code AS BookingCode,
+                   COALESCE(NULLIF(c.name, ''), c.court_number::text) AS Court,
+                   COALESCE(cu.full_name, '') AS Customer, d.start_time AS StartTime, d.end_time AS EndTime,
+                   d.price_charged AS Amount, COALESCE(b.payment_method, '') AS PaymentMethod,
+                   UPPER(CASE WHEN LOWER(d.status) = 'cancelled' THEN d.status ELSE b.status END) AS Status
+            FROM booking.booking_details d
+            JOIN booking.bookings b ON b.id = d.booking_id
+            JOIN core.courts c ON c.id = d.court_id
+            LEFT JOIN customer.customers cu ON cu.id = b.customer_id
+            WHERE b.branch_id = ANY(@BranchIds) AND d.booking_date = @Date
+              AND (LOWER(b.status) = 'cancelled' OR (b.is_active AND b.deleted_at IS NULL))
+              AND LOWER(b.status) NOT IN ('expired', 'refunded')
+            ORDER BY d.start_time, b.booking_code, d.id;
+            """, new { BranchIds = branchIds, Date = date }, cancellationToken: cancellationToken));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<SalesStatisticsDetail>> GetSalesDetailsAsync(
+        Guid[] branchIds, DateOnly date, Guid productId, CancellationToken cancellationToken)
+    {
+        using var connection = connectionFactory.CreateConnection();
+        var rows = await connection.QueryAsync<SalesStatisticsDetail>(new CommandDefinition(SalesOrders + """
+            SELECT i.id AS Id, o.sale_date AS Date, o.order_code AS OrderCode, COALESCE(category.name, '—') AS Category,
+                   i.product_name_snapshot AS ProductName, i.unit_snapshot AS Unit, i.quantity AS Quantity,
+                   i.unit_price AS UnitPrice, i.quantity * i.unit_price AS Amount
+            FROM report_orders o
+            JOIN sales.sales_order_items i ON i.sales_order_id = o.id
+            JOIN catalog.products p ON p.id = i.product_id
+            LEFT JOIN catalog.product_categories category ON category.id = p.category_id
+            WHERE i.product_id = @ProductId
+            ORDER BY o.completed_at, o.order_code, i.id;
+            """, new { BranchIds = branchIds, From = date, To = date, ProductId = productId },
+            cancellationToken: cancellationToken));
+        return rows.AsList();
+    }
+
+    public async Task<Guid?> SaveExpenseAsync(
+        Guid? id, Guid[] branchIds, Guid userId, BusinessExpenseRequest request, CancellationToken cancellationToken)
+    {
+        using var connection = connectionFactory.CreateConnection();
+        var sql = id.HasValue ? """
+            UPDATE sales.operating_expenses
+            SET branch_id = @BranchId, expense_date = @Date, category = @Category, title = @Title,
+                amount = @Amount, notes = @Notes, updated_at = now()
+            WHERE id = @Id AND branch_id = ANY(@BranchIds) AND @BranchId = ANY(@BranchIds)
+            RETURNING id;
+            """ : """
+            INSERT INTO sales.operating_expenses (id, branch_id, expense_date, category, title, amount, notes, created_by)
+            SELECT @Id, @BranchId, @Date, @Category, @Title, @Amount, @Notes, @UserId
+            WHERE @BranchId = ANY(@BranchIds)
+            RETURNING id;
+            """;
+        return await connection.QuerySingleOrDefaultAsync<Guid?>(new CommandDefinition(sql, new
+        {
+            Id = id ?? Guid.NewGuid(), BranchIds = branchIds, UserId = userId, request.BranchId, request.Date,
+            request.Category, Title = request.Title.Trim(), request.Amount, Notes = request.Notes?.Trim()
+        }, cancellationToken: cancellationToken));
+    }
+
+    public async Task<bool> DeleteExpenseAsync(Guid id, Guid[] branchIds, CancellationToken cancellationToken)
+    {
+        using var connection = connectionFactory.CreateConnection();
+        return await connection.ExecuteAsync(new CommandDefinition("""
+            DELETE FROM sales.operating_expenses WHERE id = @Id AND branch_id = ANY(@BranchIds);
+            """, new { Id = id, BranchIds = branchIds }, cancellationToken: cancellationToken)) > 0;
     }
 }

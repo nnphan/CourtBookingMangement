@@ -10,6 +10,22 @@ public sealed class SePayOptions
     public string Environment { get; set; } = "Sandbox";
     public string ApiBaseUrl { get; set; } = "https://userapi-sandbox.sepay.vn/v2";
     public string ApiToken { get; set; } = string.Empty;
+    public Guid? ApiBankAccountId { get; set; }
+
+    [Range(20, 300)]
+    public int ReconciliationIntervalSeconds { get; set; } = 30;
+
+    [Range(1, 168)]
+    public int ReconciliationLookbackHours { get; set; } = 24;
+
+    public bool ReconciliationEnabled => IsConfigured && !string.IsNullOrWhiteSpace(ApiToken)
+        && ApiBankAccountId is Guid id && id != Guid.Empty
+        && Uri.TryCreate(ApiBaseUrl, UriKind.Absolute, out var endpoint)
+        && endpoint.Scheme == Uri.UriSchemeHttps && endpoint.IsDefaultPort
+        && endpoint.AbsolutePath.TrimEnd('/') == "/v2"
+        && string.IsNullOrEmpty(endpoint.Query) && string.IsNullOrEmpty(endpoint.Fragment)
+        && string.Equals(endpoint.Host, string.Equals(Environment, "Production", StringComparison.OrdinalIgnoreCase)
+            ? "userapi.sepay.vn" : "userapi-sandbox.sepay.vn", StringComparison.OrdinalIgnoreCase);
     public string WebhookAuthenticationMode { get; set; } = "ApiKey";
     public string WebhookApiKey { get; set; } = string.Empty;
     public string WebhookHmacSecret { get; set; } = string.Empty;

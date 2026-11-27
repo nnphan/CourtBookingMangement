@@ -72,6 +72,7 @@ public sealed class StaffCreationServiceTests
         DisplayName = "Staff Member",
         Email = "Staff@example.com",
         PhoneNumber = "0901234567",
+        Password = "12345678",
         BranchIds = [_branch]
     };
 
@@ -98,74 +99,43 @@ public sealed class StaffCreationServiceTests
     }
 
     [Fact]
-    public async Task DeliveryFailureIsReportedAfterAccountCreation()
+    public async Task CreatesActiveManagerWithInitialPasswordWithoutRequiringEmailDelivery()
     {
         StaffCreation? created = null;
+        _delivery.SetupGet(x => x.IsConfigured).Returns(false);
         _repository.Setup(x => x.CreateAsync(It.IsAny<StaffCreation>(), It.IsAny<CancellationToken>()))
             .Callback<StaffCreation, CancellationToken>((value, _) => created = value)
-            .ReturnsAsync(StaffCreationOutcome.Created);
-        _emailSender.Setup(x => x.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
+            .ReturnsAsync(new StaffCreationResult(StaffCreationOutcome.Created, "NV001"));
 
         var result = await _service.CreateAsync(_actor, ValidRequest(), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal("FAILED", result.Value.InvitationDeliveryStatus);
-        Assert.Equal("INVITATION_SEND_FAILED", result.Value.WarningCode);
         Assert.NotNull(created);
         Assert.Equal(created.UserId, result.Value.UserId);
-        Assert.Equal($"invitation-hash:{_invitationToken}", created.TokenHash);
-        Assert.Equal(new DateTimeOffset(2026, 1, 2, 0, 0, 0, TimeSpan.Zero), created.ExpiresAt);
-        Assert.Equal("staff@example.com", _composedInvitation?.Recipient);
-        Assert.Equal("Staff Member", _composedInvitation?.DisplayName);
-        Assert.Equal(["A"], _composedInvitation?.BranchNames);
-        Assert.Equal(created.ExpiresAt, _composedInvitation?.ExpiresAt);
-        _repository.Verify(x => x.SetInvitationDeliveryAsync(
-            created.InvitationId, _actor, false, It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Equal("NV001", result.Value.StaffCode);
+        Assert.Equal("staff@example.com", created.Request.Email);
+        Assert.Equal(string.Empty, created.Request.Password);
+        Assert.True(BCrypt.Net.BCrypt.Verify("12345678", created.PasswordHash));
+        _invitationTokens.Verify(x => x.GenerateToken(), Times.Never);
+        _emailSender.Verify(x => x.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    [Fact]
-    public async Task InvitationIsSentOnlyAfterCreationAndDeliveryStateIsPersistedLast()
+    [Theory]
+    [InlineData("")]
+    [InlineData("1234567")]
+    public async Task InvalidInitialPasswordDoesNotCreateAccount(string password)
     {
-        var callOrder = new List<string>();
-        _repository.Setup(x => x.CreateAsync(It.IsAny<StaffCreation>(), It.IsAny<CancellationToken>()))
-            .Callback<StaffCreation, CancellationToken>((_, _) => callOrder.Add("create"))
-            .ReturnsAsync(StaffCreationOutcome.Created);
-        _emailSender.Setup(x => x.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()))
-            .Callback<EmailMessage, CancellationToken>((_, _) => callOrder.Add("send"))
-            .ReturnsAsync(true);
-        _repository.Setup(x => x.SetInvitationDeliveryAsync(
-                It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-            .Callback<Guid, Guid, bool, CancellationToken>((_, _, _, _) => callOrder.Add("delivery-state"))
-            .ReturnsAsync(true);
+        var result = await _service.CreateAsync(_actor, ValidRequest() with { Password = password }, CancellationToken.None);
 
-        var result = await _service.CreateAsync(_actor, ValidRequest(), CancellationToken.None);
-
-        Assert.True(result.IsSuccess);
-        Assert.Equal(["create", "send", "delivery-state"], callOrder);
-    }
-
-    [Fact]
-    public async Task DeliveryStatePersistenceFailureReturnsCommittedCreationWithWarning()
-    {
-        _repository.Setup(x => x.CreateAsync(It.IsAny<StaffCreation>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(StaffCreationOutcome.Created);
-        _repository.Setup(x => x.SetInvitationDeliveryAsync(
-                It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
-
-        var result = await _service.CreateAsync(_actor, ValidRequest(), CancellationToken.None);
-
-        Assert.True(result.IsSuccess);
-        Assert.Equal("SENT", result.Value.InvitationDeliveryStatus);
-        Assert.Equal("INVITATION_STATUS_PERSISTENCE_FAILED", result.Value.WarningCode);
+        Assert.Equal("STAFF_INVALID_REQUEST", result.Error.Code);
+        _repository.Verify(x => x.CreateAsync(It.IsAny<StaffCreation>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task DuplicateAccountDoesNotSendAnInvitation()
     {
         _repository.Setup(x => x.CreateAsync(It.IsAny<StaffCreation>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(StaffCreationOutcome.UserAlreadyExists);
+            .ReturnsAsync(new StaffCreationResult(StaffCreationOutcome.UserAlreadyExists));
 
         var result = await _service.CreateAsync(_actor, ValidRequest(), CancellationToken.None);
 

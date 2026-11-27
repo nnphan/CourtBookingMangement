@@ -4,6 +4,13 @@ namespace CourtBookingManagement.Application.Payments.Contracts;
 
 public sealed class SePayWebhookRequest
 {
+    [JsonIgnore]
+    public Guid? ApiTransactionId { get; init; }
+
+    [JsonIgnore]
+    public string TransactionIdentity => ApiTransactionId?.ToString("D")
+        ?? Id.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
     [JsonPropertyName("id")]
     [JsonRequired]
     public long Id { get; init; }

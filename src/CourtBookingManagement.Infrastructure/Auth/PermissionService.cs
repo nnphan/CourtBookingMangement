@@ -1,92 +1,61 @@
 using CourtBookingManagement.Application.Abstractions.Data;
 using CourtBookingManagement.Application.Auth.Interfaces;
-using CourtBookingManagement.Infrastructure.Persistence;
 using Dapper;
-using Microsoft.EntityFrameworkCore;
 
 namespace CourtBookingManagement.Infrastructure.Auth;
 
-public sealed class PermissionService(
-    ApplicationDbContext dbContext,
-    ISqlConnectionFactory connectionFactory) : IPermissionService
+public sealed class PermissionService(ISqlConnectionFactory connectionFactory) : IPermissionService
 {
-    public async Task<IReadOnlyCollection<string>> GetUserPermissionsAsync(Guid userId, CancellationToken cancellationToken = default)
-    {     
-        var permissions = await dbContext.UserRoles
-            .AsNoTracking()
-            .Where(ur => ur.UserId == userId)
-            .SelectMany(ur => ur.Role.Permissions)
-            .Select(p => p.Code)
-            .Distinct()
-            .ToListAsync(cancellationToken);
+    private const string EffectiveRoles = """
+        WITH effective_roles AS (
+            SELECT r.id, r.code, false AS branch_scoped
+            FROM auth.user_roles assignment
+            JOIN auth.roles r ON r.id = assignment.role_id
+            WHERE assignment.user_id = @UserId AND r.is_active AND r.deleted_at IS NULL
+            UNION
+            SELECT r.id, r.code, true AS branch_scoped
+            FROM auth.branch_user_roles assignment
+            JOIN auth.roles r ON r.id = assignment.role_id
+            JOIN core.branches branch ON branch.id = assignment.branch_id
+            WHERE assignment.user_id = @UserId AND assignment.is_active AND assignment.removed_at IS NULL
+              AND r.code = 'BRANCH_MANAGER' AND r.is_active AND r.deleted_at IS NULL
+              AND branch.is_active AND branch.deleted_at IS NULL
+        )
 
-        //using var connection = connectionFactory.CreateConnection();
-        //var branchPermissions = await connection.QueryAsync<string>(new CommandDefinition("""
+        """;
+
+    public async Task<IReadOnlyCollection<string>> GetUserPermissionsAsync(
+        Guid userId, CancellationToken cancellationToken = default)
+    {
+        // The claim permits opening a workspace; branch APIs still authorize each requested branch.
+        using var connection = connectionFactory.CreateConnection();
+        var permissions = await connection.QueryAsync<string>(new CommandDefinition(EffectiveRoles + """
+            SELECT DISTINCT p.code
+            FROM effective_roles r
+            JOIN auth.role_permissions rp ON rp.role_id = r.id
+            JOIN auth.permissions p ON p.id = rp.permission_id;
+            """, new { UserId = userId }, cancellationToken: cancellationToken));
+        //var permissions = await connection.QueryAsync<string>(new CommandDefinition(EffectiveRoles + """
         //    SELECT DISTINCT p.code
-        //    FROM auth.branch_user_roles bur
-        //    JOIN auth.roles r ON r.id = bur.role_id
+        //    FROM effective_roles r
         //    JOIN auth.role_permissions rp ON rp.role_id = r.id
         //    JOIN auth.permissions p ON p.id = rp.permission_id
-        //    WHERE bur.user_id = @UserId
-        //      AND bur.is_active
-        //      AND r.code IN ('BRANCH_ADMIN', 'STAFF')
-        //      AND r.is_active
-        //      AND r.deleted_at IS NULL
-
-        //    UNION
-
-        //    SELECT DISTINCT p.code
-        //    FROM core.branches b
-        //    JOIN core.owners o ON o.id = b.owner_id
-        //    JOIN auth.roles r ON r.code = 'BRANCH_ADMIN'
-        //    JOIN auth.role_permissions rp ON rp.role_id = r.id
-        //    JOIN auth.permissions p ON p.id = rp.permission_id
-        //    WHERE o.user_id = @UserId
-        //      AND o.is_active
-        //      AND o.deleted_at IS NULL
-        //      AND b.is_active
-        //      AND b.deleted_at IS NULL
-        //      AND r.is_active
-        //      AND r.deleted_at IS NULL;
+        //    WHERE NOT r.branch_scoped
+        //       OR p.code IN ('dashboard.view', 'booking.view', 'product.view',
+        //                     'inventory.view', 'inventory.receive', 'inventory.post_receipt', 'inventory.adjust',
+        //                     'sales.view', 'sales.create', 'sales.cancel', 'sales.report.view',
+        //                     'sales.invoice.view', 'sales.invoice.print');
         //    """, new { UserId = userId }, cancellationToken: cancellationToken));
-
-        return permissions.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-        // return permissions.Concat(branchPermissions).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        return permissions.AsList();
     }
 
-    public async Task<IReadOnlyCollection<string>> GetUserRolesAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyCollection<string>> GetUserRolesAsync(
+        Guid userId, CancellationToken cancellationToken = default)
     {
-        var roles = await dbContext.UserRoles
-            .AsNoTracking()
-            .Where(ur => ur.UserId == userId)
-            .Select(ur => ur.Role.Code)
-            .Distinct()
-            .ToListAsync(cancellationToken);
-
-        //using var connection = connectionFactory.CreateConnection();
-        //var branchRoles = await connection.QueryAsync<string>(new CommandDefinition("""
-        //    SELECT DISTINCT r.code
-        //    FROM auth.branch_user_roles bur
-        //    JOIN auth.roles r ON r.id = bur.role_id
-        //    WHERE bur.user_id = @UserId
-        //      AND bur.is_active
-        //      AND r.code IN ('BRANCH_ADMIN', 'STAFF')
-        //      AND r.is_active
-        //      AND r.deleted_at IS NULL
-
-        //    UNION
-
-        //    SELECT 'BRANCH_ADMIN' 
-        //    FROM core.branches b
-        //    JOIN core.owners o ON o.id = b.owner_id
-        //    WHERE o.user_id = @UserId
-        //      AND o.is_active
-        //      AND o.deleted_at IS NULL
-        //      AND b.is_active
-        //      AND b.deleted_at IS NULL;
-        //    """, new { UserId = userId }, cancellationToken: cancellationToken));
-
-        return roles.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-        // return roles.Concat(branchRoles).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        using var connection = connectionFactory.CreateConnection();
+        var roles = await connection.QueryAsync<string>(new CommandDefinition(
+            EffectiveRoles + "SELECT DISTINCT code FROM effective_roles;",
+            new { UserId = userId }, cancellationToken: cancellationToken));
+        return roles.AsList();
     }
 }

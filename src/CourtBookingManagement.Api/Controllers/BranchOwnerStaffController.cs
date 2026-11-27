@@ -18,7 +18,7 @@ public sealed class BranchOwnerStaffController(
     IStaffCreationService creationService,
     ICurrentUserService currentUserService) : ApiControllerBase
 {
-    /// <summary>Creates a Staff account and sends a one-time activation invitation.</summary>
+    /// <summary>Creates an active branch manager with an initial password and owned-branch assignments.</summary>
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<CreateStaffResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]

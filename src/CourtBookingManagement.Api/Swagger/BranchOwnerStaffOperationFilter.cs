@@ -21,7 +21,9 @@ public sealed class BranchOwnerStaffOperationFilter : IOperationFilter
             operation.Summary = context.MethodInfo.Name == nameof(BranchOwnerStaffController.Create)
                 ? "Create Staff in owner scope" : "Resend Staff activation";
             operation.Description = "Requires an active owner and staff.create on the owned branches. " +
-                "Only the STAFF branch role is assigned. Invitations are delivered after commit.";
+                (context.MethodInfo.Name == nameof(BranchOwnerStaffController.Create)
+                    ? "Creates an active account with BRANCH_MANAGER assigned only at the selected branches."
+                    : "Resends activation for a previously invited staff account.");
             return;
         }
 

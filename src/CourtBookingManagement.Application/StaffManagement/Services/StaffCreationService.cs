@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using System.Text;
 using CourtBookingManagement.Application.Abstractions.Clock;
 using CourtBookingManagement.Application.Email;
@@ -217,65 +216,34 @@ public sealed class StaffCreationService(
             await branchAuthorization.EnsureCanAccessAsync(actorId, branchId, "staff.create", cancellationToken);
         }
 
-        if (!delivery.IsConfigured)
-        {
-            return new Error("STAFF_DELIVERY_NOT_CONFIGURED", "Staff invitation delivery is not configured.");
-        }
-
         var normalized = request with
         {
             DisplayName = request.DisplayName.Trim(),
-            Email = request.Email.Trim().ToLowerInvariant(),
+            Email = NormalizeEmail(request.Email),
             PhoneNumber = request.PhoneNumber.Trim(),
-            StaffCode = request.StaffCode?.Trim(),
-            JobTitle = request.JobTitle?.Trim(),
-            Notes = request.Notes?.Trim()
+            Notes = request.Notes?.Trim(),
+            Password = string.Empty
         };
-        var token = invitationTokens.GenerateToken();
-        var expiresAt = dateTimeProvider.UtcNow
-                .AddHours(invitationPolicy.ExpirationHours);
-        var branchIds = request.BranchIds.ToHashSet();
-        var branchNames = scope.Branches
-            .Where(branch => branchIds.Contains(branch.BranchId))
-            .Select(branch => branch.BranchName)
-            .ToArray();
-        var email = emailComposer.Compose(new StaffInvitationEmailData(
-            normalized.Email,
-            token,
-            normalized.DisplayName,
-            branchNames,
-            expiresAt));
-        var creation = new StaffCreation(
-            Guid.NewGuid(), Guid.NewGuid(), scope.OwnerId, actorId, normalized,
-            BCrypt.Net.BCrypt.HashPassword(Convert.ToHexString(RandomNumberGenerator.GetBytes(32))),
-            invitationTokens.HashToken(token), expiresAt);
-
-        var outcome = await repository.CreateAsync(creation, cancellationToken);
-        if (outcome != StaffCreationOutcome.Created)
+        var creation = new StaffCreation(Guid.NewGuid(), scope.OwnerId, actorId, normalized,
+            BCrypt.Net.BCrypt.HashPassword(request.Password));
+        var result = await repository.CreateAsync(creation, cancellationToken);
+        if (result.Outcome != StaffCreationOutcome.Created)
         {
-            return outcome switch
+            return result.Outcome switch
             {
                 StaffCreationOutcome.BranchAccessDenied =>
                     new Error("STAFF_BRANCH_ACCESS_DENIED", "The requested branch is not authorized."),
                 StaffCreationOutcome.UserAlreadyExists =>
                     new Error("STAFF_ALREADY_EXISTS", "An account with the supplied contact details already exists."),
                 StaffCreationOutcome.StaffCodeAlreadyUsed =>
-                    new Error("STAFF_CODE_ALREADY_USED", "The staff code is already used in a selected branch."),
-                _ => new Error("STAFF_ROLE_NOT_CONFIGURED", "The STAFF role is not configured.")
+                    new Error("STAFF_CODE_ALREADY_USED", "The generated staff code is already used."),
+                _ => new Error("STAFF_ROLE_NOT_CONFIGURED", "The BRANCH_MANAGER role is not configured.")
             };
         }
 
-        // The committed account must have a delivery outcome even if the request disconnects.
-        var sent = await emailSender.SendAsync(email, CancellationToken.None);
-        var deliveryStatePersisted = await repository.SetInvitationDeliveryAsync(
-            creation.InvitationId, actorId, sent, CancellationToken.None);
-        logger.LogInformation("Staff account created. ActorId={ActorId} StaffUserId={StaffUserId} InvitationSent={Sent}",
-            actorId, creation.UserId, sent);
-
-        return new CreateStaffResponse(creation.UserId, sent ? "SENT" : "FAILED",
-            !deliveryStatePersisted
-                ? "INVITATION_STATUS_PERSISTENCE_FAILED"
-                : sent ? null : "INVITATION_SEND_FAILED");
+        logger.LogInformation("Branch manager account created. ActorId={ActorId} StaffUserId={StaffUserId}",
+            actorId, creation.UserId);
+        return new CreateStaffResponse(creation.UserId, StaffCode: result.StaffCode);
     }
 
     private async Task<(StaffInvitationState? State, Error? Error)> GetValidInvitationStateAsync(

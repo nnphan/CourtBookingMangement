@@ -1,4 +1,5 @@
 using System.Net.Mail;
+using System.Text;
 using CourtBookingManagement.Application.StaffManagement.DTOs;
 using FluentValidation;
 
@@ -20,10 +21,9 @@ public sealed class CreateStaffRequestValidator : AbstractValidator<CreateStaffR
         RuleFor(x => x.PhoneNumber)
             .Must(StaffValidationRules.PhoneNumber)
             .WithMessage("A phone number of at most 20 characters is required.");
-        RuleFor(x => x.StaffCode)
-            .Must(StaffValidationRules.StaffCode);
-        RuleFor(x => x.JobTitle)
-            .Must(StaffValidationRules.JobTitle);
+        RuleFor(x => x.Password)
+            .Must(value => !string.IsNullOrWhiteSpace(value) && value.Length >= 8 && Encoding.UTF8.GetByteCount(value) <= 72)
+            .WithMessage("The initial password must contain at least 8 characters and at most 72 UTF-8 bytes.");
         RuleFor(x => x.Notes).MaximumLength(1000);
         RuleFor(x => x.BranchIds)
             .Must(StaffValidationRules.Branches)

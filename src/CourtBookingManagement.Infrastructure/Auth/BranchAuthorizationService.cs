@@ -21,7 +21,7 @@ public sealed class BranchAuthorizationService(ISqlConnectionFactory connectionF
                 FROM auth.roles r
                 JOIN auth.user_roles ur ON ur.role_id = r.id
                 WHERE ur.user_id = @UserId
-                  AND r.code IN ('BRANCH_OWNER', 'BRANCH_MANAGER', 'STAFF')
+                  AND r.code IN ('BRANCH_OWNER', 'STAFF')
                   AND r.is_active
                   AND r.deleted_at IS NULL
 
@@ -33,6 +33,7 @@ public sealed class BranchAuthorizationService(ISqlConnectionFactory connectionF
                 WHERE bur.user_id = @UserId
                   AND bur.branch_id = @BranchId
                   AND bur.is_active
+                  AND bur.removed_at IS NULL
                   AND r.code IN ('BRANCH_OWNER', 'BRANCH_MANAGER', 'STAFF')
                   AND r.is_active
                   AND r.deleted_at IS NULL

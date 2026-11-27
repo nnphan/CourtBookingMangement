@@ -381,7 +381,7 @@ public sealed class BranchOwnerStaffRepository(
         return true;
     }
 
-    public async Task<StaffCreationOutcome> CreateAsync(
+    public async Task<StaffCreationResult> CreateAsync(
         StaffCreation creation,
         CancellationToken cancellationToken)
     {
@@ -419,18 +419,18 @@ public sealed class BranchOwnerStaffRepository(
             if (branches.Count != creation.Request.BranchIds.Length)
             {
                 transaction.Rollback();
-                return StaffCreationOutcome.BranchAccessDenied;
+                return new(StaffCreationOutcome.BranchAccessDenied);
             }
 
             var roleId = await connection.QuerySingleOrDefaultAsync<Guid?>(new CommandDefinition("""
                 SELECT id FROM auth.roles
-                WHERE code = 'STAFF' AND is_active AND deleted_at IS NULL
+                WHERE code = 'BRANCH_MANAGER' AND is_active AND deleted_at IS NULL
                 FOR SHARE;
                 """, transaction: transaction, cancellationToken: cancellationToken));
             if (roleId is null)
             {
                 transaction.Rollback();
-                return StaffCreationOutcome.StaffRoleUnavailable;
+                return new(StaffCreationOutcome.StaffRoleUnavailable);
             }
 
             var exists = await connection.ExecuteScalarAsync<bool>(new CommandDefinition("""
@@ -443,60 +443,42 @@ public sealed class BranchOwnerStaffRepository(
             if (exists)
             {
                 transaction.Rollback();
-                return StaffCreationOutcome.UserAlreadyExists;
+                return new(StaffCreationOutcome.UserAlreadyExists);
             }
+
+            var codeNumber = await connection.ExecuteScalarAsync<long>(new CommandDefinition(
+                "SELECT nextval('auth.staff_code_seq');", transaction: transaction, cancellationToken: cancellationToken));
+            var staffCode = "NV" + codeNumber.ToString("D3", System.Globalization.CultureInfo.InvariantCulture);
 
             await connection.ExecuteAsync(new CommandDefinition("""
                 INSERT INTO auth.users
                     (id, email, full_name, phone_number, password_hash, is_active, is_email_verified,
                      created_at, created_by, updated_at, updated_by)
                 VALUES
-                    (@UserId, @Email, @DisplayName, @PhoneNumber, @PasswordHash, false, false,
+                    (@UserId, @Email, @DisplayName, @PhoneNumber, @PasswordHash, true, false,
                      now(), @ActorId, now(), @ActorId);
                 INSERT INTO auth.branch_user_roles
-                    (branch_id, user_id, role_id, is_active, staff_code, job_title,
+                    (branch_id, user_id, role_id, is_active, staff_code,
                      employment_start_date, notes, created_at, created_by, updated_at, updated_by)
-                SELECT branch_id, @UserId, @RoleId, true, @StaffCode, @JobTitle,
+                SELECT branch_id, @UserId, @RoleId, true, @StaffCode,
                        @EmploymentStartDate, @Notes, now(), @ActorId, now(), @ActorId
                 FROM unnest(@BranchIds::uuid[]) AS branch_ids(branch_id);
-                INSERT INTO auth.user_roles
-                (
-                    user_id,
-                    role_id,
-                    assigned_at,
-                    assigned_by
-                )
-                VALUES
-                (
-                    @UserId,
-                    @RoleId,
-                    now(),
-                    @ActorId
-                );
-                INSERT INTO auth.staff_invitations
-                    (id, user_id, purpose, token_hash, expires_at, link_version, issuance_type, created_by, updated_by)
-                VALUES
-                    (@InvitationId, @UserId, 'STAFF_ACTIVATION', @TokenHash, @ExpiresAt, 2, 'CREATE', @ActorId, @ActorId);
                 """, new
             {
                 creation.UserId,
-                creation.InvitationId,
                 creation.ActorId,
                 creation.PasswordHash,
-                creation.TokenHash,
-                creation.ExpiresAt,
                 creation.Request.Email,
                 creation.Request.DisplayName,
                 creation.Request.PhoneNumber,
-                creation.Request.StaffCode,
-                creation.Request.JobTitle,
+                StaffCode = staffCode,
                 creation.Request.EmploymentStartDate,
                 creation.Request.Notes,
                 creation.Request.BranchIds,
                 RoleId = roleId.Value
             }, transaction, cancellationToken: cancellationToken));
             transaction.Commit();
-            return StaffCreationOutcome.Created;
+            return new(StaffCreationOutcome.Created, staffCode);
         }
         catch (PostgresException exception) when (
             exception.SqlState == PostgresErrorCodes.UniqueViolation &&
@@ -504,9 +486,9 @@ public sealed class BranchOwnerStaffRepository(
                 "ux_users_active_phone_number" or "ux_branch_user_roles_active_staff_code")
         {
             transaction.Rollback();
-            return exception.ConstraintName == "ux_branch_user_roles_active_staff_code"
+            return new(exception.ConstraintName == "ux_branch_user_roles_active_staff_code"
                 ? StaffCreationOutcome.StaffCodeAlreadyUsed
-                : StaffCreationOutcome.UserAlreadyExists;
+                : StaffCreationOutcome.UserAlreadyExists);
         }
     }
 
@@ -527,7 +509,7 @@ public sealed class BranchOwnerStaffRepository(
                     WHERE assignment.user_id = u.id
                       AND assignment.is_active
                       AND assignment.removed_at IS NULL
-                      AND assignment_role.code = 'STAFF'
+                      AND assignment_role.code IN ('STAFF', 'BRANCH_MANAGER')
                       AND assignment_role.is_active
                       AND assignment_role.deleted_at IS NULL
                       AND assignment_branch.owner_id = @OwnerId
@@ -583,7 +565,7 @@ public sealed class BranchOwnerStaffRepository(
                   WHERE assignment.user_id = u.id
                     AND assignment.is_active
                     AND assignment.removed_at IS NULL
-                    AND assignment_role.code = 'STAFF'
+                    AND assignment_role.code IN ('STAFF', 'BRANCH_MANAGER')
                     AND assignment_role.is_active
                     AND assignment_role.deleted_at IS NULL
                     AND assignment_branch.owner_id = @OwnerId
@@ -628,7 +610,7 @@ public sealed class BranchOwnerStaffRepository(
                       WHERE assignment.user_id = u.id
                         AND assignment.is_active
                         AND assignment.removed_at IS NULL
-                        AND assignment_role.code = 'STAFF'
+                        AND assignment_role.code IN ('STAFF', 'BRANCH_MANAGER')
                         AND assignment_role.is_active
                         AND assignment_role.deleted_at IS NULL
                         AND assignment_branch.owner_id = @OwnerId
@@ -673,7 +655,7 @@ public sealed class BranchOwnerStaffRepository(
         """;
 
     private static readonly string[] ProtectedRoleCodes =
-        ["ADMIN", "SUPER_ADMIN", "BRANCH_ADMIN", "BRANCH_OWNER", "CUSTOMER", "BRANCH_MANAGER"];
+        ["ADMIN", "SUPER_ADMIN", "BRANCH_ADMIN", "BRANCH_OWNER", "CUSTOMER"];
 
     public async Task<StaffOwnerScope?> GetOwnerScopeAsync(
         Guid ownerUserId,
@@ -773,7 +755,7 @@ public sealed class BranchOwnerStaffRepository(
               AND assignment.branch_id = ANY(@BranchIds)
               AND assignment.is_active
               AND assignment.removed_at IS NULL
-              AND assigned_role.code = 'STAFF'
+              AND assigned_role.code IN ('STAFF', 'BRANCH_MANAGER')
               AND assigned_role.is_active
               AND assigned_role.deleted_at IS NULL
               AND branch.owner_id = @OwnerId
@@ -867,7 +849,7 @@ public sealed class BranchOwnerStaffRepository(
               AND assignment.branch_id = ANY(@BranchIds)
               AND assignment.is_active
               AND assignment.removed_at IS NULL
-              AND assigned_role.code = 'STAFF'
+              AND assigned_role.code IN ('STAFF', 'BRANCH_MANAGER')
               AND assigned_role.is_active
               AND assigned_role.deleted_at IS NULL
               AND branch.owner_id = @OwnerId

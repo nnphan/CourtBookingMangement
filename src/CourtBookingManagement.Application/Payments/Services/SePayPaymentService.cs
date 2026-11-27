@@ -92,10 +92,10 @@ public sealed class SePayPaymentService(
                 new Error("Booking.StatusConflict", "The booking hold changed or is no longer available."));
         }
 
-        if (payment.Status == PaymentStatuses.PaymentReview)
+        if (payment.Status is not (PaymentStatuses.Pending or PaymentStatuses.Processing))
         {
             return Result.Failure<CreateSePayPaymentResponse>(
-                new Error("Payment.StatusConflict", "This payment is under review."));
+                new Error("Payment.StatusConflict", "This payment already has a final or review status."));
         }
 
         if (string.IsNullOrWhiteSpace(payment.PaymentCode)

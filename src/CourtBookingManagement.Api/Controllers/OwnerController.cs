@@ -3,20 +3,45 @@ using CourtBookingManagement.Application.Auth.Interfaces;
 using CourtBookingManagement.Application.Owners.Models;
 using CourtBookingManagement.Application.Owners.Services;
 using CourtBookingManagement.Infrastructure.Auth;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CourtBookingManagement.Api.Controllers;
 
 [ApiController]
 [Route("api/owners")]
-public sealed class OwnerController(IOwnerService service, ICurrentUserService currentUserService) : ApiControllerBase
+public sealed class OwnerController(
+    IOwnerService service,
+    ICurrentUserService currentUserService,
+    IAuthService authService) : ApiControllerBase
 {
     [HttpGet]
-    [Permission("owner.view")]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<OwnerResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetOwners([FromQuery] OwnerSearchRequest request, CancellationToken cancellationToken)
     {
+        if (currentUserService.UserId is not Guid userId)
+            return Unauthorized();
+
+        var isAdmin = currentUserService.Roles.Contains("ADMIN", StringComparer.OrdinalIgnoreCase);
+        if (request.IncludeUnlinked && !isAdmin)
+            return Forbid();
+
+        if (!currentUserService.Permissions.Contains("owner.view", StringComparer.OrdinalIgnoreCase))
+        {
+            if (!isAdmin)
+                return Forbid();
+
+            // A token issued before the owner permissions were granted may still be valid.
+            var account = await authService.GetCurrentUserAsync(userId, cancellationToken);
+            if (account.IsFailure || !account.Value.IsActive ||
+                !account.Value.Roles.Contains("ADMIN", StringComparer.OrdinalIgnoreCase) ||
+                !account.Value.Permissions.Contains("owner.view", StringComparer.OrdinalIgnoreCase))
+                return Forbid();
+        }
+
         var result = await service.SearchAsync(request, cancellationToken);
         return result.IsSuccess
             ? Success(result.Value.Items, "Owners retrieved successfully.", result.Value.Metadata)

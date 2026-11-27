@@ -302,6 +302,11 @@ public sealed class AuthService : IAuthService
             return Result.Failure<AuthResponse>(new Error("Auth.UserDisabled", "User account is disabled."));
         }
 
+        var roles = await _permissionService.GetUserRolesAsync(user.Id, cancellationToken);
+        var permissions = await _permissionService.GetUserPermissionsAsync(user.Id, cancellationToken);
+        var avatarUrl = await GetAvatarUrlAsync(user.Id, cancellationToken);
+        var accessToken = _jwtTokenService.GenerateAccessToken(user.Id, user.Email, roles, permissions);
+
         var oldToken = refreshToken;
         var newRefreshTokenValue = _jwtTokenService.GenerateRefreshToken();
         var newRefreshTokenId = Guid.NewGuid();
@@ -323,12 +328,6 @@ public sealed class AuthService : IAuthService
         await _authRepository.AddRefreshTokenAsync(newRefreshToken, cancellationToken);
         await _authRepository.UpdateRefreshTokenAsync(oldToken, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        var roles = await _permissionService.GetUserRolesAsync(user.Id, cancellationToken);
-        var permissions = await _permissionService.GetUserPermissionsAsync(user.Id, cancellationToken);
-        var avatarUrl = await GetAvatarUrlAsync(user.Id, cancellationToken);
-
-        var accessToken = _jwtTokenService.GenerateAccessToken(user.Id, user.Email, roles, permissions);
 
         return Result.Success(new AuthResponse
         {

@@ -43,6 +43,7 @@ public sealed class BranchRepository(
                       WHERE bur.branch_id = b.id
                         AND bur.user_id = @UserId
                         AND bur.is_active
+                        AND bur.removed_at IS NULL
                         AND r.code IN ('BRANCH_OWNER', 'BRANCH_MANAGER', 'STAFF')
                         AND r.is_active
                         AND r.deleted_at IS NULL
@@ -52,7 +53,7 @@ public sealed class BranchRepository(
                       FROM auth.user_roles ur
                       JOIN auth.roles r ON r.id = ur.role_id
                       WHERE ur.user_id = @UserId
-                        AND r.code IN ('BRANCH_OWNER', 'BRANCH_MANAGER', 'STAFF')
+                        AND r.code IN ('BRANCH_OWNER', 'STAFF')
                         AND r.is_active
                         AND r.deleted_at IS NULL
                   )
