@@ -5,10 +5,13 @@ using CourtBookingManagement.Application.Payments.Interfaces;
 using CourtBookingManagement.Domain.Bookings;
 using CourtBookingManagement.Domain.Payments;
 using Dapper;
+using Microsoft.Extensions.Logging;
 
 namespace CourtBookingManagement.Infrastructure.Repositories;
 
-public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
+public sealed class PaymentRepository(
+    ISqlConnectionFactory connectionFactory,
+    ILogger<PaymentRepository> logger)
     : IPaymentRepository
 {
     public async Task<SePayBookingPaymentContext?> GetSePayBookingForPaymentAsync(
@@ -172,10 +175,14 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
             DO UPDATE SET payment_code = EXCLUDED.payment_code,
                           processing_status = 'RECEIVED'
             WHERE callback.processing_status = 'REQUIRES_REVIEW'
-              AND callback.processing_message = 'No valid payment code was found.'
-              AND callback.payment_code IS NULL
-              AND EXCLUDED.payment_code IS NOT NULL
               AND callback.payload = EXCLUDED.payload
+              AND (
+                  (callback.processing_message = 'No valid payment code was found.'
+                   AND callback.payment_code IS NULL
+                   AND EXCLUDED.payment_code IS NOT NULL)
+                  OR (callback.processing_message = 'The transfer predates the attempt or the persisted receiving account does not match.'
+                      AND callback.payment_code = EXCLUDED.payment_code)
+              )
             RETURNING id;
             """, new
         {
@@ -200,7 +207,7 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
 
         if (!string.Equals(request.TransferType, "in", StringComparison.OrdinalIgnoreCase))
         {
-            await FinishCallbackAsync(
+            await FinishSePayCallbackAsync(
                 connection, transaction, callbackLogId.Value, "REJECTED",
                 "Only incoming transfers are processed.", cancellationToken);
             transaction.Commit();
@@ -211,7 +218,7 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
             || request.TransferAmount <= 0m
             || decimal.Truncate(request.TransferAmount) != request.TransferAmount)
         {
-            await FinishCallbackAsync(
+            await FinishSePayCallbackAsync(
                 connection, transaction, callbackLogId.Value, "REQUIRES_REVIEW",
                 "The transaction date or transfer amount is invalid.", cancellationToken);
             transaction.Commit();
@@ -220,7 +227,7 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
 
         if (!receivingAccountMatches)
         {
-            await FinishCallbackAsync(
+            await FinishSePayCallbackAsync(
                 connection, transaction, callbackLogId.Value, "REQUIRES_REVIEW",
                 "The receiving account does not match the configured account.", cancellationToken);
             transaction.Commit();
@@ -229,7 +236,7 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
 
         if (paymentCode is null)
         {
-            await FinishCallbackAsync(
+            await FinishSePayCallbackAsync(
                 connection, transaction, callbackLogId.Value, "REQUIRES_REVIEW",
                 "No valid payment code was found.", cancellationToken);
             transaction.Commit();
@@ -246,7 +253,7 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
 
         if (paymentReference is null)
         {
-            await FinishCallbackAsync(
+            await FinishSePayCallbackAsync(
                 connection, transaction, callbackLogId.Value, "REQUIRES_REVIEW",
                 "No payment attempt matched the payment code.", cancellationToken);
             transaction.Commit();
@@ -262,7 +269,7 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
 
         if (lockedBookingId is null)
         {
-            await FinishCallbackAsync(
+            await FinishSePayCallbackAsync(
                 connection, transaction, callbackLogId.Value, "REQUIRES_REVIEW",
                 "The booking for the payment code no longer exists.", cancellationToken);
             transaction.Commit();
@@ -274,7 +281,12 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
                    payment.booking_id AS BookingId,
                    payment.amount AS Amount,
                    payment.bank_account_number AS BankAccountNumber,
-                   (date_trunc('second', payment.created_at) <= @TransactionDate) AS TransferAfterCreation,
+                   -- Some bank feeds report the transfer time at minute precision.
+                   (date_trunc('second', payment.created_at) <= @TransactionDate
+                    OR (
+                        @TransactionDate = date_trunc('minute', @TransactionDate)
+                        AND payment.created_at < @TransactionDate + interval '1 minute'
+                    )) AS TransferAfterCreation,
                    payment.status AS PaymentStatus,
                    payment.provider_transaction_id AS ProviderTransactionId,
                    booking.booking_code AS BookingCode,
@@ -293,7 +305,7 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
 
         if (payment is null)
         {
-            await FinishCallbackAsync(
+            await FinishSePayCallbackAsync(
                 connection, transaction, callbackLogId.Value, "REQUIRES_REVIEW",
                 "No payment attempt matched the payment code.", cancellationToken);
             transaction.Commit();
@@ -302,9 +314,12 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
 
         if (!payment.TransferAfterCreation || !string.Equals(payment.BankAccountNumber, request.AccountNumber, StringComparison.Ordinal))
         {
-            await FinishCallbackAsync(
+            var reason = !payment.TransferAfterCreation
+                ? "The transfer predates the payment attempt."
+                : "The persisted receiving account does not match.";
+            await FinishSePayCallbackAsync(
                 connection, transaction, callbackLogId.Value, "REQUIRES_REVIEW",
-                "The transfer predates the attempt or the persisted receiving account does not match.", cancellationToken);
+                reason, cancellationToken);
             transaction.Commit();
             return new SePayWebhookProcessingOutcome(false, payment.BookingId, Array.Empty<BookingSlotResource>());
         }
@@ -328,7 +343,7 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
             }, transaction, cancellationToken: cancellationToken));
             if (alreadyApplied)
             {
-                await FinishCallbackAsync(connection, transaction, callbackLogId.Value, "PROCESSED",
+                await FinishSePayCallbackAsync(connection, transaction, callbackLogId.Value, "PROCESSED",
                     "Transfer already applied through another SePay delivery.", cancellationToken);
                 transaction.Commit();
                 return new SePayWebhookProcessingOutcome(true, payment.BookingId, Array.Empty<BookingSlotResource>());
@@ -337,7 +352,7 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
 
         if (payment.PaymentStatus == PaymentStatuses.Paid)
         {
-            await FinishCallbackAsync(
+            await FinishSePayCallbackAsync(
                 connection, transaction, callbackLogId.Value, "REQUIRES_REVIEW",
                 "An additional transfer arrived for an already paid payment.", cancellationToken);
             transaction.Commit();
@@ -353,7 +368,7 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
                 payment,
                 request,
                 cancellationToken);
-            await FinishCallbackAsync(
+            await FinishSePayCallbackAsync(
                 connection, transaction, callbackLogId.Value, "REQUIRES_REVIEW",
                 "Payment arrived after the booking hold ended.", cancellationToken);
             transaction.Commit();
@@ -365,7 +380,7 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
         {
             await UpdateSePayPaymentForReviewAsync(
                 connection, transaction, payment.PaymentId, request, cancellationToken);
-            await FinishCallbackAsync(
+            await FinishSePayCallbackAsync(
                 connection, transaction, callbackLogId.Value, "REQUIRES_REVIEW",
                 "The payment or booking state is not eligible for confirmation.", cancellationToken);
             transaction.Commit();
@@ -376,7 +391,7 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
         {
             await UpdateSePayPaymentForReviewAsync(
                 connection, transaction, payment.PaymentId, request, cancellationToken);
-            await FinishCallbackAsync(
+            await FinishSePayCallbackAsync(
                 connection, transaction, callbackLogId.Value, "REQUIRES_REVIEW",
                 "The payment amount differs from the persisted booking amount.", cancellationToken);
             transaction.Commit();
@@ -410,7 +425,7 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
                 Message = message,
                 payment.PaymentId
             }, transaction, cancellationToken: cancellationToken));
-            await FinishCallbackAsync(
+            await FinishSePayCallbackAsync(
                 connection, transaction, callbackLogId.Value, "PROCESSED", message, cancellationToken);
             transaction.Commit();
             return new SePayWebhookProcessingOutcome(false, payment.BookingId, Array.Empty<BookingSlotResource>());
@@ -436,7 +451,7 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
                 payment,
                 request,
                 cancellationToken);
-            await FinishCallbackAsync(
+            await FinishSePayCallbackAsync(
                 connection, transaction, callbackLogId.Value, "REQUIRES_REVIEW",
                 "Booking confirmation lost the expiration race.", cancellationToken);
             transaction.Commit();
@@ -483,7 +498,7 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
             transaction,
             payment.BookingId,
             cancellationToken);
-        await FinishCallbackAsync(
+        await FinishSePayCallbackAsync(
             connection, transaction, callbackLogId.Value, "PROCESSED",
             "Payment and booking confirmed.", cancellationToken);
         transaction.Commit();
@@ -1050,6 +1065,21 @@ public sealed class PaymentRepository(ISqlConnectionFactory connectionFactory)
             ReceivedAmount = request.TransferAmount,
             PaymentId = paymentId
         }, transaction, cancellationToken: cancellationToken));
+
+    private async Task FinishSePayCallbackAsync(
+        IDbConnection connection,
+        IDbTransaction transaction,
+        Guid callbackLogId,
+        string status,
+        string message,
+        CancellationToken cancellationToken)
+    {
+        await FinishCallbackAsync(connection, transaction, callbackLogId, status, message, cancellationToken);
+        if (status is "REQUIRES_REVIEW" or "REJECTED")
+        {
+            logger.LogWarning("SePay callback {CallbackLogId}: {Status}. {Reason}", callbackLogId, status, message);
+        }
+    }
 
     private static Task FinishCallbackAsync(
         System.Data.IDbConnection connection,

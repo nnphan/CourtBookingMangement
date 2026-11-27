@@ -27,7 +27,11 @@ public sealed class SePayReconciliationWorker(
         if (!settings.ReconciliationEnabled)
         {
             if (!string.IsNullOrWhiteSpace(settings.ApiToken) || settings.ApiBankAccountId.HasValue)
-                logger.LogWarning("SePay reconciliation is disabled because its account, token, or API endpoint configuration is incomplete or invalid.");
+                logger.LogWarning(
+                    "SePay reconciliation is disabled. PaymentConfigured: {PaymentConfigured}, ApiTokenConfigured: {ApiTokenConfigured}, ApiBankAccountIdConfigured: {ApiBankAccountIdConfigured}. Verify that ApiBaseUrl matches the configured SePay environment.",
+                    settings.IsConfigured,
+                    !string.IsNullOrWhiteSpace(settings.ApiToken),
+                    settings.ApiBankAccountId is Guid id && id != Guid.Empty);
             return;
         }
 

@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Text;
 using CourtBookingManagement.Application.Bookings.Interfaces;
 using CourtBookingManagement.Application.Options;
@@ -110,7 +110,7 @@ public sealed class SePayReconciliationWorkerTests
                         {"id":"{{transactionId}}","bank_account_id":"{{bankId}}","account_number":"00001234",
                          "transfer_type":"in","amount_in":20000,"transaction_date":"2026-11-27 15:22:00",
                          "reference_number":"FT123456","code":"BCM226","transaction_content":"BK BCM226A9044D3"}
-                    ],"meta":{"pagination":{"has_more":false}} }
+                    ],"meta":{"pagination":{"has_more":false} } }
                     """, Encoding.UTF8, "application/json"),
             });
         }
